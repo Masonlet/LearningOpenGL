@@ -2,17 +2,20 @@
 
 #include "model.hpp"
 
-constexpr float defaultSize{1};
+constexpr Vec2 defaultSize2D{1.0f, 1.0f};
+constexpr Vec3 defaultSize3D{1.0f, 1.0f, 1.0f};
+constexpr Vec3 defaultRotation{0.0f, 0.0f, 0.0f};
+constexpr Vec3 defaultScale{1.0f, 1.0f, 1.0f};
 
 // Primitives
-bool createTriangle(Mesh& mesh, const float  width = defaultSize, const float  height = defaultSize);
+bool createTriangle(Mesh& mesh, const Vec2& size = defaultSize2D);
 
-bool createSquare(Mesh& mesh, const float  width = defaultSize, const float  height = defaultSize);
-bool createSquareGrid(Model* models, int startIndex, int count, float spacing, const Vec3& rotation = {0.0f, 0.0f, 0.0f}, const float width = defaultSize, const float height = defaultSize);
+bool createSquare(Mesh& mesh, const Vec2& size = defaultSize2D);
+bool createSquareGrid(Model* models, int startIndex, int count, const Vec2& spacing, const Vec3& rotation = defaultRotation, const Vec2& size = defaultSize2D);
 
-bool createCube(Mesh& mesh, const float  width = defaultSize, const float  height = defaultSize, const float depth = defaultSize);
-bool createCubeGrid(Model* models, int startIndex, int count, float spacing, const Vec3& rotation = {0.0f, 0.0f, 0.0f}, const float width = defaultSize, const float height = defaultSize, const float depth = defaultSize);
+bool createCube(Mesh& mesh, const Vec3& size = defaultSize3D);
+bool createCubeGrid(Model* models, int startIndex, int count, const Vec2& spacing, const Vec3& rotation = defaultRotation, const Vec3& size = defaultSize3D);
 
 // Meshes
-bool createMeshPath(Mesh* mesh, const char* path, const char* type, const bool hasNormals);
-bool createModelGrid(Model* models, const char* path, int startIndex, int count, float spacing, const bool hasNormals, const Vec3& rotation = {0.0f, 0.0f, 0.0f});
+bool createMeshPath(Mesh* mesh, const char* path, const char* type, const Vec3& scale = defaultScale, const bool hasNormals = false);
+bool createModelGrid(Model* models, const char* path, int startIndex, int count, const Vec2& spacing, const Vec3& rotation = defaultRotation, const Vec3& scale = defaultScale, const bool hasNormals = false);

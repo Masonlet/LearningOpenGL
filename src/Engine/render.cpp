@@ -31,7 +31,7 @@ void Renderer::update() {
 	}
 
 	if (!camera.Paused() && scene && scene->isLoaded()) {
-		camera.ProcessInputs(window, models[currentIndex].transform, deltaTime);
+		camera.ProcessInputs(window, models[currentIndex].transform, scene->renderMode(), deltaTime);
 	}
 }
 
@@ -74,7 +74,7 @@ void Renderer::draw() {
 
 		const Mat4 modelMatrix{Mat4::modelMatrix(models[i].transform)};
 		const Mat4 view = camera.LookAt();
-		const Mat4 projection = camera.Perspective(aspect);
+		const Mat4 projection = scene->renderMode() == RenderMode::basic3D ? camera.Perspective(aspect) : camera.Orthographic();
 		const Mat4 mvp = projection * view * modelMatrix;
 
 		glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.data); 

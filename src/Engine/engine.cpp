@@ -9,7 +9,7 @@ constexpr unsigned int EXIT_SUCCESS{0};
 constexpr int DEFAULT_WIDTH{1920};
 constexpr int DEFAULT_HEIGHT{1080};
 
-Engine::Engine() : window{nullptr}, models{nullptr}, mvpLocation { 0 }, program{0}, height{DEFAULT_HEIGHT}, width{DEFAULT_WIDTH}, good{false}, renderType{0} {
+Engine::Engine(RenderMode renderMode) : window{nullptr}, models{nullptr}, mode{renderMode}, mvpLocation { 0 }, program{0}, height{DEFAULT_HEIGHT}, width{DEFAULT_WIDTH}, good{false} {
 #ifndef NDEBUG
 	fprintf(stderr, "initGL Start Time: %f\n", glfwGetTime());
 #endif
@@ -80,14 +80,14 @@ void Engine::Run(const char* sceneName) {
 	fprintf(stderr,"Create Scene Start Time: %f\n", glfwGetTime());
 #endif
 	Scene* scene = createSceneFromName(sceneName);
-	models = new Model[scene->objectCount()];
-
-	if (scene) {
-		scene->Load(models);
-	} else {
+	if (!scene) {
 		fprintf(stderr, "Scene not found: %s\n", sceneName);
 		return;
 	}
+
+	models = new Model[scene->objectCount()];
+	scene->Load(models);
+
 #ifndef NDEBUG
 	fprintf(stderr,"Create Scene Complete Time: %f\n", glfwGetTime());
 #endif
@@ -99,10 +99,12 @@ void Engine::Run(const char* sceneName) {
 	glfwShowWindow(window); 
 
 	while (!glfwWindowShouldClose(window)) {
-		renderer.update();
-		renderer.draw();
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		if (scene && scene->isLoaded()) {
+			renderer.update();
+			renderer.draw();
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+		}
 	}
 	
 	delete scene;

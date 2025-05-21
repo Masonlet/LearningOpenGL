@@ -3,6 +3,7 @@
 #include "Vec3.hpp"
 #include "Constants.hpp"
 #include "init.hpp"
+#include "scene.hpp"
 
 constexpr float MOVE_SPEED{25.0f};
 constexpr float CAMERA_SPEED{0.1f};
@@ -11,11 +12,11 @@ constexpr float DEFAULT_FOV{75.0f};
 constexpr float NEAR_PLANE{0.1f};
 constexpr float FAR_PLANE{10000.0f};
 
-constexpr float DEFAULT_YAW{-90.0f};
+constexpr float DEFAULT_YAW{0.0f};
 constexpr float DEFAULT_PITCH{0.0f};
 
-constexpr Vec3 INITIAL_POS{5.0f, 5.0f, 5.0f};
-constexpr Vec3 INITIAL_TARGET{0.0f, 0.0f, -1.0f};
+constexpr Vec3 INITIAL_POS{0.0f, 0.0f, -10.0f};
+constexpr Vec3 INITIAL_TARGET{0.0f, 00.0f, -1.0f};
 constexpr Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
 
 class Camera {
@@ -26,14 +27,16 @@ class Camera {
 	bool paused;
 
 	void ProcessKeyboard(GLFWwindow* window, Transform& translation, const float deltaTime);
-	void ProcessMouse(GLFWwindow* window, const double xpos, const double ypos);
+	void ProcessMouse(GLFWwindow* window, RenderMode renderMode, const double xpos, const double ypos);
 
 public:
 	Camera();
 
 	Vec3 GetRight() const;
 	Mat4 LookAt() const;
+
 	Mat4 Perspective(const float aspect) const;
+	Mat4 Orthographic() const;
 
 	inline Vec3 Pos() const { return pos; }
 	inline float MoveSpeed() const { return moveSpeed; }
@@ -57,5 +60,5 @@ public:
 	inline void SetX(const float x) { lastX = x; }
 	inline void SetY(const float y) { lastY = y; }
 
-	void ProcessInputs(GLFWwindow* window, Transform& translation, const float deltaTime);
+	void ProcessInputs(GLFWwindow* window, Transform& translation, RenderMode renderMode, const float deltaTime);
 };

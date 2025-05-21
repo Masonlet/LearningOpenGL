@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cstdio>
 
-bool createTriangle(Mesh& mesh, const float  width, const float  height) {
+bool createTriangle(Mesh& mesh, const Vec2& size) {
 	unsigned int vertexCount{3}, triangleCount{1};
 
 	mesh.numVerticesToDraw = vertexCount;
@@ -11,9 +11,9 @@ bool createTriangle(Mesh& mesh, const float  width, const float  height) {
 	if (!mesh.allocate(vertexCount, triangleCount)) 
 		return {};
 	
-	mesh.vertices[0] = { {-0.5f * width, -0.5f * height, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
-	mesh.vertices[1] = { {0.5f * width, -0.5f * height, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
-	mesh.vertices[2] = { {0.0f * width, 0.5f * height, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
+	mesh.vertices[0] = { {-0.5f * size.x, -0.5f * size.y, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
+	mesh.vertices[1] = { {0.5f * size.x, -0.5f * size.y, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
+	mesh.vertices[2] = { {0.0f * size.x, 0.5f * size.y, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
 
 	mesh.indices[0] = 0;
 	mesh.indices[1] = 1;
@@ -24,7 +24,7 @@ bool createTriangle(Mesh& mesh, const float  width, const float  height) {
 	return true;
 }
 
-bool createSquare(Mesh& mesh, const float  width, const float  height) {
+bool createSquare(Mesh& mesh, const Vec2& size) {
 	unsigned int vertexCount{4}, triangleCount{2};
 
 	if (!mesh.allocate(vertexCount, triangleCount))
@@ -33,10 +33,10 @@ bool createSquare(Mesh& mesh, const float  width, const float  height) {
 	mesh.numVerticesToDraw = vertexCount;
 	mesh.numIndicesToDraw = triangleCount * 3;
 
-	mesh.vertices[0] = { {-0.5f * width, -0.5f * height, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR }; 
-	mesh.vertices[1] = { { 0.5f * width, -0.5f * height, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR }; 
-	mesh.vertices[2] = { { 0.5f * width,  0.5f * height, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR }; 
-	mesh.vertices[3] = { {-0.5f * width,  0.5f * height, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
+	mesh.vertices[0] = { {-0.5f * size.x, -0.5f * size.y, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR }; 
+	mesh.vertices[1] = { { 0.5f * size.x, -0.5f * size.y, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR }; 
+	mesh.vertices[2] = { { 0.5f * size.x,  0.5f * size.y, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR }; 
+	mesh.vertices[3] = { {-0.5f * size.x,  0.5f * size.y, 0.0f}, DEFAULT_NORMAL, DEFAULT_COLOUR };
 
 	mesh.indices[0] = 0;
 	mesh.indices[1] = 1; 
@@ -49,11 +49,11 @@ bool createSquare(Mesh& mesh, const float  width, const float  height) {
 
 	return true;
 }
-bool createSquareGrid(Model* models, int startIndex, int count, float spacing, const Vec3& rotation, const float width, const float height) {
+bool createSquareGrid(Model* models, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec2& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
 	Mesh* squareMesh = new Mesh();
-	if (!createSquare(*squareMesh, width, height)) 
+	if (!createSquare(*squareMesh, size)) 
 		return false;
 
 	squareMesh->upload();
@@ -66,14 +66,14 @@ bool createSquareGrid(Model* models, int startIndex, int count, float spacing, c
 		size_t col = i % gridSize;
 
 		models[i].mesh = squareMesh;
-		models[i].transform.position = { spacing * col, spacing * row , 0.0f};
+		models[i].transform.position = { spacing.x * col, spacing.y * row , 0.0f};
 		models[i].transform.rotation = rotation;
 	}
 
 	return true;
 }
 
-bool createCube(Mesh& mesh, const float  width, const float  height, const float depth) {
+bool createCube(Mesh& mesh, const Vec3& size) {
 	unsigned int vertexCount{24}, triangleCount{12};
 
 	if (!mesh.allocate(vertexCount, triangleCount))
@@ -82,9 +82,9 @@ bool createCube(Mesh& mesh, const float  width, const float  height, const float
 	mesh.numVerticesToDraw = vertexCount;
 	mesh.numIndicesToDraw = triangleCount * 3;
 
-	const float cubeWidth = width * 0.5f;
-	const float cubeHeight = height * 0.5f;
-	const float cubeDepth = depth * 0.5f;
+	const float cubeWidth = size.x * 0.5f;
+	const float cubeHeight = size.y * 0.5f;
+	const float cubeDepth = size.z * 0.5f;
 	mesh.vertices[0] = {{-cubeWidth, -cubeHeight, cubeDepth}, DEFAULT_NORMAL, DEFAULT_COLOUR}; 
 	mesh.vertices[1] = {{ cubeWidth, -cubeHeight, cubeDepth}, DEFAULT_NORMAL, DEFAULT_COLOUR}; 
 	mesh.vertices[2] = {{ cubeWidth,  cubeHeight, cubeDepth}, DEFAULT_NORMAL, DEFAULT_COLOUR};
@@ -160,11 +160,11 @@ bool createCube(Mesh& mesh, const float  width, const float  height, const float
 	mesh.upload();
 	return true;
 }
-bool createCubeGrid(Model* models, int startIndex, int count, float spacing, const Vec3& rotation, const float width, const float height, const float depth) {
+bool createCubeGrid(Model* models, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
 	Mesh* cubeMesh = new Mesh();
-	if (!createCube(*cubeMesh, width, height, depth))
+	if (!createCube(*cubeMesh, size))
 		return false;
 
 	cubeMesh->upload();
@@ -173,24 +173,24 @@ bool createCubeGrid(Model* models, int startIndex, int count, float spacing, con
 		size_t col = i % gridSize;
 
 		models[i].mesh = cubeMesh;
-		models[i].transform.position = { spacing * col, 0.0f, spacing * row };
+		models[i].transform.position = { spacing.x * col, 0.0f, spacing.y * row };
 		models[i].transform.rotation = rotation; 
 	}
 
 	return true;
 }
 
-bool createMeshPath(Mesh* mesh, const char* path, const char* type, const bool hasNormals) {
+bool createMeshPath(Mesh* mesh, const char* path, const char* type, const Vec3& scale, const bool hasNormals) {
 	if (type[0] == 'P' && type[1] == 'L' && type[2] == 'Y')
 		return mesh->createPLY(path, hasNormals);
 
 	return false;
 }
-bool createModelGrid(Model* models, const char* path, int startIndex, int count, float spacing, const bool hasNormals, const Vec3& rotation) {
+bool createModelGrid(Model* models, const char* path, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& scale, const bool hasNormals) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	
 	Mesh* modelMesh = new Mesh();
-	if (!createMeshPath(modelMesh, path, "PLY", hasNormals)) {
+	if (!createMeshPath(modelMesh, path, "PLY", scale, hasNormals)) {
 		fprintf(stderr, "Failed to load base model from path: %s\n", path);
 		return false;
 	}
@@ -201,7 +201,8 @@ bool createModelGrid(Model* models, const char* path, int startIndex, int count,
 		size_t col = i % gridSize;
 
 		models[i].mesh = modelMesh;
-		models[i].transform.position = { spacing * col, 0.0f, spacing * row };
+		models[i].transform.scale(scale);
+		models[i].transform.position = { spacing.x * col, 0.0f, spacing.y * row };
 		models[i].transform.rotation = rotation;
 	}
 

@@ -10,14 +10,14 @@ class Engine {
 	GLFWwindow* window;
 	Camera camera;
 	Model* models;
+	RenderMode mode;
 
-	unsigned int height, width, renderType;
+	unsigned int height, width;
 	unsigned int program, mvpLocation;
-
 	bool good;
 
 public:
-	Engine();
+	Engine(RenderMode renderMode = RenderMode::basic3D);
 	~Engine();
 
 	void Run(const char* sceneName = "Default");

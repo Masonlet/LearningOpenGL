@@ -30,6 +30,4 @@ struct Model {
 
 	Model(const Model& b) = delete;
 	Model& operator=(const Model& b) = delete;
-
-	void createModelFromBuffers();
 };
