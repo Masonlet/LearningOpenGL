@@ -2,5 +2,5 @@
 
 int main() {
 	Engine engine;
-	engine.Run();
+	engine.Run("Space");
 }

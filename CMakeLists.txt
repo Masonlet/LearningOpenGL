@@ -10,11 +10,11 @@ else()
     set(ARCH_DIR "x86")
 endif()
 
-# Add the correct GLFW include and lib paths
+# Correct GLFW include and lib paths
 include_directories(${CMAKE_SOURCE_DIR}/${ARCH_DIR}/inc)
 link_directories(${CMAKE_SOURCE_DIR}/${ARCH_DIR}/lib)
 
-# Your own include structure
+# Include structure
 set(INC_DIR "${CMAKE_SOURCE_DIR}/inc")
 include_directories(${INC_DIR})
 include_directories(${INC_DIR}/Core)
