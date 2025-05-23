@@ -8,12 +8,13 @@ constexpr Vec3 DEFAULT_NORMAL{0.0f, 0.0f, 0.0f};
 constexpr Vec3 DEFAULT_COLOUR{0.0f, 1.0f, 0.0f};
 
 struct Mesh {
-	Vertex* vertices{nullptr};
-	unsigned int* indices{nullptr};
+	Vertex* vertices;
+	unsigned int* indices;
 
-	unsigned int numIndicesToDraw{0}, numVerticesToDraw{0}, sizeOfVertexArrayInBytes{0};
-	unsigned int vao{0}, vbo{0}, ebo{0};
+	unsigned int numIndicesToDraw, numVerticesToDraw, sizeOfVertexArrayInBytes;
+	unsigned int vao, vbo, ebo;
 
+	Mesh();
 	~Mesh();
 
 	bool createPLY(const char* path, const bool hasNormals);

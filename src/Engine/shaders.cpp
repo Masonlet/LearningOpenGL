@@ -34,10 +34,11 @@ unsigned int createArray(const unsigned int vbo, const unsigned int ebo) {
 	glBindVertexArray(0);
 	return vao;
 }
-static unsigned int createShader(const unsigned int type, const char* text) {
+
+static unsigned int createShader(const unsigned int type, const unsigned char* text) {
 	const unsigned int shader = glCreateShader(type);
 
-    glShaderSource(shader, 1, &text, nullptr);
+    glShaderSource(shader, 1, reinterpret_cast<const char**>(&text), nullptr);
     glCompileShader(shader);
 
 	int success{0};
@@ -79,9 +80,21 @@ static unsigned int createProgram(const unsigned int vertex_shader, const unsign
 }
 
 unsigned int initializeShaders() {
-	const unsigned int vertex_shader = createShader(GL_VERTEX_SHADER, VERTEX_SHADER_SOURCE);
-	const unsigned int fragment_shader = createShader(GL_FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
-	if (vertex_shader == 0 || fragment_shader == 0)
+	unsigned char* vertexShader, *fragmentShader;
+	size_t discard;
+
+	if (!loadFile(vertexShader, "Assets/Shaders/vertex_shader.glsl", discard)) 
+		fprintf(stderr, "Failed to load vertex shader");
+
+	const unsigned int vertex_shader = createShader(GL_VERTEX_SHADER, vertexShader);
+	if (vertex_shader == 0)
+		return 0;
+
+	if (!loadFile(fragmentShader, "Assets/Shaders/fragment_shader.glsl", discard)) 
+		fprintf(stderr, "Failed to load fragment shader");
+
+	const unsigned int fragment_shader = createShader(GL_FRAGMENT_SHADER, fragmentShader);
+	if (fragment_shader == 0)
 		return 0;
 
 	unsigned int program = createProgram(vertex_shader, fragment_shader);

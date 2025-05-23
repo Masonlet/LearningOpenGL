@@ -1,5 +1,4 @@
 #include "engine.hpp"
-
 #include "scene.hpp"
 #include <cstdio>
 
@@ -79,7 +78,7 @@ void Engine::Run(const char* sceneName) {
 #ifndef NDEBUG
 	fprintf(stderr,"Create Scene Start Time: %f\n", glfwGetTime());
 #endif
-	Scene* scene = createSceneFromName(sceneName);
+	Scene* scene = createSceneFromName(reinterpret_cast<const unsigned char*>(sceneName));
 	if (!scene) {
 		fprintf(stderr, "Scene not found: %s\n", sceneName);
 		return;
@@ -92,7 +91,7 @@ void Engine::Run(const char* sceneName) {
 	fprintf(stderr,"Create Scene Complete Time: %f\n", glfwGetTime());
 #endif
 	
-	Renderer renderer(window, models, scene, program, mvpLocation, width, height);
+	Renderer renderer(window, models, scene, mode, program, mvpLocation, width, height);
 	glfwSetWindowUserPointer(window, &renderer);
 
 	setCallbacks(window);

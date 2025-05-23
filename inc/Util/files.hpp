@@ -1,5 +1,5 @@
 #pragma once
 
-bool loadFile(char*& outBuffer, const char* path, size_t& sizeOut);
+bool loadFile(unsigned char*& outBuffer, const char* path, size_t& sizeOut);
 
 

@@ -18,4 +18,4 @@ public:
 	virtual RenderMode renderMode() const { return RenderMode::basic3D; }
 };
 
-Scene* createSceneFromName(const char* name);
+Scene* createSceneFromName(const unsigned char* name);

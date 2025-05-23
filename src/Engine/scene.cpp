@@ -1,5 +1,5 @@
 #include "scene.hpp"
-#include "generator.hpp"
+#include "factory.hpp"
 #include "parser.hpp"
 #include <cstdio>
 
@@ -25,7 +25,7 @@ public:
 };
 class CubeDemo : public Scene {
 	bool loaded{false};
-	const unsigned int count{10000};
+	const unsigned int count{5000};
 
 public:
 	void Load(Model* models) override {
@@ -71,7 +71,7 @@ public:
 };
 class CarDemo : public Scene {
 	bool loaded{false};
-	const unsigned int count{2500};
+	const unsigned int count{500};
 
 public:
 	void Load(Model* models) override {
@@ -93,7 +93,7 @@ public:
 	inline unsigned int objectCount() const { return count; }
 	RenderMode renderMode() const override { return RenderMode::basic3D; }
 };
-class basic2DPlaneDemo : public Scene {
+class PlaneDemo : public Scene {
 	bool loaded{false};
 	const unsigned int count{2500};
 
@@ -113,15 +113,15 @@ public:
 
 	inline bool isLoaded() const { return loaded; }
 	inline unsigned int objectCount() const { return count; }
-	RenderMode renderMode() const override { return RenderMode::basic2D; }
+	RenderMode renderMode() const override { return RenderMode::basic3D; }
 };
 
-Scene* createSceneFromName(const char* name) {
+Scene* createSceneFromName(const unsigned char* name) {
 	if (strEquals(name, "Default")) return new DefaultDemo();
 	else if (strEquals(name, "Cube")) return new CubeDemo();
 	else if (strEquals(name, "Space")) return new SpaceDemo();
 	else if (strEquals(name, "Car")) return new CarDemo();
-	else if (strEquals(name, "2DPlane")) return new basic2DPlaneDemo();
+	else if (strEquals(name, "Plane")) return new PlaneDemo();
 
 	return nullptr;
 }

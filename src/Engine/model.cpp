@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <cmath>
 
-static _forceinline const char* parseMeshVertices(Mesh& mesh, const char* p, unsigned int numVertices, bool hasNormals = false) {
+static _forceinline const unsigned char* parseMeshVertices(Mesh& mesh, const unsigned char* p, unsigned int numVertices, bool hasNormals = false) {
 	for (unsigned int i{0}; i < numVertices; i++) {
 		p = parseFloat(p, mesh.vertices[i].pos.x);
 		p = parseFloat(p, mesh.vertices[i].pos.y);
@@ -26,10 +26,10 @@ static _forceinline const char* parseMeshVertices(Mesh& mesh, const char* p, uns
 
 	return p;
 }
-static _forceinline const char* parseMeshIndices(Mesh& mesh, const char* p, unsigned int numTriangles) {
+static _forceinline const unsigned char* parseMeshIndices(Mesh& mesh, const unsigned char* p, unsigned int numTriangles) {
 	for (unsigned int i = 0, b = 0; i < numTriangles; i++, b += 3) {
 		unsigned int vertices{0};
-		p = parseUInt(p, vertices);
+		p = parseStringUInt(p, vertices);
 
 		if (vertices != 3) {
 			fprintf(stderr, "Error: Triangle %u has %u vertices (expected 3)\n", i, vertices);
@@ -37,15 +37,16 @@ static _forceinline const char* parseMeshIndices(Mesh& mesh, const char* p, unsi
 			return nullptr;
 		}
 
-		p = parseUInt(p, mesh.indices[b + 0]);
-		p = parseUInt(p, mesh.indices[b + 1]);
-		p = parseUInt(p, mesh.indices[b + 2]);
+		p = parseStringUInt(p, mesh.indices[b + 0]);
+		p = parseStringUInt(p, mesh.indices[b + 1]);
+		p = parseStringUInt(p, mesh.indices[b + 2]);
 		p = skipToNextLine(p);
 	}
 
 	return p;
 }
 
+Mesh::Mesh() : vertices{nullptr}, indices{nullptr}, numIndicesToDraw{0}, numVerticesToDraw{0}, sizeOfVertexArrayInBytes{0}, vao{0}, vbo{0}, ebo{0} {}
 Mesh::~Mesh() {
 	if (vertices) delete[] vertices;
 	if (indices) delete[] indices;
@@ -58,6 +59,7 @@ Mesh::~Mesh() {
 	indices = nullptr;
 	vao = vbo = ebo = 0;
 }
+
 void Mesh::upload() {
 	if (vao && vbo && ebo) return;
 
@@ -78,7 +80,7 @@ bool Mesh::allocate(unsigned int vertexCount, unsigned int triangleCount) {
 	return true;
 }
 bool Mesh::createPLY(const char* path, const bool hasNormals) {
-	char* buffer{};
+	unsigned char* buffer{};
 	size_t discard;
 
 	if (!loadFile(buffer, path, discard)) {
@@ -87,7 +89,7 @@ bool Mesh::createPLY(const char* path, const bool hasNormals) {
 	}
 	
 	unsigned int vertexCount{0}, triangleCount{0};
-	const char* cursor = parseHeader(buffer, vertexCount, triangleCount);
+	const unsigned char* cursor = parseHeader(buffer, vertexCount, triangleCount);
 	if (vertexCount == 0 || triangleCount == 0 || !cursor) {
 		fprintf(stderr, "Invalid Number / Formatting of Vertices / Triangles\n");
 		return false;
@@ -97,8 +99,6 @@ bool Mesh::createPLY(const char* path, const bool hasNormals) {
 		return false;
 	}
 
-	numVerticesToDraw = vertexCount;
-	numIndicesToDraw = triangleCount * 3;
 	cursor = parseMeshVertices(*this, cursor, vertexCount, hasNormals);
 
 	if (!cursor) {
@@ -112,11 +112,12 @@ bool Mesh::createPLY(const char* path, const bool hasNormals) {
 		return false;
 	}
 
+	numVerticesToDraw = vertexCount;
+	numIndicesToDraw = triangleCount * 3;
 	return true;
 }
 
 Model::Model() : mesh{nullptr} {}
-
 Model::~Model() {
 	delete mesh;
 }

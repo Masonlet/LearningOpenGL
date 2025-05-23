@@ -4,7 +4,9 @@
 #include "shaders.hpp"
 #include "render.hpp"
 #include "callbacks.hpp"
-#include "generator.hpp"
+#include "factory.hpp"
+
+
 
 class Engine {
 	GLFWwindow* window;

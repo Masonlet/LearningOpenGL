@@ -3,8 +3,10 @@
 
 #include <cstdio>
 
-Renderer::Renderer(GLFWwindow* window, Model* models, Scene* scene, unsigned int program, unsigned int mvpLocation, unsigned int width, unsigned int height)
-	: window(window), models(models), scene(scene), program(program), mvpLocation(mvpLocation), width(width), height(height), aspect(static_cast<float>(width) / static_cast<float>(height)), lastTime(static_cast<float>(glfwGetTime())), deltaTime(1.0f / 60.0f) {
+Renderer::Renderer() 
+	: window(nullptr), models(nullptr), scene(nullptr), program(0), mvpLocation(0), currentProgram(0), currentVAO(0), currentModel(0), currentIndex(0), aspect(0.0f), deltaTime(0.0f), lastTime(0.0f), lastYaw(0.0f), lastPitch(0.0f), width(0), height(0), paused(false), wireframe(false), mouseLocked(false) {}
+Renderer::Renderer(GLFWwindow* window, Model* models, Scene* scene, RenderMode& mode, unsigned int program, unsigned int mvpLocation, unsigned int width, unsigned int height)
+	: window(window), models(models), scene(scene), mode(mode), program(program), mvpLocation(mvpLocation), currentProgram(0), currentVAO(0), currentModel(0), currentIndex(0), width(width), height(height), aspect(static_cast<float>(width) / static_cast<float>(height)), lastTime(static_cast<float>(glfwGetTime())), deltaTime(1.0f / 60.0f), lastYaw(0.0f), lastPitch(0.0f), paused(false), wireframe(false), mouseLocked(false) {
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -31,7 +33,7 @@ void Renderer::update() {
 	}
 
 	if (!camera.Paused() && scene && scene->isLoaded()) {
-		camera.ProcessInputs(window, models[currentIndex].transform, scene->renderMode(), deltaTime);
+		camera.ProcessInputs(window, models[currentIndex].transform, mode, deltaTime);
 	}
 }
 
@@ -45,10 +47,6 @@ void Renderer::draw() {
 
 	if (currentProgram != program) {
 		glUseProgram(program);
-		GLenum err;
-		while ((err = glGetError()) != GL_NO_ERROR) {
-			fprintf(stderr, "currentProgram error: %x\n", err);
-		}
 		currentProgram = program;
 	}
 
@@ -70,6 +68,7 @@ void Renderer::draw() {
 		while ((err = glGetError()) != GL_NO_ERROR) {
 			fprintf(stderr, "MVP Location: %d\n", mvpLocation);
 			fprintf(stderr, "OpenGL error: %x\n", err);
+			return;
 		}
 
 		const Mat4 modelMatrix{Mat4::modelMatrix(models[i].transform)};

@@ -1,4 +1,4 @@
-#include "generator.hpp"
+#include "factory.hpp"
 #include <cmath>
 #include <cstdio>
 
@@ -20,7 +20,6 @@ bool createTriangle(Mesh& mesh, const Vec2& size) {
 	mesh.indices[2] = 2;
 
 	mesh.upload();
-
 	return true;
 }
 
@@ -46,28 +45,25 @@ bool createSquare(Mesh& mesh, const Vec2& size) {
 	mesh.indices[5] = 0; 
 
 	mesh.upload();
-
 	return true;
 }
-bool createSquareGrid(Model* models, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec2& size) {
+bool createSquareGrid(Model* models, size_t startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec2& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
 	Mesh* squareMesh = new Mesh();
-	if (!createSquare(*squareMesh, size)) 
+	if (!createSquare(*squareMesh, size) || squareMesh->vao == 0) {
+		delete squareMesh;
 		return false;
-
-	squareMesh->upload();
-
-	if (squareMesh == nullptr || squareMesh->vao == 0) 
-		return false;
+	}
 
 	for (size_t i = 0; i < count; i++) {
+		size_t index = startIndex + i;
 		size_t row = i / gridSize; 
 		size_t col = i % gridSize;
 
-		models[i].mesh = squareMesh;
-		models[i].transform.position = { spacing.x * col, spacing.y * row , 0.0f};
-		models[i].transform.rotation = rotation;
+		models[index].mesh = squareMesh;
+		models[index].transform.position = { spacing.x * col, spacing.y * row , 0.0f};
+		models[index].transform.rotation = rotation;
 	}
 
 	return true;
@@ -160,33 +156,36 @@ bool createCube(Mesh& mesh, const Vec3& size) {
 	mesh.upload();
 	return true;
 }
-bool createCubeGrid(Model* models, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& size) {
+bool createCubeGrid(Model* models, size_t startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
 	Mesh* cubeMesh = new Mesh();
 	if (!createCube(*cubeMesh, size))
 		return false;
 
-	cubeMesh->upload();
 	for (size_t i = 0; i < count; i++) {
+		size_t index = startIndex + i;
 		size_t row = i / gridSize; 
 		size_t col = i % gridSize;
 
-		models[i].mesh = cubeMesh;
-		models[i].transform.position = { spacing.x * col, 0.0f, spacing.y * row };
-		models[i].transform.rotation = rotation; 
+		models[index].mesh = cubeMesh;
+		models[index].transform.position = { spacing.x * col, 0.0f, spacing.y * row };
+		models[index].transform.rotation = rotation; 
 	}
 
 	return true;
 }
 
 bool createMeshPath(Mesh* mesh, const char* path, const char* type, const Vec3& scale, const bool hasNormals) {
-	if (type[0] == 'P' && type[1] == 'L' && type[2] == 'Y')
-		return mesh->createPLY(path, hasNormals);
+	if (type[0] == 'P' && type[1] == 'L' && type[2] == 'Y') {
+		mesh->createPLY(path, hasNormals);
+		mesh->upload();
+		return mesh;
+	}
 
 	return false;
 }
-bool createModelGrid(Model* models, const char* path, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& scale, const bool hasNormals) {
+bool createModelGrid(Model* models, const char* path, size_t startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& scale, const bool hasNormals) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	
 	Mesh* modelMesh = new Mesh();
@@ -195,8 +194,8 @@ bool createModelGrid(Model* models, const char* path, int startIndex, int count,
 		return false;
 	}
 
-	modelMesh->upload();
 	for (size_t i = 0; i < count; ++i) {
+		size_t index = startIndex + i;
 		size_t row = i / gridSize;
 		size_t col = i % gridSize;
 

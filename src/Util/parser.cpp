@@ -1,6 +1,6 @@
 #include "parser.hpp"
 
-const int strEquals(const char* a, const char* b) {
+const unsigned int strEquals(const unsigned char* a, const char* b) {
 	while (*a && *b) {
 		if (*a != *b)
 			return 0;
@@ -10,17 +10,17 @@ const int strEquals(const char* a, const char* b) {
 	return *a == *b;
 }
 
-const char* skipToNextLine(const char* p) {
+const unsigned char* skipToNextLine(const unsigned char* p) {
 	while (*p != '\n' && *p != '\0') ++p;
 	return (*p == '\n') ? p + 1 : p;
 }
-const char* skipWhitespace(const char* p) {
+const unsigned char* skipWhitespace(const unsigned char* p) {
 	while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') ++p;
 	return p;
 }
 
-const char* parseToken(const char* p, char* out, const size_t maxLength) {
-	skipWhitespace(p);
+const unsigned char* parseToken(const unsigned char* p, unsigned char* out, const size_t maxLength) {
+	p = skipWhitespace(p);
 
 	size_t i = 0;
 	while (*p && *p != ' ' && *p != '\t' && *p != '\r' && i < maxLength - 1)
@@ -30,7 +30,7 @@ const char* parseToken(const char* p, char* out, const size_t maxLength) {
 
 	return p;
 }
-const char* parseFloat(const char* p, float& out) {
+const unsigned char* parseFloat(const unsigned char* p, float& out) {
 	p = skipWhitespace(p);
 	out = 0.0f;
 	bool neg = false;
@@ -59,7 +59,8 @@ const char* parseFloat(const char* p, float& out) {
 	if (neg) out = -out;
 	return p;
 }
-const char* parseUInt(const char* p, unsigned int& out) {
+
+const unsigned char* parseStringUInt(const unsigned char* p, unsigned int& out) {
 	p = skipWhitespace(p);
 	out = 0;
 
@@ -72,8 +73,22 @@ const char* parseUInt(const char* p, unsigned int& out) {
 
 	return p;
 }
+const unsigned int parseBinaryUINT(unsigned char* buffer) {
+	/* bit shifting <<
+	* x 00000001 
+	* << becomes,
+	* x 00000010
+	*/
 
-const char* parseHeader(const char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut) {
+	/* bitwise or |
+	* x	    00000011
+	* y	    00000110
+	* x | y	00000111
+	*/
+	return (buffer[0] << 24 | buffer[1] << 16 | buffer[2] << 8 | buffer[3]);
+}
+
+const unsigned char* parseHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut) {
 	while(*p){
 		p = skipWhitespace(p);
 
@@ -84,11 +99,11 @@ const char* parseHeader(const char* p, unsigned int& numVerticesOut, unsigned in
 
 				if (p[0] == 'v' && p[1] == 'e' && p[2] == 'r' && p[3] == 't' && p[4] == 'e' && p[5] == 'x'  && (p[6]== ' ' || p[6] == '\t')) {
 					p += 6;
-					p = parseUInt(p, numVerticesOut);
+					p = parseStringUInt(p, numVerticesOut);
 				} 
 				else if (p[0] == 'f' && p[1] == 'a' && p[2] == 'c' && p[3] == 'e' && (p[4]== ' ' || p[4] == '\t')) {
 					p += 4;
-					p = parseUInt(p, numTrianglesOut);
+					p = parseStringUInt(p, numTrianglesOut);
 				} 
 			}
 			else if (p[1] == 'n' && p[2] == 'd' && p[3] == '_' && p[4] == 'h' && p[5] == 'e'  && p[6] == 'a' && p[7] == 'd' && p[8] == 'e' && p[9] == 'r') {
