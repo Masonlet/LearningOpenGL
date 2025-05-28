@@ -1,5 +1,6 @@
 #include "scene.hpp"
 #include "Mat4.hpp"
+#include "factory.hpp"
 
 class DefaultDemo : public Scene {
 	bool loaded{false};
@@ -38,11 +39,32 @@ public:
 	}
 	
 	inline bool isLoaded() const { return loaded; }
-	unsigned int objectCount() const { return count; }
+};
+class CubeDemo : public Scene {
+	bool loaded{false};
+	const unsigned int count{5000};
+
+public:
+	void Load(Engine& engine) override {
+		constexpr Vec3 rotation{0.0f, 0.0f, 0.0f};
+		constexpr Vec3 scale{0.25f, 0.25f, 0.25f};
+		constexpr Vec2 spacing{1.0f * scale.x, 1.0f * scale.y};
+
+		if (!createCubeGrid(engine, "cube", 0, count, spacing, rotation, scale)) {
+			fprintf(stderr, "Failed to create CubeDemo cubeGrid\n");
+			loaded = false;
+			return;
+		}
+
+		loaded = true;
+	}
+
+	inline bool isLoaded() const override { return loaded; }
 };
 
 Scene* createSceneFromName(const std::string& name) {
 	if (name == "Default") return new DefaultDemo();
+	else if (name == "Cube") return new CubeDemo();
 
 	return nullptr;
 }

@@ -31,6 +31,8 @@ struct ModelDrawInfo {
 
 class VAOManager {
 public:
+	bool LoadPrimitiveIntoVAO(ModelDrawInfo& drawInfo, unsigned int shaderProgramID);
+	bool LoadModelFromFile(const std::string& path, ModelDrawInfo& drawInfo);
 	bool LoadModelIntoVAO(std::string fileName, ModelDrawInfo& drawInfo, unsigned int shaderProgramID);
 
 	bool FindDrawInfoByModelName(std::string fileName, ModelDrawInfo& drawInfo);
@@ -40,7 +42,7 @@ public:
 private:
 	std::map<std::string, ModelDrawInfo> modelName_to_VAOID;
 
-	bool LoadTheModel(const std::string& path, ModelDrawInfo& drawInfo);
+	bool UploadToGPU(ModelDrawInfo& info);
 
 	std::string lastErrorString;
 	void AppendTextToLastError(std::string text, bool addNewLineBefore = true);

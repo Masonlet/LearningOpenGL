@@ -15,8 +15,12 @@ public:
 	~Engine();
 
 	bool getWireframe() const { return wireframe; }
+	unsigned int getProgram() const { return program; }
+	VAOManager* getMeshManager() const { return meshManager; }
 
 	bool loadModel(const std::string& name, const std::string& path, const Mat4& transform);
+	void addModelInfo(const std::string& name, const ModelDrawInfo& info);
+	bool addInstance(const std::string& name, const std::string& path, const Mat4& transform);
 
 	void updateWireframe();
 	void updateAspect(unsigned int width, unsigned int height);

@@ -5,6 +5,9 @@ int main() {
 
 	/*Scene
 	* Default (Empty)
+	* Cube 
 	*/
-	engine.run();
+	engine.run("Cube");
+
+	return 0;
 }

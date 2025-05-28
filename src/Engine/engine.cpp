@@ -1,6 +1,5 @@
 #include "engine.hpp"
 #include "init.hpp"
-#include "render.hpp"
 #include "callbacks.hpp"
 #include "mat4.hpp"
 #include "scene.hpp"
@@ -42,6 +41,7 @@ void Engine::setupGLState() {
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 }
+
 bool Engine::loadModel(const std::string& name, const std::string& path, const Mat4& transform) {
 	if (modelInstances.find(name) != modelInstances.end()) {
 		printf("Name already used: %s\n", path.c_str());
@@ -61,7 +61,25 @@ bool Engine::loadModel(const std::string& name, const std::string& path, const M
 	
 	modelInstances[name] = {path, transform};
 	return true;
-}	  
+}	
+void Engine::addModelInfo(const std::string& name, const ModelDrawInfo& info) {
+	modelInfos[name] = info;
+}
+bool Engine::addInstance(const std::string& name, const std::string& path, const Mat4& transform) {
+	if (modelInstances.find(name) != modelInstances.end()) {
+		printf("[WARN] Instance name already used: %s\n", name.c_str());
+		return false;
+	}
+
+	if (modelInfos.find(path) == modelInfos.end()) {
+		printf("[ERROR] Cannot add instance: mesh not preloaded: %s\n", path.c_str());
+		return false;
+	}
+
+	modelInstances[name] = { path, transform };
+	return true;
+}
+
 Engine::Engine() : window{nullptr}, shaderManager{new ShaderManager()}, meshManager{new VAOManager()}, mvpLocation{0}, program{0}, vertex_buffer{0}, currentProgram{0}, height { DEFAULT_HEIGHT }, width{DEFAULT_WIDTH}, deltaTime{0.0f}, lastTime{0.0f}, aspect{0.0f}, wireframe{false} {
 	window = initGL(width, height);
 	if (!window) {

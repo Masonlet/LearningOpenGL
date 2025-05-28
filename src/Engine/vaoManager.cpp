@@ -132,54 +132,24 @@ ModelDrawInfo::ModelDrawInfo() {
 	this->modelMatrix = Mat4::identity();
 }
 
+bool VAOManager::LoadPrimitiveIntoVAO(ModelDrawInfo& drawInfo, unsigned int shaderProgramID){
+	if (!UploadToGPU(drawInfo)) {
+		AppendTextToLastError("Failed to upload primitive to GPU", true);
+		return false;
+	}
+	
+	return true;
+}
 bool VAOManager::LoadModelIntoVAO(std::string fileName, ModelDrawInfo& drawInfo, unsigned int shaderProgramID) {
 	//Load the model from file (Do it here since if we cant load it theres no point in doing anything else)
 	drawInfo.meshName = fileName;
-	if (!this->LoadTheModel(fileName, drawInfo)) {
+	if (!this->LoadModelFromFile(fileName, drawInfo)) {
 		this->AppendTextToLastError("Didnt load model", true);
 		return false;
 	}
 	//Model is loaded and the vertices and indices are in the drawInfo struct
-	
-	//Create a VAO (Vertex Array Object), which will keep track of all the 'state' needed to draw from this buffer
-	//Ask OpenGL for a new buffer ID
-	glGenVertexArrays(1, &(drawInfo.VAO_ID));
 
-	//Bind the buffer: aka "make this the 'current' VAO buffer
-	glBindVertexArray(drawInfo.VAO_ID);
-
-	//Now ANY state that is related to vertex or index buffer and vertex attribute layout, is stored in the 'state' of the VAO
-	glGenBuffers(1, &(drawInfo.VertexBufferID));
-	glBindBuffer(GL_ARRAY_BUFFER, drawInfo.VertexBufferID);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * drawInfo.numVertices, drawInfo.vertices, GL_STATIC_DRAW);
-
-	//Copy the index buffer into the video card to create an index buffer
-	glGenBuffers(1, &(drawInfo.IndexBufferID));
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawInfo.IndexBufferID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * drawInfo.numIndices, drawInfo.indices, GL_STATIC_DRAW);
-
-	//Set the vertex attributes
-	unsigned int vpos_location = 0; //vPos program
-	unsigned int vcol_location = 1; //vCol program
-	unsigned int vnorm_location = 2; //vNorm program;
-
-	// Set the vertex attributes for this shader
-	glEnableVertexAttribArray(vpos_location); // vPos
-	glVertexAttribPointer( vpos_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ( void* )0);
-
-	glEnableVertexAttribArray(vcol_location); // vCol
-	glVertexAttribPointer( vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ( void* )( sizeof(float) * 3 ));
-
-	glEnableVertexAttribArray(vnorm_location);
-	glVertexAttribPointer(vnorm_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 6));
-
-	// Now that all the parts are set up, set the VAO to zero
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	this->modelName_to_VAOID[drawInfo.meshName] = drawInfo;
-	return true;
+	return UploadToGPU(drawInfo);
 }
 
 bool VAOManager::FindDrawInfoByModelName(std::string fileName, ModelDrawInfo& drawInfo) {
@@ -192,7 +162,7 @@ bool VAOManager::FindDrawInfoByModelName(std::string fileName, ModelDrawInfo& dr
 	return true;
 }
 
-bool VAOManager::LoadTheModel(const std::string& path, ModelDrawInfo& drawInfo) {
+bool VAOManager::LoadModelFromFile(const std::string& path, ModelDrawInfo& drawInfo) {
 	unsigned char* buffer{nullptr};
 	size_t fileSize{0};
 
@@ -226,6 +196,56 @@ bool VAOManager::LoadTheModel(const std::string& path, ModelDrawInfo& drawInfo) 
 	return true;
 }
 
+bool VAOManager::UploadToGPU(ModelDrawInfo& info) {
+	//Create a VAO (Vertex Array Object), which will keep track of all the 'state' needed to draw from this buffer
+	//Ask OpenGL for a new buffer ID
+	glGenVertexArrays(1, &(info.VAO_ID));
+
+	//Bind the buffer: aka "make this the 'current' VAO buffer
+	glBindVertexArray(info.VAO_ID);
+
+	//Now ANY state that is related to vertex or index buffer and vertex attribute layout, is stored in the 'state' of the VAO
+	glGenBuffers(1, &(info.VertexBufferID));
+	glBindBuffer(GL_ARRAY_BUFFER, info.VertexBufferID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * info.numVertices, info.vertices, GL_STATIC_DRAW);
+
+	//Copy the index buffer into the video card to create an index buffer
+	glGenBuffers(1, &(info.IndexBufferID));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info.IndexBufferID);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * info.numIndices, info.indices, GL_STATIC_DRAW);
+
+	//Set the vertex attributes
+	unsigned int vpos_location = 0; //vPos program
+	unsigned int vcol_location = 1; //vCol program
+	unsigned int vnorm_location = 2; //vNorm program;
+
+	// Set the vertex attributes for this shader
+	glEnableVertexAttribArray(vpos_location); // vPos
+	glVertexAttribPointer( vpos_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ( void* )0);
+
+	glEnableVertexAttribArray(vcol_location); // vCol
+	glVertexAttribPointer( vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), ( void* )( sizeof(float) * 3 ));
+
+	glEnableVertexAttribArray(vnorm_location);
+	glVertexAttribPointer(vnorm_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 6));
+
+	// Now that all the parts are set up, set the VAO to zero
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR) {
+		std::stringstream ss;
+		ss << "OpenGL Error in UploadToGPU: 0x" << std::hex << err;
+		this->AppendTextToLastError(ss.str(), true);
+		return false;
+	}
+
+	this->modelName_to_VAOID[info.meshName] = info;
+	return true;
+}
+
 std::string VAOManager::GetLastError(bool bAndClear) {
 	std::string theLastError = this->lastErrorString;
 	if (bAndClear) {
@@ -234,7 +254,6 @@ std::string VAOManager::GetLastError(bool bAndClear) {
 
 	return theLastError;
 }
-
 void VAOManager::AppendTextToLastError(std::string text, bool addNewLineBefore) {
 	std::stringstream ss;
 	ss << this->lastErrorString;
