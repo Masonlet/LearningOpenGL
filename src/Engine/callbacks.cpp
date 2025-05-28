@@ -1,47 +1,53 @@
 #include "callbacks.hpp"
-#include "render.hpp"
-#include <cstdio>
+#include "engine.hpp"
+#include <stdio.h>
 
 void error_callback(const int error, const char* description) {
 	fprintf(stderr, "Error: %s\n", description);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	if (!renderer) return;
+	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
+	if (!engine) return;
 	
 	if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, GLFW_TRUE);	
+		if (key == GLFW_KEY_ESCAPE) 
+			glfwSetWindowShouldClose(window, GLFW_TRUE);	
 		
 		if (key == GLFW_KEY_P) {
-			renderer->wireframe = !renderer->wireframe;
-			glPolygonMode(GL_FRONT_AND_BACK, renderer->wireframe ? GL_LINE : GL_FILL);
+			engine->updateWireframe();
+			glPolygonMode(GL_FRONT_AND_BACK, engine->getWireframe() ? GL_LINE : GL_FILL);
 		}
 
-		if (key == GLFW_KEY_SPACE) renderer->paused = !renderer->paused;
-
-		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-			renderer->mouseLocked = !renderer->mouseLocked;
-
-			int currentMode = glfwGetInputMode(window, GLFW_CURSOR);
-			glfwSetInputMode(window, GLFW_CURSOR, currentMode == GLFW_CURSOR_DISABLED ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+		if (key == GLFW_KEY_C) {
+			if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			else 
+				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 	}
-
-	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) renderer->currentIndex++;
-	if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) renderer->currentIndex = 0;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-	Renderer* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	if (!renderer) return;
+	static int lastWidth = 0;
+	static int lastHeight = 0;
+
+	if (width == lastWidth && height == lastHeight)
+		return;
+
+	lastWidth = width;
+	lastHeight = height;
+
+	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
+	if (!engine) return;
 	
+#ifndef NDEBUG
+	printf("[INFO] Framebuffer resized: %dx%d\n", width, height);
+#endif
+
+	if (width < 64) width = 64;
+	if (height < 64) height = 64;
+
+	engine->updateAspect(width, height);
 	glViewport(0, 0, width, height);
-
-	renderer->updateAspect(width, height);
-}
-
-void setCallbacks(GLFWwindow* window) {
-	glfwSetKeyCallback(window, key_callback);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 }

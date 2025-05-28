@@ -1,9 +1,10 @@
 #pragma once
-#include "Mat4.hpp"
-#include "Vec3.hpp"
-#include "Constants.hpp"
+
 #include "init.hpp"
-#include "scene.hpp"
+#include "Vec3.hpp"
+#include "mat4.hpp"
+
+#include <glad/glad.h> // If "GLFW_INCLUDE_NONE" was not defined this would need to be included before glfw3.h
 
 constexpr float MOVE_SPEED{25.0f};
 constexpr float CAMERA_SPEED{0.1f};
@@ -18,16 +19,16 @@ constexpr float DEFAULT_PITCH{0.0f};
 constexpr Vec3 INITIAL_POS{0.0f, 0.0f, -10.0f};
 constexpr Vec3 INITIAL_TARGET{0.0f, 00.0f, -1.0f};
 constexpr Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
-
-class Camera {
+	
+struct Camera {
 	float moveSpeed, mouseSpeed;
 	Vec3 pos, front, up;
 	float yaw, pitch;
 	float lastX, lastY;
 	bool paused;
 
-	void ProcessKeyboard(GLFWwindow* window, Transform& translation, const float deltaTime);
-	void ProcessMouse(GLFWwindow* window, RenderMode renderMode, const double xpos, const double ypos);
+	void ProcessMouse(GLFWwindow* window, const double xpos, const double ypos);
+	void ProcessKeyboard(GLFWwindow* window, const float deltaTime);
 
 public:
 	Camera();
@@ -36,7 +37,6 @@ public:
 	Mat4 LookAt() const;
 
 	Mat4 Perspective(const float aspect) const;
-	Mat4 Orthographic() const;
 
 	inline Vec3 Pos() const { return pos; }
 	inline float MoveSpeed() const { return moveSpeed; }
@@ -60,5 +60,5 @@ public:
 	inline void SetX(const float x) { lastX = x; }
 	inline void SetY(const float y) { lastY = y; }
 
-	void ProcessInputs(GLFWwindow* window, Transform& translation, RenderMode renderMode, const float deltaTime);
+	void ProcessInputs(GLFWwindow* window, const float deltaTime);
 };

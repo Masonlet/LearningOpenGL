@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Transform.hpp"
 
 struct Mat4 {
@@ -46,24 +48,9 @@ struct Mat4 {
 		return result;
 	}
 	inline bool operator==(const Mat4& b) const {
-		if (data[0] != b.data[0] ||
-			data[1] != b.data[1] ||
-			data[2] != b.data[2] ||
-			data[3] != b.data[3] ||
-			data[4] != b.data[4] ||
-			data[5] != b.data[5] ||
-			data[6] != b.data[6] ||
-			data[7] != b.data[7] ||
-			data[8] != b.data[8] ||
-			data[9] != b.data[9] ||
-			data[10] != b.data[10] ||
-			data[11] != b.data[11] ||
-			data[12] != b.data[12] ||
-			data[13] != b.data[13] ||
-			data[14] != b.data[14] ||
-			data[15] != b.data[15])
-			return false;
-
+		for (int i = 0; i < 16; ++i)
+			if (data[i] != b.data[i])
+				return false;
 		return true;
 	}
 };

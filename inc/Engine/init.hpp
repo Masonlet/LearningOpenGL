@@ -11,8 +11,5 @@ void cleanupGL(unsigned int program);
 
 GLFWwindow* initGL(unsigned int width, unsigned int height);
 
-void setCallbacks(GLFWwindow* window);
 
-void error_callback(const int error, const char* description);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 

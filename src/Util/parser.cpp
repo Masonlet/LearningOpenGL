@@ -1,6 +1,7 @@
 #include "parser.hpp"
+#include <string>
 
-const unsigned int strEquals(const unsigned char* a, const char* b) {
+const unsigned int strEquals(const unsigned char* a, const unsigned char* b) {
 	while (*a && *b) {
 		if (*a != *b)
 			return 0;
@@ -13,6 +14,11 @@ const unsigned int strEquals(const unsigned char* a, const char* b) {
 const unsigned char* skipToNextLine(const unsigned char* p) {
 	while (*p != '\n' && *p != '\0') ++p;
 	return (*p == '\n') ? p + 1 : p;
+}
+const unsigned char* skipToNextWord(const unsigned char* p) {
+	while (*p != '\0' && *p != ' ' && *p != '\t' && *p != '\n' && *p != '\r') ++p;
+	while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') ++p;
+	return p;
 }
 const unsigned char* skipWhitespace(const unsigned char* p) {
 	while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') ++p;
@@ -40,10 +46,11 @@ const unsigned char* parseFloat(const unsigned char* p, float& out) {
 		p++;
 	}
 
-	while (*p >= '0' && *p <= '9') {
+	//Parse Integer
+	while (*p >= '0' && *p <= '9') 
 		out = out * 10.0f + (*p++ - '0');
-	}
 
+	//Parse Fractional
 	if (*p == '.') {
 		p++;
 		float frac = 0.0f;
@@ -93,20 +100,24 @@ const unsigned char* parseHeader(const unsigned char* p, unsigned int& numVertic
 		p = skipWhitespace(p);
 
 		if (p[0] == 'e') {
-			if (p[1] == 'l' && p[2] == 'e' && p[3] == 'm' && p[4] == 'e' && p[5] == 'n' && p[6] == 't'  && (p[7]== ' ' || p[7] == '\t')) { //element
+			if (strncmp((const char*)p, "element", 7) == 0 && (p[7] == ' ' || p[7] == '\t')) { //element
 				p += 7;
 				p = skipWhitespace(p);
 
-				if (p[0] == 'v' && p[1] == 'e' && p[2] == 'r' && p[3] == 't' && p[4] == 'e' && p[5] == 'x'  && (p[6]== ' ' || p[6] == '\t')) {
+				if (strncmp((const char*)p, "vertex", 6) == 0 && (p[6] == ' ' || p[6] == '\t')) {
 					p += 6;
 					p = parseStringUInt(p, numVerticesOut);
-				} 
-				else if (p[0] == 'f' && p[1] == 'a' && p[2] == 'c' && p[3] == 'e' && (p[4]== ' ' || p[4] == '\t')) {
+				} else if (strncmp((const char*)p, "face", 4) == 0 && (p[4] == ' ' || p[4] == '\t')) {
 					p += 4;
 					p = parseStringUInt(p, numTrianglesOut);
-				} 
-			}
-			else if (p[1] == 'n' && p[2] == 'd' && p[3] == '_' && p[4] == 'h' && p[5] == 'e'  && p[6] == 'a' && p[7] == 'd' && p[8] == 'e' && p[9] == 'r') {
+				}
+			} else if (strncmp((const char*)p, "property", 8) == 0) {
+				p += 8;
+				p = skipWhitespace(p);
+
+				p = skipToNextWord(p);
+
+			} else if (strncmp((const char*)p, "end_header", 10) == 0) {
 				p = skipToNextLine(p);
 				break;
 			} 

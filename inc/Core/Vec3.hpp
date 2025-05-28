@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+Vec3
+* 3-Dimensional Floating Point Vector
+* float x, float y, float z
+*/
 struct Vec3 {
 	float x{0.0f}, y{0.0f}, z{0.0f};
 
