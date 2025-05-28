@@ -1,9 +1,9 @@
 #include "engine.hpp"
 #include "init.hpp"
 #include "render.hpp"
-#include "camera.hpp"
 #include "callbacks.hpp"
 #include "mat4.hpp"
+#include "scene.hpp"
 #include <cstdio>
 
 constexpr int DEFAULT_WIDTH{1920};
@@ -35,26 +35,37 @@ void Engine::setupShaders() {
 	}
 	
 }
-bool Engine::loadModel(const std::string& path, const Mat4& transform) {
-	if (modelInfos.find(path) != modelInfos.end()) {
-		printf("Model already loaded: %s\n", path.c_str());
+void Engine::setupGLState() {
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
+}
+bool Engine::loadModel(const std::string& name, const std::string& path, const Mat4& transform) {
+	if (modelInstances.find(name) != modelInstances.end()) {
+		printf("Name already used: %s\n", path.c_str());
 		return false;
 	}
 
-	ModelDrawInfo meshInfo;
-	if (!meshManager->LoadModelIntoVAO(path, meshInfo, program)) {
-		printf("Failed to load model into VAO: %s\n", path.c_str());
-		return false;
-	}	
+	if (modelInfos.find(path) == modelInfos.end()) {
+		ModelDrawInfo meshInfo;
 
-	modelInfos[path] = meshInfo;
-	modelTransforms[path] = transform;
+		if (!meshManager->LoadModelIntoVAO(path, meshInfo, program)) {
+			printf("Failed to load model into VAO: %s\n", path.c_str());
+			return false;
+		}	
+
+		modelInfos[path] = meshInfo;
+	}
+	
+	modelInstances[name] = {path, transform};
 	return true;
 }	  
 Engine::Engine() : window{nullptr}, shaderManager{new ShaderManager()}, meshManager{new VAOManager()}, mvpLocation{0}, program{0}, vertex_buffer{0}, currentProgram{0}, height { DEFAULT_HEIGHT }, width{DEFAULT_WIDTH}, deltaTime{0.0f}, lastTime{0.0f}, aspect{0.0f}, wireframe{false} {
 	window = initGL(width, height);
 	if (!window) {
-		fprintf(stderr, "Failed to initialize OpenGL");
+		fprintf(stderr, "Failed to initialize OpenGL\n");
 		return;
 	}
 	
@@ -70,8 +81,8 @@ Engine::Engine() : window{nullptr}, shaderManager{new ShaderManager()}, meshMana
 #endif
 
 	setupShaders();
+	setupGLState();
 
-	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowUserPointer(window, this);
 }
 
@@ -89,7 +100,7 @@ void Engine::clearModels() {
 		unloadModel(info);
 	}
 	modelInfos.clear();
-	modelTransforms.clear();
+	modelInstances.clear();
 }
 Engine::~Engine() {
 	if (program) glDeleteProgram(program);
@@ -130,22 +141,23 @@ void Engine::handleInputs() {
 
 }
 bool Engine::drawModel(const std::string& name, const Mat4& view, const Mat4& projection) {
-	std::map<std::string, ModelDrawInfo>::iterator model = modelInfos.find(name);
-	if(model == modelInfos.end()) {
+	std::map<std::string, ModelInstance>::iterator instance = modelInstances.find(name);
+	if(instance == modelInstances.end()) {
 		printf("drawModel [ERROR] Failed to find model for '%s'\n", name.c_str());
 		return false;
 	}
 	
-	std::map<std::string, Mat4>::iterator transform = modelTransforms.find(name);
-	if(transform == modelTransforms.end()) {
+	const std::string& path = instance->second.path;
+	std::map<std::string, ModelDrawInfo>::iterator mesh = modelInfos.find(path);
+	if(mesh == modelInfos.end()) {
 		printf("drawModel [ERROR] Failed to find transform for '%s'\n", name.c_str());
 		return false;
 	}
 
-	const Mat4 mvp = projection * view * transform->second;
+	const Mat4 mvp = projection * view * instance->second.transform;
 	glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.data);
-	glBindVertexArray(model->second.VAO_ID);
-	glDrawElements(GL_TRIANGLES, model->second.numIndices, GL_UNSIGNED_INT, (void*)0);
+	glBindVertexArray(mesh->second.VAO_ID);
+	glDrawElements(GL_TRIANGLES, mesh->second.numIndices, GL_UNSIGNED_INT, (void*)0);
 	glBindVertexArray(0);
 	return true;
 }
@@ -162,13 +174,20 @@ void Engine::renderFrame() {
 		currentProgram = program;
 	}
 		
-	for (std::map<std::string, ModelDrawInfo>::const_iterator it = modelInfos.begin(); it != modelInfos.end(); ++it) {
-		const std::string& name = it->first;
-		drawModel(name, view, projection);
+	for (std::map<std::string, ModelInstance>::const_iterator it = modelInstances.begin(); it != modelInstances.end(); ++it) {
+		drawModel(it->first, view, projection);
 	}
 }
-void Engine::run() {
+void Engine::run(const std::string& scene) {
 	setCallbacks();
+
+	Scene* currentScene = createSceneFromName(scene);
+	if (currentScene) 
+		currentScene->Load(*this);
+    else {
+		fprintf(stderr, "[ERROR] Scene '%s' could not be loaded.\n", scene.c_str());
+		return;
+	}
 
 	while (!glfwWindowShouldClose(window)) {	
 		const float currentTime = static_cast<float>(glfwGetTime());

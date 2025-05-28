@@ -4,8 +4,8 @@
 #include "vaoManager.hpp"
 #include "camera.hpp"
 
-struct ModelInit {
-	const char* path;
+struct ModelInstance {
+	std::string path;
 	Mat4 transform;
 };
 
@@ -16,12 +16,12 @@ public:
 
 	bool getWireframe() const { return wireframe; }
 
-	bool loadModel(const std::string& path, const Mat4& transform);
+	bool loadModel(const std::string& name, const std::string& path, const Mat4& transform);
 
 	void updateWireframe();
 	void updateAspect(unsigned int width, unsigned int height);
 
-	void run();
+	void run(const std::string& scene = "Default");
 
 private:
 	GLFWwindow* window;
@@ -29,7 +29,7 @@ private:
 	ShaderManager* shaderManager;
 	VAOManager* meshManager;
 		
-	std::map<std::string, Mat4> modelTransforms;	
+	std::map<std::string, ModelInstance> modelInstances;	
 	std::map<std::string, ModelDrawInfo> modelInfos;
 
 	unsigned int height, width;
@@ -40,6 +40,7 @@ private:
 	bool wireframe;
 
 	void setupShaders();	
+	void setupGLState();
 	void setCallbacks();
 
 	bool drawModel(const std::string& name, const Mat4& view, const Mat4& projection);

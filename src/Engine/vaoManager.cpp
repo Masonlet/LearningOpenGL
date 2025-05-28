@@ -197,7 +197,7 @@ bool VAOManager::LoadTheModel(const std::string& path, ModelDrawInfo& drawInfo) 
 	size_t fileSize{0};
 
 	if (!loadFile(buffer, fileSize, path)) {
-		fprintf(stderr, "Failed to load file: %s", path.c_str());
+		fprintf(stderr, "Failed to load file: %s\n", path.c_str());
 		return false;
 	}
 
