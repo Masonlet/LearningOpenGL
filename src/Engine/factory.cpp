@@ -1,4 +1,5 @@
 #include "factory.hpp"
+
 #include <cmath>
 
 static bool fillCubeMeshData(ModelDrawInfo& info, const std::string& name, const Vec3& size) {
@@ -15,24 +16,24 @@ static bool fillCubeMeshData(ModelDrawInfo& info, const std::string& name, const
 	float z = 0.5f * size.z;
 
 	Vec3 positions[8] = {
-		{-x, -y, -z}, { x, -y, -z}, { x,  y, -z}, { -x,  y, -z}, // back
-		{-x, -y,  z}, { x, -y,  z}, { x,  y,  z}, { -x,  y,  z}  // front
+		{-x, -y, -z}, { x, -y, -z}, { x,  y, -z}, { -x,  y, -z}, // Back
+		{-x, -y,  z}, { x, -y,  z}, { x,  y,  z}, { -x,  y,  z}  // Front
 	};
 
 	unsigned int faces[6][6] = {
-		{4, 5, 6, 4, 6, 7}, // front
-		{1, 0, 3, 1, 3, 2}, // back
-		{0, 4, 7, 0, 7, 3}, // left
-		{5, 1, 2, 5, 2, 6}, // right
-		{3, 7, 6, 3, 6, 2}, // top
-		{0, 1, 5, 0, 5, 4}  // bottom
+		{4, 5, 6, 4, 6, 7}, // Front
+		{1, 0, 3, 1, 3, 2}, // Back
+		{0, 4, 7, 0, 7, 3}, // Left
+		{5, 1, 2, 5, 2, 6}, // Right
+		{3, 7, 6, 3, 6, 2}, // Top
+		{0, 1, 5, 0, 5, 4}  // Bottom
 	};
 
 	for (int i = 0; i < 6; ++i) {
 		for (int j = 0; j < 6; ++j) {
 			int idx = i * 6 + j;
 			info.vertices[idx].pos = positions[faces[i][j]];
-			info.vertices[idx].col = {1.0f, 1.0f, 1.0f};
+			info.vertices[idx].col = {1.0f, 1.0f, 1.0f, 1.0f};
 			info.indices[idx] = idx;
 		}
 	}
@@ -55,7 +56,7 @@ bool createTriangle(VAOManager* vaoManager, const std::string& name, const Vec2&
 	info.vertices[2].pos = {  0.0f,           0.5f * size.y, 0.0f };
 
 	for (int i = 0; i < 3; ++i)
-		info.vertices[i].col = { 1.0f, 1.0f, 1.0f };
+		info.vertices[i].col = { 1.0f, 1.0f, 1.0f, 1.0f};
 
 	info.indices[0] = 0;
 	info.indices[1] = 1;
@@ -87,7 +88,7 @@ bool createSquare(VAOManager* vaoManager, const std::string& name, const Vec2& s
 	info.vertices[5].pos = { -halfX,  halfY, 0.0f };
 
 	for (int i = 0; i < 6; ++i)
-		info.vertices[i].col = { 1.0f, 1.0f, 1.0f };
+		info.vertices[i].col = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	for (int i = 0; i < 6; ++i)
 		info.indices[i] = i;
@@ -152,7 +153,6 @@ bool createCubeGrid(Engine& engine, const std::string& baseName, int startIndex,
 			return false;
 		}
 
-		// Add to Engine using loadModel approach - create a temporary "file" entry
 		engine.addModelInfo(sharedName, info);
 	}
 	
@@ -162,8 +162,8 @@ bool createCubeGrid(Engine& engine, const std::string& baseName, int startIndex,
 
 		Vec3 position = {
 			spacing.x * col,
+			0.0f,
 			spacing.y * row,
-			0.0f
 		};
 
 		std::string instanceName = baseName + "_instance_" + std::to_string(i);

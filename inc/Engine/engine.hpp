@@ -5,8 +5,15 @@
 #include "camera.hpp"
 
 struct ModelInstance {
-	std::string path;
-	Mat4 transform;
+  Vec3 position;
+  Vec3 rotation;
+  Vec3 scale;
+  Vec3 colour;
+
+  Mat4 modelMatrix;
+
+  std::string path;
+  ColourMode colourMode;
 };
 
 class Engine {
@@ -18,7 +25,7 @@ public:
 	unsigned int getProgram() const { return program; }
 	VAOManager* getMeshManager() const { return meshManager; }
 
-	bool loadModel(const std::string& name, const std::string& path, const Mat4& transform);
+	bool loadModel(const std::string& name, const std::string& path,const Vec3& position, const Vec3& rotation, const Vec3& scale,const Vec3& assignedColour, ColourMode colourMode);
 	void addModelInfo(const std::string& name, const ModelDrawInfo& info);
 	bool addInstance(const std::string& name, const std::string& path, const Mat4& transform);
 
@@ -26,6 +33,11 @@ public:
 	void updateAspect(unsigned int width, unsigned int height);
 
 	void run(const std::string& scene = "Default");
+
+  bool saveScene();
+
+  void incrementModel();
+  void decrementModel();
 
 private:
 	GLFWwindow* window;
@@ -38,8 +50,9 @@ private:
 
 	unsigned int height, width;
 	unsigned int program, vertex_buffer;
-	unsigned int currentProgram;
-	unsigned int mvpLocation;
+	unsigned int currentProgram, currentModel;
+  std::string currentScene;
+	int modelLocation, modelViewLocation, modelProjectionLocation, useOverrideColourLocation, colourOverrideLocation;
 	float deltaTime, lastTime, aspect;
 	bool wireframe;
 
@@ -47,7 +60,9 @@ private:
 	void setupGLState();
 	void setCallbacks();
 
-	bool drawModel(const std::string& name, const Mat4& view, const Mat4& projection);
+  bool createSceneFromName(const std::string& scene);
+
+	bool drawModel(const ModelInstance& instance, const Mat4& view, const Mat4& projection);
 
 	void updateDeltaTime(const float currentTime);
 	void handleInputs();

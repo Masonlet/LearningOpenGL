@@ -1,0 +1,6 @@
+ship, GalacticaOriginal_ASCII_no_text.ply, 0.0 0.0 10.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Rainbow
+car, de--lorean.ply, 0.0 0.0 -100.0, 45.0 0.0 0.0, 1.0 1.0 1.0, Green
+dolphin, dolphin.ply, 0.0 -100.0 -50.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Blue
+audi, AUDI_TT_COUPE.ply, 0.0 0.0 -75.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Yellow
+homer, homer.ply, 0.0 0.0 -2.0, 0.0 0.0 0.0, 100.0 100.0 100.0, Random
+

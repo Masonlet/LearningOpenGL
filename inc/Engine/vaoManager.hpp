@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <map>
-
 #include "vertex.hpp"
 #include "mat4.hpp"
+
+#include <string>
+#include <map>
 
 /*
 ModelDrawInfo
@@ -25,7 +25,11 @@ struct ModelDrawInfo {
 
 	Vertex* vertices; 
 	unsigned int* indices;
+  Vec3 colour;
 
+  bool hasNormals, hasColours;
+  
+  ColourMode colourMode;
 	Mat4 modelMatrix;
 };
 

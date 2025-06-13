@@ -21,4 +21,4 @@ extern volatile unsigned int g_NumIndicesToDraw;
 extern volatile unsigned int g_NumVerticesToDraw;
 extern volatile unsigned int g_SizeOfVertexArrayInBytes;
 
-bool loadFile(unsigned char*& bufferOut, size_t& sizeOut, const std::string& path);
+bool loadFile(std::string& out, const std::string& path);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "vertex.hpp"
 #include <vector>
 #include <map>
 #include <string>
@@ -40,9 +39,8 @@ public:
 	bool createProgramFromFile(std::string friendlyName, Shader& vertexShader, Shader& fragShader);
 
 	void setBasePath(const std::string& path);
-	Shader makeShader(const std::string& path);
 
-	int getIDFromFriendlyName(std::string friendlyName);
+		int getIDFromFriendlyName(std::string friendlyName);
 	ShaderProgram* getShaderProgramFromFriendlyName(std::string friendlyName);
 
 	std::string getLastError();

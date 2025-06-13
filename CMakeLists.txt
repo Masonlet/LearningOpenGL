@@ -3,17 +3,6 @@ project(LearningOpenGL)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Detect target architecture (x86 or x64)
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(ARCH_DIR "x64")
-else()
-    set(ARCH_DIR "x86")
-endif()
-
-# Correct GLFW include and lib paths
-include_directories(${CMAKE_SOURCE_DIR}/${ARCH_DIR}/inc)
-link_directories(${CMAKE_SOURCE_DIR}/${ARCH_DIR}/lib)
-
 # Include structure
 set(INC_DIR "${CMAKE_SOURCE_DIR}/inc")
 include_directories(${INC_DIR})
@@ -28,16 +17,35 @@ file(GLOB_RECURSE SOURCES
 )
 file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/inc/*.hpp)
 
-# Visual Studio organization
+# Visual Studio organization (harmless elsewhere)
 source_group(TREE ${CMAKE_SOURCE_DIR}/src PREFIX "Source Files" FILES ${SOURCES})
 source_group(TREE ${CMAKE_SOURCE_DIR}/inc PREFIX "Header Files" FILES ${HEADERS})
 
-# Executable
+# Add Executable
 add_executable(LearningOpenGL ${SOURCES} ${HEADERS})
 
-# Link OpenGL and GLFW
 find_package(OpenGL REQUIRED)
-target_link_libraries(LearningOpenGL OpenGL::GL glfw3)
+
+if(WIN32)
+    # Determine 32- vs 64-bit
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(ARCH_DIR "x64")
+    else()
+        set(ARCH_DIR "x86")
+    endif()
+
+    # Include and link for Windows
+    include_directories(${CMAKE_SOURCE_DIR}/${ARCH_DIR}/inc)
+    set(GLFW_LIB_PATH "${CMAKE_SOURCE_DIR}/${ARCH_DIR}/lib/glfw3.lib")
+    target_link_libraries(LearningOpenGL OpenGL::GL "${GLFW_LIB_PATH}")
+
+elseif(UNIX)
+    # On Linux, just use system packages
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(GLFW REQUIRED glfw3)
+    include_directories(${GLFW_INCLUDE_DIRS})
+    target_link_libraries(LearningOpenGL OpenGL::GL ${GLFW_LIBRARIES})
+endif()
 
 # Output directories
 set_target_properties(LearningOpenGL PROPERTIES

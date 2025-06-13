@@ -1,13 +1,14 @@
 #include "engine.hpp"
 
 int main() {
-	Engine engine;
+	Engine engine{};
 
 	/*Scene
 	* Default (Empty)
 	* Cube 
+  * Teacher
+  * Warehouse
 	*/
-	engine.run("Cube");
-
+	engine.run("Warehouse");
 	return 0;
 }

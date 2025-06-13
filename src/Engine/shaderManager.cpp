@@ -1,9 +1,10 @@
 #include "shaderManager.hpp"
 #include "init.hpp"
 #include "files.hpp"
-#include "parser.hpp"
+
 #include <cstdio>
 #include <sstream>
+#include <cstring>
 
 bool ShaderManager::useShaderProgram(unsigned int ID) {
 	//Add lookup to see if we really have that ID
@@ -49,23 +50,15 @@ const unsigned int MAXLINELENGTH = 65536; //16x1024
 void ShaderManager::setBasePath(const std::string& path) {
 	this->basePath = path;
 }
-ShaderManager::Shader ShaderManager::makeShader(const std::string& path) {
-	ShaderManager::Shader shader;
-	shader.fileName = path;
-	return shader;
-}
 
 bool ShaderManager::loadSourceFromFile(Shader& shader) const {
 	std::string path = this->basePath + shader.fileName;
-
-	unsigned char* buffer{nullptr};
-	size_t bufferSize{0};
-	if (!loadFile(buffer, bufferSize, path)) {
+  
+  std::string src{};
+	if (!loadFile(src, path)) 
 		return false;
-	}
 
 	shader.vecSource.clear();
-	std::string src(reinterpret_cast<char*>(buffer), bufferSize);
 	std::istringstream iss(src);
 	std::string line;
 

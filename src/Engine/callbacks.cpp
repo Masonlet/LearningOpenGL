@@ -1,5 +1,6 @@
 #include "callbacks.hpp"
 #include "engine.hpp"
+
 #include <stdio.h>
 
 void error_callback(const int error, const char* description) {
@@ -25,6 +26,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			else 
 				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
+
+    if(key == GLFW_KEY_L){
+      engine->saveScene();
+    }
+
+    if(key == GLFW_KEY_N){
+      if(mods & GLFW_MOD_SHIFT)
+        engine->incrementModel();
+      else
+        engine->decrementModel();
+    }
 	}
 }
 

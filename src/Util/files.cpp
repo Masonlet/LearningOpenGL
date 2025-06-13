@@ -1,17 +1,17 @@
 #include "files.hpp"
 #include "parser.hpp"
 #include <fstream>
+#include <cstdio>
 
-bool loadFile(unsigned char*& bufferOut, size_t& sizeOut, const std::string& path) {
+bool loadFile(std::string& out, const std::string& path) {
 	constexpr size_t MAX_SIZE = static_cast<size_t>(100.0 * 1024 * 1024); //100mb
 
 	// Open File
-	FILE* file {nullptr};
-	if (fopen_s(&file, path.c_str(), "rb") != 0 || file == nullptr) {
-		fprintf(stderr, "Failed to open file ");
-		printf("%s\n", path.c_str());
+	FILE* file = fopen(path.c_str(), "r");
+	if (!file) {
+		fprintf(stderr, "Failed to open file: %s\n ", path.c_str());
 		return false;
-	}
+	}	
 
 	// Seek to end 
 	if (fseek(file, 0, SEEK_END) != 0) {
@@ -21,9 +21,9 @@ bool loadFile(unsigned char*& bufferOut, size_t& sizeOut, const std::string& pat
 	}
 
 	// Get the file size
-	size_t fileSize = ftell(file);
-	if (fileSize < 0 || fileSize > MAX_SIZE) {
-		fprintf(stderr, "Invalid file, or it is too large\n");
+	long fileSize = ftell(file);
+	if (fileSize < 0 || static_cast<size_t>(fileSize) > MAX_SIZE) {
+		fprintf(stderr, "Invalid file, or it is too large%s\n", path.c_str());
 		fclose(file);
 		return false;
 	} 
@@ -32,22 +32,15 @@ bool loadFile(unsigned char*& bufferOut, size_t& sizeOut, const std::string& pat
 	rewind(file);
 
 	// Read file into buffer
-	unsigned char* buffer = new unsigned char [fileSize + 1];
-	if (fread(buffer, 1, fileSize, file) != fileSize) {
-		fprintf(stderr, "File read failed ");
-		printf("%s\n", path.c_str());
-		delete[] buffer;
+  out.resize(static_cast<size_t>(fileSize) + 1);
+	if (fread(&out[0], 1, static_cast<size_t>(fileSize), file) != static_cast<size_t>(fileSize)) {
+		fprintf(stderr, "File read failed: %s\n", path.c_str());
+		out.clear();
 		fclose(file);
-		bufferOut = nullptr;
 		return false;
 	}
 
-	//End buffer with a eof
-	buffer[fileSize] = '\0';
-
-	//Set out variables
-	bufferOut = buffer;
-	sizeOut = fileSize;
+  out[fileSize] = '\0'; 
 
 	fclose(file);
 	return true;

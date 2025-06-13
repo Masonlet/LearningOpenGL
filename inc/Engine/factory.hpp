@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vec2.hpp"
-#include "Vec3.hpp"
+#include "vec2.hpp"
+#include "vec3.hpp"
 #include "vaoManager.hpp"
 #include "engine.hpp"
 
