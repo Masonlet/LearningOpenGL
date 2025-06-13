@@ -41,7 +41,7 @@ static bool fillCubeMeshData(ModelDrawInfo& info, const std::string& name, const
 	return true;
 }
 
-bool createTriangle(VAOManager* vaoManager, const std::string& name, const Vec2& size) {
+bool createTriangle(VAOManager* vaoManager, const std::string& name, const Vec2& size, const Vec4& vertexColour) {
 	ModelDrawInfo info;
 	info.meshName = name;
 	info.numVertices = 3;
@@ -56,7 +56,7 @@ bool createTriangle(VAOManager* vaoManager, const std::string& name, const Vec2&
 	info.vertices[2].pos = {  0.0f,           0.5f * size.y, 0.0f };
 
 	for (int i = 0; i < 3; ++i)
-		info.vertices[i].col = { 1.0f, 1.0f, 1.0f, 1.0f};
+		info.vertices[i].col = vertexColour;
 
 	info.indices[0] = 0;
 	info.indices[1] = 1;
@@ -113,11 +113,16 @@ bool createSquareGrid(Engine& engine, const std::string& baseName, int startInde
 
 	std::string sharedName = baseName + "_sharedSquare";
 
-	ModelDrawInfo drawInfo;
-	if (!engine.getMeshManager()->FindDrawInfoByModelName(sharedName, drawInfo)) {
-		if (!createSquare(engine.getMeshManager(), sharedName, size))
-			return false;
-	}
+  ModelDrawInfo drawInfo;
+  if (!engine.getMeshManager()->FindDrawInfoByModelName(sharedName, drawInfo)) {
+    if (!createSquare(engine.getMeshManager(), sharedName, size))
+      return false;
+
+    if (!engine.getMeshManager()->FindDrawInfoByModelName(sharedName, drawInfo))
+      return false;
+
+    engine.addModelInfo(sharedName, drawInfo); 
+  }
 
 	for (int i = startIndex; i < count; ++i) {
 		int row = i / gridSize;

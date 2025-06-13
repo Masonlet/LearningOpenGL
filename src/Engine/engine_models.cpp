@@ -24,10 +24,6 @@ bool Engine::addInstance(const std::string& name, const std::string& path, const
   instance.modelMatrix = transform;
   instance.path = path;
 
-  const ModelDrawInfo& meshInfo = modelInfos[path];
-  instance.colour = meshInfo.colour;
-  instance.colourMode = meshInfo.colourMode;
-
   modelInstances[name] = instance;
   return true;
 }

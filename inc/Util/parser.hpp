@@ -1,4 +1,7 @@
 #pragma once
+
+#include "vec3.hpp"
+
 #include <cstddef>
 
 const unsigned int strEquals(const unsigned char* a, const char* b);
@@ -14,3 +17,5 @@ const unsigned char* parseStringUInt(const unsigned char* p, unsigned int& out);
 const unsigned int parseBinaryUINT(unsigned char* buffer);
 
 const unsigned char* parseHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut);
+
+const unsigned char* parseVec3(const unsigned char* p, Vec3& out);

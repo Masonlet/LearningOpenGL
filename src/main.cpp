@@ -4,11 +4,15 @@ int main() {
 	Engine engine{};
 
 	/*Scene
-	* Default (Empty)
-	* Cube 
+	* "" (Empty) (Default)
   * Teacher
   * Warehouse
+  *
+  * Primitive Scenes
+	* Cube 
+  * Triangle
+  * Square
 	*/
-	engine.run("Warehouse");
+	engine.run("Teacher");
 	return 0;
 }

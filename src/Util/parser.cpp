@@ -141,3 +141,12 @@ const unsigned char* parseHeader(const unsigned char* p, unsigned int& numVertic
 
   return nullptr; // failed to find end_header
 }
+
+const unsigned char* parseVec3(const unsigned char* p, Vec3& out) {
+  if (!(p = parseFloat(p, out.x)) ||
+      !(p = parseFloat(p, out.y)) ||
+      !(p = parseFloat(p, out.z))) {
+    return nullptr;
+  }
+  return p;
+}

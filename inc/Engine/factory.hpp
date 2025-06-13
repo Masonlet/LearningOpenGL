@@ -11,7 +11,7 @@ constexpr Vec3 defaultRotation{0.0f, 0.0f, 0.0f};
 constexpr Vec3 defaultScale{1.0f, 1.0f, 1.0f};
 
 // Primitives (GPU-uploaded via vaoManager)
-bool createTriangle(VAOManager* vaoManager, const std::string& name, const Vec2& size = defaultSize2D);
+bool createTriangle(VAOManager* vaoManager, const std::string& name, const Vec2& size = defaultSize2D, const Vec4& vertexColour = {1.0f, 1.0f, 1.0f, 1.0f});
 bool createSquare(VAOManager* vaoManager, const std::string& name, const Vec2& size = defaultSize2D);
 bool createCube(VAOManager* vaoManager, const std::string& name, const Vec3& size = defaultSize3D);
 

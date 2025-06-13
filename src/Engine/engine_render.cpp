@@ -32,6 +32,10 @@ bool Engine::drawModel(const ModelInstance& instance, const Mat4& view, const Ma
 
   glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.ptr());
 
+  bool useOverride = (instance.colourMode == ColourMode::Solid);
+  glUniform1i(glGetUniformLocation(program, "useOverrideColour"), useOverride);
+  glUniform3fv(glGetUniformLocation(program, "colourOverride"), 1, &instance.colour.x);
+
   glBindVertexArray(mesh->second.VAO_ID);
   glDrawElements(GL_TRIANGLES, mesh->second.numIndices, GL_UNSIGNED_INT, (void*)0);
 
