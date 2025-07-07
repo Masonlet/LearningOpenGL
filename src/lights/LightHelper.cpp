@@ -1,4 +1,4 @@
-#include "lights/LightHelper.hpp"
+#include "lights/lightHelper.hpp"
 
 const float LightHelper::DEFAULT_ATTEN_CONST = 0.1f;
 const float LightHelper::DEFAULT_ATTEN_LINEAR = 0.1f;

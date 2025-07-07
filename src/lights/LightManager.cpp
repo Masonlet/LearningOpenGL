@@ -1,4 +1,4 @@
-#include "lights/LightManager.hpp"
+#include "lights/lightManager.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
