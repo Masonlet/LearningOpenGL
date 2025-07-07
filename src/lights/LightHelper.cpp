@@ -1,0 +1,84 @@
+#include "lights/LightHelper.hpp"
+
+const float LightHelper::DEFAULT_ATTEN_CONST = 0.1f;
+const float LightHelper::DEFAULT_ATTEN_LINEAR = 0.1f;
+const float LightHelper::DEFAULT_ATTEN_QUADRATIC = 0.1f;
+const float LightHelper::DEFAULT_AMBIENT_TO_DIFFUSE_RATIO = 0.8f;
+const float LightHelper::DEFAULTINFINITEDISTANCE = 10000.0f;
+const float LightHelper::DEFAULDIFFUSEACCURACYTHRESHOLD = 0.001f;
+
+float LightHelper::calcApproxDistFromAtten(float targetLightLevel) {
+	return this->calcApproxDistFromAtten(targetLightLevel, LightHelper::DEFAULDIFFUSEACCURACYTHRESHOLD);
+}
+
+float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accuracy) {
+	return this->calcApproxDistFromAtten(targetLightLevel, accuracy,
+		LightHelper::DEFAULT_ATTEN_CONST, LightHelper::DEFAULT_ATTEN_LINEAR, LightHelper::DEFAULT_ATTEN_QUADRATIC,
+		LightHelper::DEFAULTINFINITEDISTANCE, LightHelper::DEFAULTMAXITERATIONS);
+}
+
+float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accuracy,
+	float infiniteDistance,
+	float constAttenuation, float linearAttenuation, float quadraticAttenuation,
+	unsigned int maxIterations /*= DEFAULTMAXITERATIONS = 50*/) {
+	// See if the accuracy being set it too big for the targetLightLevel, unless targetLightLevel is actually zero (0.0f)
+	// If it's actually zero, then adjusting the accuracy to a tenth of zero would give zero, and we would max out the iterations
+	if (targetLightLevel != 0.0f) 
+		// Adjust the accuracy by a hundredth
+		if ((accuracy * 10.0f) >= targetLightLevel * 10.0f)	
+			accuracy = targetLightLevel / 10.0f;
+
+	float targetLightLevelLow = targetLightLevel - accuracy;
+	float targetLightLevelHigh = targetLightLevel + accuracy;
+
+	// See if we're getting a value at infinite. i.e. at 'infinite distance', is the light level too high already
+	if (this->calcDiffuseFromAttenByDistance(LightHelper::DEFAULTINFINITEDISTANCE, constAttenuation, linearAttenuation, quadraticAttenuation, accuracy) > targetLightLevelHigh) 	
+		// Yes, so we can never get down to this light level
+		return LightHelper::DEFAULTINFINITEDISTANCE;
+
+	// There is a light level somewhere between a distance of 0.0 to DEFAULTINFINITEDISTANCE
+	float distanceGuessLow = 0.0f;
+	float distanceGuessHigh = LightHelper::DEFAULTINFINITEDISTANCE;
+
+	unsigned int iterationCount = 0;
+	while (iterationCount < maxIterations) {
+		// Pick a distance between the high and low
+		float curDistanceGuess = ((distanceGuessHigh - distanceGuessLow) / 2.0f) + distanceGuessLow;
+
+		// Could be three possibilities: too low, too high, or in between
+		float curDiffuseAtGuessDistance = this->calcDiffuseFromAttenByDistance(curDistanceGuess, constAttenuation, linearAttenuation, quadraticAttenuation, DEFAULTZEROTHRESHOLD);
+		if (curDiffuseAtGuessDistance < targetLightLevelLow) // Light is too dark, so distance is to HIGH. Reduce and guess again.
+			distanceGuessHigh = curDistanceGuess;	// Lower the high limit for the guesses
+		
+		else if (curDiffuseAtGuessDistance > targetLightLevelHigh) // Light is too bright, so distance is to LOW. Increase and guess again
+			distanceGuessLow = curDistanceGuess;
+
+		else // Light level is within range, so return this distance
+			return curDistanceGuess;
+		
+		iterationCount++;
+	}
+
+	// If we are here, then we ran out of iterations. Pick a distance between the low and high
+	float distance = (distanceGuessHigh - distanceGuessLow) / 2.0f;
+	return distance;
+}
+
+const float LightHelper::DEFAULTZEROTHRESHOLD = 0.0001f;
+float LightHelper::calcDiffuseFromAttenByDistance(
+	float distance,
+	float constAttenuation, float linearAttenuation, float quadraticAttenuation,
+	float zeroThreshold /*= DEFAULTZEROTHRESHOLD*/) {
+	float diffuse = 1.0f;		// Assume full brightness
+	float denominator = constAttenuation + linearAttenuation * distance + quadraticAttenuation * distance * distance;
+
+	if (denominator <= zeroThreshold) 
+		diffuse = 1.0f;
+  else {
+		float atten = 1.0f / denominator;
+		diffuse *= atten;
+		if (diffuse > 1.0f)
+			diffuse = 1.0f;
+	} 
+	return diffuse;
+}

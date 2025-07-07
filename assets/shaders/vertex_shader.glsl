@@ -1,28 +1,40 @@
-#version 330 core
+#version 420
 
 //uniform mat4 MVP;
-uniform mat4 proj;
-uniform mat4 view;
-uniform mat4 model;
+uniform mat4 mProj;
+uniform mat4 mView;
+uniform mat4 mModel;
+uniform mat4 mModel_InverseTranpose;
 
-uniform bool useOverrideColour;
-uniform vec3 colourOverride;
+uniform bool bUseOverrideColor;
+uniform vec3 colorOverride;
 
-layout(location = 0) in vec3 vPos;
-layout(location = 1) in vec4 vCol;
-layout(location = 2) in vec3 vNorm;
+in vec4 vCol;
+in vec4 vPos;
+in vec4 vNorm;
 
-out vec4 fragColour;
-out vec3 normal;
+out vec4 vertColor;
+out vec4 vertNormal;
+out vec4 vertWorldPosition;
 
-void main() {
-  mat4 MVP = proj * view * model;
-  gl_Position = MVP * vec4(vPos, 1.0);
+void main()
+{
+	mat4 MVP = mProj * mView * mModel;
 
-  if(useOverrideColour){
-    fragColour = vec4(colourOverride, 1.0);
-  } else {
-    fragColour = vCol;
-  }
-  normal = vNorm;
-}
+    gl_Position = MVP * vec4(vPos.xyz, 1.0f);
+	
+	vertWorldPosition = mModel * vec4(vPos.xyz, 1.0f);
+	
+	
+	if (bUseOverrideColor)
+	{
+		vertColor = vec4(colorOverride.rgb, 1.0f);
+	}
+	else
+	{
+	    vertColor = vec4(vCol.rgb, 1.0f);
+	}
+	
+	vertNormal = mModel_InverseTranpose * vec4(vNorm.xyz, 1.0f);
+	vertNormal.xyz = normalize(vertNormal.xyz);
+};

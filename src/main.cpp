@@ -1,11 +1,11 @@
-#include "engine.hpp"
+#include "core/engine.hpp"
 
 int main() {
 	Engine engine{};
 
 	/*Scene
 	* "" (Empty) (Default)
-  * Teacher
+  * Teacher, Teacher2
   * Warehouse
   *
   * Primitive Scenes
@@ -13,6 +13,6 @@ int main() {
   * Triangle
   * Square
 	*/
-	engine.run("Teacher");
+	engine.run("Teacher2");
 	return 0;
 }
