@@ -11,7 +11,7 @@ cd LearningOpenGL
 ```bash
 mkdir build
 cd build 
-cmake ..
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
 ```
 
 ### 3. Build the Project
