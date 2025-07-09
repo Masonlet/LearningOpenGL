@@ -13,6 +13,6 @@ int main() {
   * Triangle
   * Square
 	*/
-	engine.run("Teacher2");
+	engine.run();
 	return 0;
 }

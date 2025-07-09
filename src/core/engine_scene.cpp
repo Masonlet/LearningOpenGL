@@ -95,12 +95,50 @@ bool Engine::createSceneFromName(const std::string& scene){
     char name[64]{};
     linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(name), sizeof(name));
     if (!linePtr || strlen(name) == 0) {
-      fprintf(stderr, "[createSceneFromName ERROR] failed to parse name\n");
+      fprintf(stderr, "[createSceneFromName ERROR] Failed to parse name\n");
       break;
     }
     if(*linePtr == ',') ++linePtr;
 
-    if(strcmp(name, "cubeGrid") == 0){
+    if (strcmp(name, "model") == 0) {
+      char meshName[64]{};
+      linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(meshName), sizeof(meshName));
+      if (!linePtr || strlen(meshName) == 0) {
+        fprintf(stderr, "[createSceneFromName ERROR] failed to parse path\n");
+        break;
+      }
+      if (*linePtr == ',') ++linePtr;
+
+      char path[128]{};
+      linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(path), sizeof(path));
+      if (!linePtr || strlen(path) == 0) {
+        fprintf(stderr, "[createSceneFromName ERROR] failed to parse path\n");
+        break;
+      }
+      if (*linePtr == ',') ++linePtr;
+
+      Vec3 temp;
+      PARSE_OR_FAIL(parseVec3, temp, "Failed to parse position");
+      Vec4 position{ temp, 0.0f };
+
+      Vec3 rotation;
+      PARSE_OR_FAIL(parseVec3, rotation, "Failed to parse rotation");
+
+      Vec3 scale;
+      PARSE_OR_FAIL(parseVec3, scale, "Failed to parse scale");
+
+      Vec4 assignedColour = { 1.0f, 1.0f, 1.0f, 0.0f };
+      ColourMode colourMode = ColourMode::PLYColour;
+      linePtr = parseColour(linePtr, assignedColour, colourMode);
+
+      if (!loadModel(meshName, path, position, rotation, scale, assignedColour, colourMode)) {
+        fprintf(stderr, "[createSceneFromName ERROR] loadModel failed: %s\n", path);
+        continue;
+      }
+
+      p = reinterpret_cast<const unsigned char*>(lineEnd);
+    }
+    else if(strcmp(name, "cubeGrid") == 0){
       unsigned int count = 0;
       PARSE_OR_FAIL(parseStringUInt, count, "Failed to parse cubeGrid count");
 
@@ -195,9 +233,9 @@ bool Engine::createSceneFromName(const std::string& scene){
       continue;
     }
     else if(strcmp(name, "triangle") == 0){
-      char name[64]{};
-      linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(name), sizeof(name));
-      if (!linePtr || strlen(name) == 0) {
+      char meshName[64]{};
+      linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(meshName), sizeof(meshName));
+      if (!linePtr || strlen(meshName) == 0) {
         fprintf(stderr, "[createSceneFromName ERROR] failed to parse path\n");
         break;
       }
@@ -224,7 +262,7 @@ bool Engine::createSceneFromName(const std::string& scene){
         int r = static_cast<int>(assignedColour.x * 255.0f);
         int g = static_cast<int>(assignedColour.y * 255.0f);
         int b = static_cast<int>(assignedColour.z * 255.0f);
-        sharedName = std::string(name) + "_solid_" + std::to_string(r) + "_" + std::to_string(g) + "_" + std::to_string(b);
+        sharedName = std::string(meshName) + "_solid_" + std::to_string(r) + "_" + std::to_string(g) + "_" + std::to_string(b);
         skipCache = true; // always bake solid-colored triangles fresh
       } else {
         sharedName = "triangle_shared";
@@ -235,7 +273,7 @@ bool Engine::createSceneFromName(const std::string& scene){
 
       if (!meshExists) {
         Vec4 bakedVertexColour = {assignedColour.x, assignedColour.y, assignedColour.z, 1.0f};
-        if (!createTriangle(getMeshManager(), sharedName, {scale.x, scale.y}, bakedVertexColour)) {
+        if (!createTriangle(getMeshManager(), sharedName, getProgram(), {scale.x, scale.y}, bakedVertexColour)) {
           fprintf(stderr, "[createSceneFromName ERROR] Failed to create triangle mesh: %s\n", sharedName.c_str());
           break;
         }
@@ -248,7 +286,7 @@ bool Engine::createSceneFromName(const std::string& scene){
         addModelInfo(sharedName, info);
       }
 
-      std::string instanceName = std::string(name) + "_instance";
+      std::string instanceName = std::string(meshName) + "_instance";
       Mat4 transform = Mat4::translation(position);
       if (!addInstance(instanceName, sharedName, transform)) {
         fprintf(stderr, "[createSceneFromName ERROR] Failed to add triangle instance\n");
@@ -294,35 +332,8 @@ bool Engine::createSceneFromName(const std::string& scene){
       p = reinterpret_cast<const unsigned char*>(lineEnd);
       continue;
     }
-    else /* Load models from file */ {
-      char path[128]{};
-      linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(path), sizeof(path));
-      if (!linePtr || strlen(path) == 0) {
-        fprintf(stderr, "[createSceneFromName ERROR] failed to parse path\n");
-        break;
-      }
-      if(*linePtr == ',') ++linePtr;
-
-      Vec3 temp;
-      PARSE_OR_FAIL(parseVec3, temp, "Failed to parse position");
-      Vec4 position { temp, 0.0f };
-
-      Vec3 rotation;
-      PARSE_OR_FAIL(parseVec3, rotation, "Failed to parse rotation");
-
-      Vec3 scale;
-      PARSE_OR_FAIL(parseVec3, scale, "Failed to parse scale");
-
-      Vec4 assignedColour = {1.0f, 1.0f, 1.0f, 0.0f};
-      ColourMode colourMode = ColourMode::PLYColour;
-      linePtr = parseColour(linePtr, assignedColour, colourMode);
-
-      if (!loadModel(name, path, position, rotation, scale, assignedColour, colourMode)) {
-        fprintf(stderr, "[createSceneFromName ERROR] loadModel failed: %s\n", path);
-        continue;
-      }
-
-      p = reinterpret_cast<const unsigned char*>(lineEnd);
+    else {
+      fprintf(stderr, "[createSceneFromName ERROR] Invalid scene format");
     }
   }
 
@@ -348,21 +359,22 @@ bool Engine::saveScene(){
       continue;
     }
 
-    file << name << ", " << instance.path << ", "
+    file << "model, " << name << ", "
+      << instance.path << ", "
       << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
       << instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
       << instance.scale.x    << " " << instance.scale.y    << " " << instance.scale.z;
 
     switch (instance.colourMode) {
       case ColourMode::Solid:
-        file << ", " << instance.colour.x * 255.0f << " "
-          << instance.colour.y * 255.0f << " "
-          << instance.colour.z * 255.0f;
+        file << ", " << instance.colour.x * 255.0f << " " << instance.colour.y * 255.0f << " " << instance.colour.z * 255.0f;
         break;
       case ColourMode::Random:
-        file << ", Random"; break;
+        file << ", Random"; 
+        break;
       case ColourMode::VerticalGradient:
-        file << ", Rainbow"; break;
+        file << ", Rainbow"; 
+        break;
       case ColourMode::PLYColour:
       default:
         break;

@@ -28,7 +28,7 @@ bool Engine::addInstance(const std::string& name, const std::string& path, const
   return true;
 }
 
-bool Engine::loadModel(const std::string& name, const std::string& path,const Vec4& position, const Vec3& rotation, const Vec3& scale,const Vec4& assignedColour, ColourMode colourMode) {
+bool Engine::loadModel(const std::string& name, const std::string& path, const Vec4& position, const Vec3& rotation, const Vec3& scale, const Vec4& assignedColour, ColourMode colourMode) {
   if (modelInstances.find(name) != modelInstances.end()) {
     printf("name already used: %s\n", path.c_str());
     return false;
@@ -37,18 +37,18 @@ bool Engine::loadModel(const std::string& name, const std::string& path,const Ve
   if (modelInfos.find(path) == modelInfos.end()) {
     ModelDrawInfo meshinfo;
     meshinfo.meshName = path;
-    meshinfo.colour = assignedColour; 
+    meshinfo.colour = assignedColour;
     meshinfo.colourMode = colourMode;
 
     if (!meshManager->LoadModelIntoVAO(path, meshinfo, program)) {
       printf("failed to load model into vao: %s\n", path.c_str());
       return false;
-    }	
+    }
 
     modelInfos[path] = meshinfo;
   }
 
- Transform t;
+  Transform t;
   t.position = position;
   t.rotation = rotation;
   t.scale = scale;
@@ -64,7 +64,7 @@ bool Engine::loadModel(const std::string& name, const std::string& path,const Ve
 
   modelInstances[name] = instance;
   return true;
-}	
+}
 
 void Engine::unloadModel(ModelDrawInfo& info) {
   glDeleteVertexArrays(1, &info.VAO_ID);

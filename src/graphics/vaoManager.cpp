@@ -11,9 +11,10 @@
     if (!(linePtr = parser(linePtr, target))) { \
         fprintf(stderr, "[vaoManager ERROR]: %s\n", errorMsg); \
         valid = false; \
-    } \
-    if (*linePtr == ',') ++linePtr;
-
+    } else { \
+      if (*linePtr == ',') ++linePtr; \
+    }
+    
 constexpr Vec4 DEFAULT_NORMAL{ 0.0f, 0.0f, 0.0f, 0.0f };
 constexpr Vec4 DEFAULT_COLOUR{ 0.0f, 1.0f, 0.0f, 0.0f };
 
@@ -47,6 +48,8 @@ const static Vec3 calculateGradient(float y, float minY, float maxY) {
     };
 }
 const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigned char* p) {
+    printf("%s\n", drawInfo.meshName.c_str());
+
     if (!drawInfo.vertices || drawInfo.numVertices == 0) {
         fprintf(stderr, "[parseVertices ERROR] vertices buffer not allocated!\n");
         return nullptr;
@@ -65,21 +68,21 @@ const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigne
     float minY = FLT_MAX, maxY = -FLT_MAX;
     unsigned int i = 0;
     while (i < drawInfo.numVertices && *p) {
-        Vertex& v = drawInfo.vertices[i];
+      Vertex& v = drawInfo.vertices[i];
 
-        const char* lineStart = reinterpret_cast<const char*>(p);
-        const char* lineEnd = reinterpret_cast<const char*>(skipToNextLine(p));
-        size_t lineLen = lineEnd - lineStart;
+      const char* lineStart = reinterpret_cast<const char*>(p);
+      const char* lineEnd = reinterpret_cast<const char*>(skipToNextLine(p));
+      size_t lineLen = lineEnd - lineStart;
 
-        while (lineLen > 0 && (lineStart[lineLen - 1] == '\n' || lineStart[lineLen - 1] == '\r'))
-            --lineLen;
+      while (lineLen > 0 && (lineStart[lineLen - 1] == '\n' || lineStart[lineLen - 1] == '\r'))
+        --lineLen;
 
-        if (lineLen == 0) {
-            p = reinterpret_cast<const unsigned char*>(lineEnd);
-            continue;
-        }
+      if (lineLen == 0) {
+        p = reinterpret_cast<const unsigned char*>(lineEnd);
+        continue;
+      }
 
-        const unsigned char* linePtr = reinterpret_cast<const unsigned char*>(lineStart);
+      const unsigned char* linePtr = reinterpret_cast<const unsigned char*>(lineStart);
         linePtr = skipWhitespace(linePtr);
         if (*linePtr == '\0' || *linePtr == '\n') {
             linePtr = reinterpret_cast<const unsigned char*>(lineEnd);
@@ -91,6 +94,10 @@ const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigne
         //Pos
         bool valid = true; 
         PARSE_OR_CONTINUE(parseFloat, v.pos.x, "Failed to parse position X");
+        if (!valid) {
+          fprintf(stderr, "Line contents: \"%s\"\n", badLine.c_str());
+        }
+
         PARSE_OR_CONTINUE(parseFloat, v.pos.y, "Failed to parse position Y");
         PARSE_OR_CONTINUE(parseFloat, v.pos.z, "Failed to parse position Z");
         v.pos.w = 1.0f;
@@ -361,9 +368,6 @@ bool VAOManager::LoadModelFromFile(const std::string& path, ModelDrawInfo& drawI
     return false;
   }
 
-  drawInfo.hasNormals = true;
-  drawInfo.hasColours = true;
-
   if (drawInfo.numVertices == 0 || drawInfo.numTriangles == 0) {
     fprintf(stderr, "[LoadModelFromFile ERROR] Header found but no vertices/triangles declared\n");
     delete[] drawInfo.indices;
@@ -423,19 +427,23 @@ bool VAOManager::UploadToGPU(ModelDrawInfo& drawInfo, unsigned int shaderProgram
 
   //Set the vertex attributes
   GLint vpos_location = glGetAttribLocation(shaderProgramID, "vPos");
+  if (vpos_location != -1) {
+    glEnableVertexAttribArray(vpos_location);
+    glVertexAttribPointer(vpos_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+  }
+
   GLint vnorm_location = glGetAttribLocation(shaderProgramID, "vNorm");
+  if (vnorm_location != -1) {
+    glEnableVertexAttribArray(vnorm_location);
+    glVertexAttribPointer(vnorm_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, norm));
+  }
+
   GLint vcol_location = glGetAttribLocation(shaderProgramID, "vCol");
+  if (vcol_location != -1) {
+    glEnableVertexAttribArray(vcol_location);
+    glVertexAttribPointer(vcol_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col));
+  }
 
-  // Set the vertex attributes for this shader
-  glEnableVertexAttribArray(vpos_location); // vPos
-  glVertexAttribPointer( vpos_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
-
-  glEnableVertexAttribArray(vnorm_location);
-  glVertexAttribPointer(vnorm_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, norm));
-
-  glEnableVertexAttribArray(vcol_location);
-  glVertexAttribPointer(vcol_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col));
- 
   // Now that all the parts are set up, set the VAO to zero
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);

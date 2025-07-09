@@ -1,9 +1,9 @@
-ship, Corellian_Corvette_xyz_n_rgba.ply, 0.0 -20.0 10.0, 0.0 0.0 0.0, 10.0 10.0 10.0, Rainbow
-testcar, de--lorean_xyz_n_rgba.ply, 0.0 0.0 -100.0, 45.0 0.0 0.0, 1.0 1.0 1.0
-dolphin, dolphin_xyz_n_rgba.ply, 0.0 -100.0 -50.0, 0.0 0.0 0.0, 1.0 1.0 1.0
-cow, cow_xyz_n_rgba.ply, 0.0 0.0 -75.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Yellow
-homer, homer_xyz_n_rgba.ply, -30.0 0.0 -50.0, 0.0 0.0 0.0, 100.0 100.0 100.0, Random
-warehouse, Warehouse_xyz_n_rgba.ply, 0.0 -20.0 0.0, 0.0 0.0 0.0, 10.0 10.0 10.0
+model, ship, Corellian_Corvette_xyz_n_rgba.ply, 0.0 -20.0 10.0, 0.0 0.0 0.0, 10.0 10.0 10.0, Rainbow
+model, testcar, de--lorean_xyz_n_rgba.ply, 0.0 0.0 -100.0, 45.0 0.0 0.0, 1.0 1.0 1.0
+model, dolphin, dolphin_xyz_n_rgba.ply, 0.0 -100.0 -50.0, 0.0 0.0 0.0, 1.0 1.0 1.0
+model, cow, cow_xyz_n_rgba.ply, 0.0 0.0 -75.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Yellow
+model, homer, homer_xyz_n_rgba.ply, -30.0 0.0 -50.0, 0.0 0.0 0.0, 100.0 100.0 100.0, Random
+model, warehouse, Warehouse_xyz_n_rgba.ply, 0.0 -20.0 0.0, 0.0 0.0 0.0, 10.0 10.0 10.0
 
 light, 0, 0.0 100.0 100.0 1.0, 50.0 50.0 50.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 light, 1, 10.0 5.0 0.0 1.0, 100.0 0.0 0.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 -1.0 0.0, 1.0 15.0 25.0 0.0, 1.0 0.0 0.0 0.0
