@@ -11,59 +11,6 @@ constexpr int GL_MINOR{ 3 };
 static void cleanupWindow(GLFWwindow* window) {
   if (window) glfwDestroyWindow(window);
 }
-static void cleanupGL(const unsigned int program) {
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  glDeleteProgram(program);
-  glBindVertexArray(0);
-}
-
-static GLFWwindow* createWindow(const int& width, const int& height, const char* title) {
-#ifndef NDEBUG
-  fprintf(stderr, "createWindow Start Time: %f\n", glfwGetTime());
-#endif
-
-  //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-  //glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
-  GLFWwindow* window = glfwCreateWindow(width, height, title, nullptr, nullptr);
-  if (!window)
-    return nullptr;
-
-  glfwMakeContextCurrent(window);
-  glfwSwapInterval(1); // Enables VSYNC
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-#ifndef NDEBUG
-  fprintf(stderr, "createWindow Finish Time: %f\n", glfwGetTime());
-#endif
-  return window;
-}
-
-GLFWwindow* initGL(unsigned int width, unsigned int height) {
-  glfwSetErrorCallback(error_callback);
-  if (!glfwInit()) {
-    fprintf(stderr, "Failed to initialize GFLW\n");
-    return nullptr;
-  }
-
-  GLFWwindow* window = createWindow(width, height, "Mason LEtoile 1146210");
-  if (!window) {
-    fprintf(stderr, "Failed to initialize window\n");
-    return nullptr;
-  }
-
-  if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-    fprintf(stderr, "Failed to initialize GLAD\n");
-    cleanupWindow(window);
-    return nullptr;
-  }
-
-  glViewport(0, 0, width, height);
-  return window;
-}
 
 Engine::Engine() :
   window{ nullptr },
@@ -74,7 +21,7 @@ Engine::Engine() :
   wireframe{ false },
   renderer(), shaderManager(), vaoManager(), lightManager(), scene(), sceneLoader(scene, &renderer, &lightManager)
 {
-  window = initGL(width, height);
+  window = WindowManager::initGL(width, height);
   if (!window) {
     fprintf(stderr, "failed to initialize opengl\n");
     return;
@@ -91,8 +38,8 @@ Engine::Engine() :
 #endif
 
   setupShaders();
-  setupGLState();
-  setCallbacks();
+  WindowManager::setupGLState();
+  WindowManager::setCallbacks(window);
 
   glViewport(0, 0, width, height);
   glfwSetWindowUserPointer(window, this);
@@ -100,7 +47,7 @@ Engine::Engine() :
 
 Engine::~Engine() {
   scene.clearModels(vaoManager);
-  if (window) cleanupWindow(window);
+  WindowManager::destroy(window);
 }
 
 void Engine::updateAspect(unsigned int width, unsigned int height) {
@@ -135,24 +82,6 @@ void Engine::setupShaders() {
   renderer.setProgram(shaderID);
 }
 
-void Engine::setupGLState() {
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-
-  //glEnable(GL_CULL_FACE);
-  glDisable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
-  glFrontFace(GL_CCW);
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void Engine::setCallbacks() {
-  glfwSetKeyCallback(window, key_callback);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-}
-
 void Engine::updateWireframe() {
   wireframe = !wireframe;
 }
@@ -180,12 +109,8 @@ void Engine::updateDeltaTime(const float currenttime) {
   deltaTime = smoothing_factor * deltaTime + (2.0f - smoothing_factor) * rawdelta;
 }
 
-void Engine::handleInputs() {
-  handleModelInput(camera, window, deltaTime, scene.getModelInstances(), currentModel);
-}
-
-void Engine::run(const std::string& scene) {
-  const std::string sceneName = scene.empty() ? "Default" : scene;
+void Engine::run(const std::string& sceneIn) {
+  const std::string sceneName = sceneIn.empty() ? "Default" : sceneIn;
 
   if (!sceneLoader.loadTxtScene(sceneName)) {
     fprintf(stderr, "[SCENE ERROR] Scene '%s' could not be loaded.\n", sceneName.c_str());
@@ -198,7 +123,7 @@ void Engine::run(const std::string& scene) {
     const float currenttime = static_cast<float>(glfwGetTime());
 
     updateDeltaTime(currenttime);
-    handleInputs();
+    handleModelInput(camera, window, deltaTime, scene.getModelInstances(), currentModel);
     renderFrame();
 
     glfwSwapBuffers(window); 

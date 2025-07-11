@@ -1,11 +1,6 @@
 #pragma once
 
-// OpenGL and GLAD
-#define GLFW_INCLUDE_NONE // Disables inclusion of the development environment header to ensure there are no header conflicts
-#include <GLFW/glfw3.h> // Include GFLW API's constants, types, and function prototypes. By default also includes OpenGL header
-
-#include <glad/glad.h> // If "GLFW_INCLUDE_NONE" was not defined this would need to be included before glfw3.h
-
+#include "core/windowManager.hpp"
 #include "core/colour.hpp"
 #include "core/modelInstance.hpp"
 #include "core/scene.hpp"
@@ -32,7 +27,7 @@ public:
 	void updateWireframe();
 	void updateAspect(unsigned int width, unsigned int height);
 
-	void run(const std::string& scene = "Default");
+	void run(const std::string& sceneIn = "Default");
 
 private:
 	GLFWwindow* window;
@@ -53,10 +48,7 @@ private:
 	float deltaTime, lastTime;
 
 	void setupShaders();	
-	void setupGLState();
-	void setCallbacks();
 
 	void updateDeltaTime(const float currentTime);
-	void handleInputs();
 	void renderFrame();
 };
