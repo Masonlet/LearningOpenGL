@@ -1,5 +1,5 @@
 #include "graphics/shaderManager.hpp"
-#include "core/init.hpp"
+#include "core/engine.hpp"
 #include "utils/files.hpp"
 
 #include <cstdio>
@@ -55,7 +55,7 @@ bool ShaderManager::loadSourceFromFile(Shader& shader) const {
 	std::string path = this->basePath + shader.fileName;
   
 	std::string src{};
-	fprintf(stderr, "[DEBUG] Trying to load shader from: %s\n", path.c_str());
+	//fprintf(stderr, "[DEBUG] Trying to load shader from: %s\n", path.c_str());
 	if (!loadFile(src, path)) {
 		fprintf(stderr, "[loadSourceFromFile ERROR] Failed to load file: %s\n", path.c_str());
 		return false;

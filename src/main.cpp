@@ -3,15 +3,16 @@
 int main() {
 	Engine engine{};
 
-	/*Scene
-	* "" (Empty) (Default)
-  * Teacher, Teacher2
-  * Warehouse
+	/* 
+	* Available Scenes
+	* - "" (Empty/Default)
+  * - Teacher, Teacher2
+  * - Warehouse
   *
   * Primitive Scenes
-	* Cube 
-  * Triangle
-  * Square
+	* - Triangle
+	* - Square 
+  * - Cube
 	*/
 	engine.run();
 	return 0;

@@ -1,4 +1,4 @@
-#include "core/engine_controls.hpp"
+#include "core/modelControls.hpp"
 
 static void processObject(GLFWwindow* window, Vec4& pos, Vec3& rot, Vec3& scale, float deltaTime){
   if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) pos.z += deltaTime;

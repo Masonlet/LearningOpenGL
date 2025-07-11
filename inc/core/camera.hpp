@@ -1,26 +1,11 @@
 #pragma once
 
-#include "core/init.hpp"
-#include "math/vec3.hpp"
+#include <GLFW/glfw3.h>
+
+#include "math/constants.hpp"
 #include "math/vec4.hpp"
 #include "math/mat4.hpp"
 
-#include <glad/glad.h> // If "GLFW_INCLUDE_NONE" was not defined this would need to be included before glfw3.h
-
-constexpr float MOVE_SPEED{25.0f};
-constexpr float CAMERA_SPEED{0.1f};
-
-constexpr float DEFAULT_FOV{75.0f};
-constexpr float NEAR_PLANE{0.1f};
-constexpr float FAR_PLANE{10000.0f};
-
-constexpr float DEFAULT_YAW{-90.0f};
-constexpr float DEFAULT_PITCH{0.0f};
-
-constexpr Vec3 INITIAL_POS{0.0f, 0.0f, -10.0f};
-constexpr Vec3 INITIAL_TARGET{0.0f, 00.0f, -1.0f};
-constexpr Vec3 WORLD_UP{0.0f, 1.0f, 0.0f};
-	
 class Camera {
 public:
 	Camera();

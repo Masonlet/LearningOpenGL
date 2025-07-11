@@ -18,7 +18,7 @@ struct Vec4 {
 	constexpr Vec4(float f) : x(f), y(f), z(f), w(f) {}
 	constexpr Vec4(const Vec3& v, float wIn) : x(v.x), y(v.y), z(v.z), w(wIn) {}
 	constexpr Vec4(float xIn, float yIn, float zIn, float wIn) { x = xIn, y = yIn, z = zIn, w = wIn; }
-
+	
 	float length() const;
 	inline float lengthSquared() const { return x * x + y * y + z * z + w * w; }
 

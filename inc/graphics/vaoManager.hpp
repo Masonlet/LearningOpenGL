@@ -2,6 +2,7 @@
 
 #include "math/vertex.hpp"
 #include "math/mat4.hpp"
+#include "core/colour.hpp"
 
 #include <string>
 #include <map>
@@ -15,7 +16,7 @@ ModelDrawInfo
 struct ModelDrawInfo {
 	ModelDrawInfo();
 
-	std::string meshName;
+	std::string meshPath;
 
 	unsigned int VAO_ID;
 

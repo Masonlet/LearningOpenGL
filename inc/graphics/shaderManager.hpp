@@ -16,8 +16,10 @@ public:
 		enum ShaderType { VERTEX_SHADER, FRAGMENT_SHADER, UNKNOWN };
 		ShaderType type;
 
-		Shader();
-		~Shader();
+		Shader() : ID{ 0 }, type{ Shader::UNKNOWN }, sourceIsMultiLine{ false } {};
+		Shader(std::string fileName) : ID{ 0 }, type{ Shader::UNKNOWN }, sourceIsMultiLine{ false }, fileName{ fileName } {};
+
+		~Shader() {};
 
 		std::string getType();
 	};

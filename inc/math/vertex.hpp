@@ -15,10 +15,3 @@ struct Vertex {
 	Vec4 col; // float r, float g, float b
 	Vec4 norm; //float nx, float ny, float nz
 };
-
-enum class ColourMode {
-  Solid,
-  Random,
-  VerticalGradient,
-  PLYColour
-};

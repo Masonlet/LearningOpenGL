@@ -1,7 +1,7 @@
 #include "graphics/vaoManager.hpp"
 #include "utils/parser.hpp"
 #include "utils/files.hpp"
-#include "core/init.hpp"
+#include "core/engine.hpp"
 
 #include <vector>
 #include <sstream>
@@ -48,8 +48,6 @@ const static Vec3 calculateGradient(float y, float minY, float maxY) {
     };
 }
 const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigned char* p) {
-    printf("%s\n", drawInfo.meshName.c_str());
-
     if (!drawInfo.vertices || drawInfo.numVertices == 0) {
         fprintf(stderr, "[parseVertices ERROR] vertices buffer not allocated!\n");
         return nullptr;
@@ -320,7 +318,7 @@ bool VAOManager::LoadPrimitiveIntoVAO(ModelDrawInfo& drawInfo, unsigned int shad
 }
 bool VAOManager::LoadModelIntoVAO(std::string fileName, ModelDrawInfo& drawInfo, unsigned int shaderProgramID) {
   //Load the model from file (Do it here since if we cant load it theres no point in doing anything else)
-  drawInfo.meshName = fileName;
+  drawInfo.meshPath = fileName;
   drawInfo.hasNormals = false;
   drawInfo.hasColours = false;
   drawInfo.numVertices = 0;
@@ -357,7 +355,7 @@ bool VAOManager::LoadModelFromFile(const std::string& path, ModelDrawInfo& drawI
     return false;
   }
 
-  const unsigned char* cursor = parseHeader(src, drawInfo.numVertices,  drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours);
+  const unsigned char* cursor = parsePlyHeader(src, drawInfo.numVertices,  drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours);
   if(!cursor){
     fprintf(stderr, "[LoadModelFromFile ERROR] Failed to parse header or missing 'end_header'\n");
     delete[] drawInfo.indices;
@@ -457,7 +455,7 @@ bool VAOManager::UploadToGPU(ModelDrawInfo& drawInfo, unsigned int shaderProgram
     return false;
   }
 
-  this->modelName_to_VAOID[drawInfo.meshName] = drawInfo;
+  this->modelName_to_VAOID[drawInfo.meshPath] = drawInfo;
   return true;
 }
 

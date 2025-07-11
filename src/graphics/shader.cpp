@@ -1,15 +1,5 @@
 #include "graphics/shaderManager.hpp"
 
-ShaderManager::Shader::Shader() : sourceIsMultiLine{false} {
-  this->ID = 0;
-  this->type = Shader::UNKNOWN;
-  return;
-}
-
-ShaderManager::Shader::~Shader() {
-  return;
-}
-
 std::string ShaderManager::Shader::getType() {
   switch ( this->type )
   {

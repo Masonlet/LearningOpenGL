@@ -2,20 +2,44 @@
 
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
+#include "core/colour.hpp"
 
 #include <cstddef>
+#include <string>
+
+#ifndef PARSE_OR_FAIL
+#define PARSE_OR_FAIL(parser, target, errorMsg) \
+    if (!(p = parser(p, target))) { \
+        fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
+        return nullptr; \
+    } \
+    if (*p == ',') ++p;
+#endif
+
+#ifndef PARSE_OR_FALSE
+#define PARSE_OR_FALSE(parser, target, errorMsg) \
+    if (!(p = parser(p, target))) { \
+        fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
+        return false; \
+    } \
+    if (*p == ',') ++p;
+#endif
 
 const unsigned char* skipToNextLine(const unsigned char* p);
 const unsigned char* skipToNextWord(const unsigned char* p);
 const unsigned char* skipWhitespace(const unsigned char* p);
 
-const unsigned char* parseToken(const unsigned char* p, unsigned char* out, const size_t maxLength);
-const unsigned char* parseFloat(const unsigned char* p, float& out);
-
+const unsigned char* parseToken     (const unsigned char* p, unsigned char* out, const size_t maxLength);
+const unsigned char* parseFloat     (const unsigned char* p, float& out);	
 const unsigned char* parseStringUInt(const unsigned char* p, unsigned int& out);
-const unsigned int parseBinaryUINT(unsigned char* buffer);
-
-const unsigned char* parseHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut);
+const unsigned int   parseBinaryUINT(unsigned char* buffer);
 
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out);
 const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
+
+const unsigned char* parsePlyHeader(const unsigned char* p, 
+	unsigned int& numVerticesOut, unsigned int& numTrianglesOut, 
+	bool& hasNormalsOut, bool& hasColoursOut);
+
+const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut);
+
