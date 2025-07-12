@@ -13,7 +13,7 @@
 
 SceneLoader::SceneLoader(Scene& scene, Renderer* renderer, LightManager* lightManager) : scene(scene), renderer(renderer), lightManager(lightManager) {}
 
-static void applyColourSettings(ModelInstance& instance, const Vec4& colour, ColourMode mode) {
+static void applyColourSettings(ModelInstance& instance, const Vec4& colour, const ColourMode& mode) {
   instance.colour = colour;
   instance.colourMode = mode;
 }
@@ -33,8 +33,7 @@ bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("cube_instance_", 0) == 0) 
-      applyColourSettings(instance, grid.colour, grid.colourMode);
+    if (instanceName.rfind("cube_instance_", 0) == 0) applyColourSettings(instance, grid.colour, grid.colourMode);
   }
 
   return true;
@@ -240,7 +239,8 @@ bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
       continue;
     }
 
-    const unsigned char* linePtr = reinterpret_cast<const unsigned char*>(lineStart);
+    std::string rawLine(lineStart, lineLen);
+    const unsigned char* linePtr = reinterpret_cast<const unsigned char*>(rawLine.c_str());
     linePtr = skipWhitespace(linePtr);
     if (*linePtr == '\0' || *linePtr == '\n') continue;
 

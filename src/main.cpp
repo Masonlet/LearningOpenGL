@@ -15,6 +15,6 @@ int main() {
 	* - Square 
   * - Cube
 	*/
-	engine.run("Maze");
+	engine.run();
 	return 0;
 }
