@@ -13,28 +13,11 @@
 
 SceneLoader::SceneLoader(Scene& scene, Renderer* renderer, LightManager* lightManager) : scene(scene), renderer(renderer), lightManager(lightManager) {}
 
-bool SceneLoader::handleModelLine(const unsigned char* p) {
-  ParsedModel model{};
-  PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
-
-  ModelDrawInfo drawInfo;
-  drawInfo.meshPath = model.path;
-  drawInfo.colour = model.colour;
-  drawInfo.colourMode = model.colourMode;
-
-  scene.addModelInfo(model.path, drawInfo);
-  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, drawInfo, renderer->getProgram())) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to load model: %s\n", model.path.c_str());
-    return false;
-  }
-  scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ model.position, model.rotation, model.scale }));
-
-  ModelInstance& inst = scene.getModelInstances()[model.meshName];
-  inst.colour = model.colour;
-  inst.colourMode = model.colourMode;
-
-  return true;
+static void applyColourSettings(ModelInstance& instance, const Vec4& colour, ColourMode mode) {
+  instance.colour = colour;
+  instance.colourMode = mode;
 }
+
 bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
   ParsedGrid grid;
   PARSE_OR_FALSE(parseCubeGrid, grid, "Failed to parse cubeGrid colour");
@@ -50,19 +33,17 @@ bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("cube_instance_", 0) == 0) {
-      instance.colour = grid.colour;
-      instance.colourMode = grid.colourMode;
-    }
+    if (instanceName.rfind("cube_instance_", 0) == 0) 
+      applyColourSettings(instance, grid.colour, grid.colourMode);
   }
 
   return true;
 }
 bool SceneLoader::handleSquareGridLine(const unsigned char* p) {
-  ParsedGrid squareGrid;
-  PARSE_OR_FALSE(parseSquareGrid, squareGrid, "Failed to parse squareGrid colour");
+  ParsedGrid grid;
+  PARSE_OR_FALSE(parseSquareGrid, grid, "Failed to parse squareGrid colour");
 
-  if (!createSquareGrid(*this, squareGrid.meshName, 0, squareGrid.layout.count, { squareGrid.layout.spacing, squareGrid.layout.spacing }, squareGrid.layout.rotation, { squareGrid.layout.scale.x, squareGrid.layout.scale.y })) {
+  if (!createSquareGrid(*this, grid.meshName, 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
     fprintf(stderr, "[createSceneFromName ERROR] Failed to create squareGrid\n");
     return false;
   }
@@ -71,10 +52,8 @@ bool SceneLoader::handleSquareGridLine(const unsigned char* p) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("square_instance_", 0) == 0) {
-      instance.colour = squareGrid.colour;
-      instance.colourMode = squareGrid.colourMode;
-    }
+    if (instanceName.rfind("square_instance_", 0) == 0) 
+      applyColourSettings(instance, grid.colour, grid.colourMode);
   }
 
   return true;
@@ -129,6 +108,28 @@ bool SceneLoader::handleTriangleLine(const unsigned char* p) {
   scene.getModelInstances()[instanceName].colourMode = triangle.colourMode;
   return true;
 }
+
+bool SceneLoader::handleModelLine(const unsigned char* p) {
+  ParsedModel model{};
+  PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
+
+  ModelDrawInfo drawInfo;
+  drawInfo.meshPath = model.path;
+  drawInfo.colour = model.colour;
+  drawInfo.colourMode = model.colourMode;
+
+  scene.addModelInfo(model.path, drawInfo);
+  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, drawInfo, renderer->getProgram())) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to load model: %s\n", model.path.c_str());
+    return false;
+  }
+  scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ model.position, model.rotation, model.scale }));
+
+  ModelInstance& instance = scene.getModelInstances()[model.meshName];
+  applyColourSettings(instance, model.colour, model.colourMode);
+
+  return true;
+}
 bool SceneLoader::handleLightLine(const unsigned char* p) {
   ParsedLight lightData{};
   if (!(p = parseLight(p, lightData))) {
@@ -147,41 +148,77 @@ bool SceneLoader::handleLightLine(const unsigned char* p) {
     return true;
   }
 }
-const unsigned char* SceneLoader::handleMazeLine(const unsigned char* p) {
-  ParsedMaze maze{};
-  if (!(p = parseMaze(p, maze))) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse maze\n");
-    return nullptr;
+
+bool SceneLoader::handleMazeLine(const unsigned char* p) {
+  ParsedMaze maze;
+  if (!parseMazeHeader(p, maze)) {
+    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse maze header\n");
+    return false;
   }
 
+  pendingMaze = maze;
+  return true;
+}
+bool SceneLoader::buildMaze(Scene& scene, const ParsedMaze& maze) {
   const float tileSize = 1.0f;
 
-  for (size_t row = 0; row < maze.layout.size(); ++row) {
-    for (size_t col = 0; col < maze.layout[row].size(); ++col) {
-      const bool isWall = maze.layout[row][col];
-      const std::string& type = isWall ? maze.wallType : maze.floorType;
-      const std::string instanceName = "maze_" + std::to_string(row) + "_" + std::to_string(col);
+  std::vector<std::string> modelsToLoad = { maze.wallType, maze.floorType };
 
-      Vec4 position = {
-        static_cast<float>(col) * tileSize,
-        0.0f,
-        -static_cast<float>(row) * tileSize,
-        0.0f
-      };
+  for (const std::string& modelPath : modelsToLoad) {
+    ModelDrawInfo existingInfo;
+    if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {
+      ModelDrawInfo drawInfo;
+      drawInfo.meshPath = modelPath;
+      drawInfo.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
+      drawInfo.colourMode = ColourMode::PLYColour;
 
-      Mat4 transform = Mat4::translation(position);
-      if (!scene.addInstance(instanceName, type, transform)) {
-        fprintf(stderr, "[createSceneFromName ERROR] Failed to add maze instance: %s\n", instanceName.c_str());
-        return nullptr;
+      scene.addModelInfo(modelPath, drawInfo);
+      if (!renderer->getVAOManager()->LoadModelIntoVAO(modelPath, drawInfo, renderer->getProgram())) {
+        fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());
+        return false;
       }
     }
   }
 
-  return p;
-}
+  for (size_t row = 0; row < maze.layout.size(); ++row) {
+    for (size_t col = 0; col < maze.layout[row].size(); ++col) {
+      const std::string& mesh = maze.layout[row][col] ? maze.wallType : maze.floorType;
+      std::string instanceName = maze.mazeName + "_" + std::to_string(row) + "_" + std::to_string(col);
 
-bool SceneLoader::loadTxtScene(const std::string& scene) {
-  std::string scenepath = "assets/scenes/" + scene + ".txt";
+      Vec4 pos = { static_cast<float>(col), 0.0f, -static_cast<float>(row), 0.0f };
+      if (!scene.addInstance(instanceName, mesh, Mat4::translation(pos))) {
+        fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", instanceName.c_str());
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+bool SceneLoader::handleMazeData(const unsigned char* p) {
+  if (!pendingMaze.has_value()) {
+    fprintf(stderr, "[SceneLoader ERROR] Unexpected mazeData with no pending maze\n");
+    return false;
+  }
+
+  // Parse the maze layout data into the pendingMaze
+  if (!(p = parseMazeData(p, *pendingMaze, scene))) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to parse mazeData\n");
+    return false;
+  }
+
+  // Build the actual maze in the scene
+  if (!buildMaze(scene, *pendingMaze)) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to build maze\n");
+    return false;
+  }
+
+  pendingMaze.reset();
+  return true;
+}
+  
+bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
+  std::string scenepath = "assets/scenes/" + sceneIn + ".txt";
   std::string src{};
 
   if (!loadFile(src, scenepath)) {
@@ -203,48 +240,28 @@ bool SceneLoader::loadTxtScene(const std::string& scene) {
       continue;
     }
 
-    std::string rawLine(lineStart, lineLen);
-    const unsigned char* linePtr = reinterpret_cast<const unsigned char*>(rawLine.c_str());
+    const unsigned char* linePtr = reinterpret_cast<const unsigned char*>(lineStart);
     linePtr = skipWhitespace(linePtr);
-    if (*linePtr == '\0' || *linePtr == '\n') {
-      linePtr = reinterpret_cast<const unsigned char*>(lineEnd);
-      continue;
-    }
+    if (*linePtr == '\0' || *linePtr == '\n') continue;
 
     //Name 
     char name[64]{};
     linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(name), sizeof(name));
     if (!linePtr || strlen(name) == 0) {
       fprintf(stderr, "[createSceneFromName ERROR] Failed to parse name\n");
-      break;
+      return false;
     }
     if (*linePtr == ',') ++linePtr;
 
     bool handled{ false };
-    if (strcmp(name, "model") == 0) {
-      handled = handleModelLine(linePtr);
-    }
-    else if (strcmp(name, "cubeGrid") == 0) {
-      handled = handleCubeGridLine(linePtr);
-    }
-    else if (strcmp(name, "squareGrid") == 0) {
-      handled = handleSquareGridLine(linePtr);
-    }
-    else if (strcmp(name, "triangle") == 0) {
-      handled = handleTriangleLine(linePtr);
-    }
-    else if (strcmp(name, "light") == 0) {
-      handled = handleLightLine(linePtr);
-    }
-    else if (strcmp(name, "maze") == 0) {
-      p = handleMazeLine(linePtr);
-      if (!p) break;
-      continue;
-    }
-    else {
-      fprintf(stderr, "[createSceneFromName ERROR] Invalid scene format after line: '%.*s'\n", static_cast<int>(lineLen), lineStart);
-      handled = false;
-    }
+    if (strcmp(name, "model") == 0) handled = handleModelLine(linePtr);
+    else if (strcmp(name, "cubeGrid") == 0) handled = handleCubeGridLine(linePtr);
+    else if (strcmp(name, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
+    else if (strcmp(name, "triangle") == 0) handled = handleTriangleLine(linePtr);
+    else if (strcmp(name, "light") == 0) handled = handleLightLine(linePtr);
+    else if (strcmp(name, "maze") == 0) handled = handleMazeLine(linePtr);
+    else if (strcmp(name, "mazeData") == 0) handled = handleMazeData(linePtr);
+    else fprintf(stderr, "[createSce  neFromName ERROR] Invalid scene format after line: '%.*s'\n", static_cast<int>(lineLen), lineStart);
 
     if (!handled) break;
     p = reinterpret_cast<const unsigned char*>(lineEnd);

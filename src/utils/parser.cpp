@@ -36,6 +36,7 @@ const unsigned char* parseToken(const unsigned char* p, unsigned char* out, cons
     
     return skipWhitespace(p);
 }
+
 const unsigned char* parseFloat(const unsigned char* p, float& out) {
     p = skipWhitespace(p);
     if (!p || *p == '\0') return nullptr;

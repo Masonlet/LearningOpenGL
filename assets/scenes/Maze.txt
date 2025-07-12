@@ -1,4 +1,6 @@
-maze, cow_xyz_n_rgba.ply, dolphin_xyz_n_rgba.ply,
+maze, testMaze, cow_xyz_n_rgba.ply, dolphin_xyz_n_rgba.ply, mazeData1
+
+mazeData, mazeData1
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 X...X.....X...X.....X.....X..
 X.X.X.X.....X.X.XXX.X.X.XXX.X
@@ -14,3 +16,4 @@ X.........X.XXXXX.X.XXXXX.X.X
 X.XXX.....X.X.XXXXXXXXXXX.X.X
 X...........X.............X.X
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+mazeData1

@@ -5,6 +5,8 @@
 #include "core/colour.hpp"
 #include "math/geometry.hpp"
 
+#include "core/scene.hpp"
+
 #include <string>
 #include <vector>
 
@@ -40,8 +42,10 @@ struct ParsedLight {
 	Vec4 param2;
 };
 struct ParsedMaze {
+	std::string mazeName;
 	std::string floorType;
 	std::string wallType;
+	std::string layoutName;
 	std::vector<std::vector<bool>> layout;
 };
 
@@ -51,5 +55,5 @@ const unsigned char* parseCubeGrid(const unsigned char* p, ParsedGrid& out);
 const unsigned char* parseSquareGrid(const unsigned char* p, ParsedGrid& out);
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out);
 
-const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out);
-const unsigned char* parseMazeData(const unsigned char* p, ParsedMaze& out);
+const unsigned char* parseMazeHeader(const unsigned char* p, ParsedMaze& out);
+const unsigned char* parseMazeData(const unsigned char* p, ParsedMaze& maze, Scene& scene);

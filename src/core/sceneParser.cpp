@@ -88,8 +88,15 @@ const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   return p;
 }
 
-const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
-  char wall[128]{}, floor[128]{};
+const unsigned char* parseMazeHeader(const unsigned char* p, ParsedMaze& out) {
+  char mazeName[64]{}, floor[128]{}, wall[128]{}, layoutName[64]{};
+
+  p = parseToken(p, reinterpret_cast<unsigned char*>(mazeName), sizeof(mazeName));
+  if (!p || strlen(mazeName) == 0) {
+    fprintf(stderr, "[parseMazeHeader ERROR] Failed to parse maze name\n");
+    return nullptr;
+  }
+  if (*p == ',') ++p;
 
   p = parseToken(p, reinterpret_cast<unsigned char*>(floor), sizeof(floor));
   if (!p || strlen(floor) == 0) {
@@ -104,39 +111,65 @@ const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
     return nullptr;
   }
   if (*p == ',') ++p;
-  p = skipWhitespace(p);
 
+  p = parseToken(p, reinterpret_cast<unsigned char*>(layoutName), sizeof(layoutName));
+  if (!p || strlen(layoutName) == 0) {
+    fprintf(stderr, "[parseMazeHeader ERROR] Failed to parse maze layout name\n");
+    return nullptr;
+  }
+
+  out.layout.clear();
+  out.mazeName = mazeName;
   out.floorType = floor;
   out.wallType = wall;
+  out.layoutName = layoutName;
 
   return p;
 }
-const unsigned char* parseMazeData(const unsigned char* p, ParsedMaze& out) {
-  out.layout.clear();
+const unsigned char* parseMazeData(const unsigned char* p, ParsedMaze& maze, Scene& scene) {
+  char layoutName[64]{};
+  p = parseToken(p, reinterpret_cast<unsigned char*>(layoutName), sizeof(layoutName));
+  if (!p || strlen(layoutName) == 0) {
+    fprintf(stderr, "[SceneLoader ERROR] Maze layout name mismatch: expected '%s', got '%s'\n", maze.layoutName.c_str(), layoutName);
+    return nullptr;
+  }
 
-  while (*p) {
+  if (maze.layoutName != layoutName) {
+    fprintf(stderr, "[SceneLoader ERROR] Maze layout name mismatch: expected '%s', got '%s'\n",
+      maze.layoutName.c_str(), layoutName);
+    return nullptr;
+  }
+
+  p = skipWhitespace(p);
+
+  while (*p && *p != '\0') {
     const char* lineStart = reinterpret_cast<const char*>(p);
     const char* lineEnd = reinterpret_cast<const char*>(skipToNextLine(p));
-    size_t len = lineEnd - lineStart;
+    size_t lineLen = lineEnd - lineStart;
 
-    while (len > 0 && (lineStart[len - 1] == '\n' || lineStart[len - 1] == '\r'))
-      --len;
-    if (len == 0) break;
+    while (lineLen > 0 && (lineStart[lineLen - 1] == '\n' || lineStart[lineLen - 1] == '\r'))
+      --lineLen;
+
+    if (lineLen == 0)
+      return reinterpret_cast<const unsigned char*>(lineEnd);
+
+    std::string line(lineStart, lineLen);
+
+    if (line == maze.layoutName) 
+      return reinterpret_cast<const unsigned char*>(lineEnd);
 
     std::vector<bool> row;
-    for (size_t i = 0; i < len; ++i) {
-      char c = lineStart[i];
+    for (char c : line) {
       if (c == 'X') row.push_back(true);
       else if (c == '.') row.push_back(false);
-      else {
-        fprintf(stderr, "[parseMaze ERROR] Unexpected char in maze layout: '%c'\n", c);
-        return nullptr;
-      }
     }
 
-    out.layout.push_back(row);
+    if (!row.empty())
+      maze.layout.push_back(std::move(row));
+
     p = reinterpret_cast<const unsigned char*>(lineEnd);
   }
 
-  return p;
+  fprintf(stderr, "[SceneLoader ERROR] Unexpected end of input while parsing maze layout\n");
+  return nullptr;
 }
