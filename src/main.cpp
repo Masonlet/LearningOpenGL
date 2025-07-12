@@ -15,6 +15,6 @@ int main() {
 	* - Square 
   * - Cube
 	*/
-	engine.run();
+	engine.run("Warehouse");
 	return 0;
 }

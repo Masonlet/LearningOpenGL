@@ -6,6 +6,8 @@
 #include "math/vec4.hpp"
 #include "math/mat4.hpp"
 
+#include "core/inputManager.hpp"
+
 class Camera {
 public:
 	Camera();
@@ -36,7 +38,7 @@ public:
   inline void SetX(const float x) { lastX = x; }
   inline void SetY(const float y) { lastY = y; }
 
-  void ProcessInputs(GLFWwindow* window, Vec4& pos, Vec3& rot, Vec3& scale, const float deltaTime);
+  void ProcessInputs(InputManager* input, const float deltaTime);
   void print() const;
 
 private:
@@ -46,6 +48,6 @@ private:
 	float lastX, lastY;
 	bool paused;
 
-	void ProcessKeyboard(GLFWwindow* window, const float deltaTime);
-	void ProcessMouse(GLFWwindow* window, const double xpos, const double ypos);
+	void ProcessKeyboard(InputManager* input, const float deltaTime);
+	void ProcessMouse(InputManager* input);
 };

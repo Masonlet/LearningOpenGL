@@ -6,6 +6,7 @@
 #include "core/scene.hpp"
 #include "core/sceneLoader.hpp"
 #include "core/camera.hpp"
+#include "core/inputManager.hpp"
 
 #include "graphics/shaderManager.hpp"
 #include "graphics/vaoManager.hpp"
@@ -18,12 +19,13 @@ public:
 	Engine();
 	~Engine();
 
-	inline bool getWireframe() const { return wireframe; }
+	inline Renderer* getRenderer() { return &renderer; }
+
 	inline std::map<std::string, ModelInstance>& getModelInstances() { return scene.getModelInstances(); }
 	inline LightManager* getLightManager() { return &lightManager; }
-	inline Renderer* getRenderer() { return &renderer; }
 	inline SceneLoader& getSceneLoader() { return sceneLoader; }
 
+	inline bool getWireframe() const { return wireframe; }
 	void updateWireframe();
 	void updateAspect(unsigned int width, unsigned int height);
 
@@ -32,11 +34,13 @@ public:
 private:
 	GLFWwindow* window;
 	Camera camera;
+	InputManager input;
+
 	ShaderManager shaderManager;
 	VAOManager vaoManager;
-	LightManager lightManager;
 	Renderer renderer;
 
+	LightManager lightManager;
 	Scene scene;
 	SceneLoader sceneLoader;
 

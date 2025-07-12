@@ -159,11 +159,7 @@ bool SceneLoader::handleMazeLine(const unsigned char* p) {
   return true;
 }
 bool SceneLoader::buildMaze(Scene& scene, const ParsedMaze& maze) {
-  const float tileSize = 1.0f;
-
-  std::vector<std::string> modelsToLoad = { maze.wallType, maze.floorType };
-
-  for (const std::string& modelPath : modelsToLoad) {
+  for (const std::string& modelPath : { maze.wallType, maze.floorType }) {
     ModelDrawInfo existingInfo;
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {
       ModelDrawInfo drawInfo;
@@ -200,13 +196,11 @@ bool SceneLoader::handleMazeData(const unsigned char* p) {
     return false;
   }
 
-  // Parse the maze layout data into the pendingMaze
   if (!(p = parseMazeData(p, *pendingMaze, scene))) {
     fprintf(stderr, "[SceneLoader ERROR] Failed to parse mazeData\n");
     return false;
   }
 
-  // Build the actual maze in the scene
   if (!buildMaze(scene, *pendingMaze)) {
     fprintf(stderr, "[SceneLoader ERROR] Failed to build maze\n");
     return false;

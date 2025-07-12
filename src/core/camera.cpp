@@ -6,9 +6,7 @@
 
 Camera::Camera() :
   moveSpeed{ MOVE_SPEED }, mouseSpeed{ CAMERA_SPEED }, 
-  pos{ INITIAL_POS },
-  front{ INITIAL_TARGET },
-  up{ WORLD_UP }, 
+  pos{ INITIAL_POS }, front{ INITIAL_TARGET }, up{ WORLD_UP }, 
   yaw{ DEFAULT_YAW }, pitch{ DEFAULT_PITCH }, 
   lastX{ 0 }, lastY{ 0 }, 
   paused{ false } {
@@ -18,10 +16,8 @@ Camera::Camera() :
 Vec3 Camera::GetRight() const {
   Vec3 right = front.cross(up);
 
-  if (right.length() < 0.00001f)
-    return { 1.0f, 0.0f, 0.0f };
-
-  return right.normalized();
+  if (right.length() < 0.00001f) return { 1.0f, 0.0f, 0.0f };
+  else return right.normalized();
 }
 
 Mat4 Camera::LookAt() const {
@@ -69,6 +65,50 @@ Mat4 Camera::Perspective(const float aspect) const {
 
   return projection;
 };
+
+void Camera::ProcessInputs(InputManager* input, float deltaTime) {
+  ProcessKeyboard(input, deltaTime);
+  ProcessMouse(input);
+}
+
+void Camera::ProcessKeyboard(InputManager* input, const float deltaTime) {
+  if (input->IsKeyDown(GLFW_KEY_W)) MoveForward(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_A)) MoveLeft(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_S)) MoveBackward(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_D)) MoveRight(deltaTime);
+
+  if (input->IsKeyDown(GLFW_KEY_SPACE)) MoveUp(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_LEFT_CONTROL)) MoveDown(deltaTime);
+}
+
+void Camera::ProcessMouse(InputManager* input) {
+  if (!input->IsCursorLocked())
+    return;
+
+  Vec2 delta = input->GetMouseDelta();
+
+  float xoffset = delta.x * mouseSpeed;
+  float yoffset = delta.y * mouseSpeed;
+
+  yaw += xoffset;
+  pitch += yoffset;
+
+  if (pitch > 89.0f)
+    pitch = 89.0f;
+  if (pitch < -89.0f)
+    pitch = -89.0f;
+
+  front.x = cos(radians(yaw)) * cos(radians(pitch));
+  front.y = sin(radians(pitch));
+  front.z = sin(radians(yaw)) * cos(radians(pitch));
+  front = front.normalized();
+
+  Vec3 right = front.cross(WORLD_UP).normalized();
+  if (right.length() < 1e-6f)
+    right = { 1.0f, 0.0f, 0.0f };
+
+  up = right.cross(front).normalized();
+}
 
 void Camera::print() const {
   fprintf(stdout, "Pos: %f:%f:%f\n", pos.x, pos.y, pos.z);

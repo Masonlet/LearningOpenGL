@@ -5,28 +5,22 @@
 
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };
-constexpr int GL_MAJOR{ 3 };
-constexpr int GL_MINOR{ 3 };
-
-static void cleanupWindow(GLFWwindow* window) {
-  if (window) glfwDestroyWindow(window);
-}
 
 Engine::Engine() :
   window{ nullptr },
   currentProgram{ 0 }, currentModel{ 0 }, currentLight{ 0 },
   height{ default_height }, width{ default_width },
   deltaTime{ 0.0f }, lastTime{ 0.0f },
-  aspect{ 0.0f },
+  aspect{ static_cast<float>(width) / static_cast<float>(height) },
   wireframe{ false },
-  renderer(), shaderManager(), vaoManager(), lightManager(), scene(), sceneLoader(scene, &renderer, &lightManager)
+  sceneLoader(scene, &renderer, &lightManager)
 {
   window = WindowManager::initGL(width, height);
   if (!window) {
     fprintf(stderr, "failed to initialize opengl\n");
     return;
   }
-  aspect = static_cast<float>(width) / static_cast<float>(height);
+  glfwSetWindowUserPointer(window, this);
 
 #ifndef ndebug
   printf("initgl complete time: %f\n", glfwGetTime());
@@ -40,9 +34,6 @@ Engine::Engine() :
   setupShaders();
   WindowManager::setupGLState();
   WindowManager::setCallbacks(window);
-
-  glViewport(0, 0, width, height);
-  glfwSetWindowUserPointer(window, this);
 }
 
 Engine::~Engine() {
@@ -54,6 +45,7 @@ void Engine::updateAspect(unsigned int width, unsigned int height) {
   this->width = width;
   this->height = height;
   this->aspect = static_cast<float>(width) / static_cast<float>(height);
+  glViewport(0, 0, width, height);
 }
 void Engine::setupShaders() {
 #ifndef ndebug
@@ -80,6 +72,12 @@ void Engine::setupShaders() {
 
   renderer.initialize(&shaderManager, &vaoManager);
   renderer.setProgram(shaderID);
+
+  constexpr float bgR = 0.2f;
+  constexpr float bgG = 0.2f;
+  constexpr float bgB = 0.2f;
+  constexpr float bgA = 1.0f;
+  glClearColor(bgR, bgG, bgB, bgA);
 }
 
 void Engine::updateWireframe() {
@@ -100,7 +98,7 @@ void Engine::updateDeltaTime(const float currenttime) {
 
   if (rawdelta > max_delta) {
 #ifndef ndebug
-    printf("[warn] large delta time clamped: %f\n", rawdelta);
+    printf("[warn] deltaTime clamped to %.3f (was %.3f)\n", max_delta, rawdelta);
 #endif
     rawdelta = max_delta;
   }
@@ -123,7 +121,9 @@ void Engine::run(const std::string& sceneIn) {
     const float currenttime = static_cast<float>(glfwGetTime());
 
     updateDeltaTime(currenttime);
-    handleModelInput(camera, window, deltaTime, scene.getModelInstances(), currentModel);
+    input.Update(window);
+    camera.ProcessInputs(&input, deltaTime);
+    handleModelInput(&input, deltaTime, scene.getModelInstances(), currentModel);
     renderFrame();
 
     glfwSwapBuffers(window); 
@@ -132,8 +132,7 @@ void Engine::run(const std::string& sceneIn) {
 }
 
 void Engine::renderFrame() {
-  glViewport(0, 0, width, height);
-  glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+  glViewport(0, 0, width, height);  
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   unsigned int shaderProgram = renderer.getProgram();
@@ -150,12 +149,9 @@ void Engine::renderFrame() {
 
   lightManager.UpdateShaderUniforms(currentProgram);
 
-  std::map<std::string, ModelInstance>::const_iterator it;
-  for (it = scene.getModelInstances().begin(); it != scene.getModelInstances().end(); ++it) {
-    const ModelInstance& currentModel = it->second;
-    renderer.drawModel(currentModel, view, projection);
-  }
-
+  for (const std::pair<const std::string, ModelInstance>& pair : scene.getModelInstances())
+    renderer.drawModel(pair.second, view, projection);
+  
   glBindVertexArray(0);
 }
 

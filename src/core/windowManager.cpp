@@ -3,13 +3,16 @@
 
 #include <cstdio>
 
+constexpr int GL_MAJOR{ 3 };
+constexpr int GL_MINOR{ 3 };
+
 GLFWwindow* WindowManager::create(int width, int height, const char* title) {
 #ifndef NDEBUG
   fprintf(stderr, "[WindowManager] create() start: %f\n", glfwGetTime());
 #endif
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
   // glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // Optional
   // glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);   // Optional
 
@@ -17,6 +20,7 @@ GLFWwindow* WindowManager::create(int width, int height, const char* title) {
   if (!window) return nullptr;
 
   glfwMakeContextCurrent(window);
+  glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_TRUE);
   glfwSwapInterval(1); // Enable VSYNC
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
