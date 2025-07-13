@@ -1,4 +1,5 @@
-maze, testMaze, cow_xyz_n_rgba.ply, dolphin_xyz_n_rgba.ply, mazeData1
+model, homer, homer_xyz_n_rgba.ply, 0.0 -100.0 -50.0, 0.0 0.0 0.0, 1.0 1.0 1.0
+maze, testMaze, cow_xyz_n_rgba.ply, homer_xyz_n_rgba.ply, mazeData1
 
 mazeData, mazeData1
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXX

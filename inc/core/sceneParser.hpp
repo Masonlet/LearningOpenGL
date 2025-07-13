@@ -51,9 +51,8 @@ struct ParsedMaze {
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out);
 const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out);
-const unsigned char* parseCubeGrid(const unsigned char* p, ParsedGrid& out);
-const unsigned char* parseSquareGrid(const unsigned char* p, ParsedGrid& out);
+const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out);
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out);
 
-const unsigned char* parseMazeHeader(const unsigned char* p, ParsedMaze& out);
-const unsigned char* parseMazeData(const unsigned char* p, ParsedMaze& maze, Scene& scene);
+const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out);
+bool parseMazeData(const unsigned char* p, ParsedMaze& maze, Scene& scene);

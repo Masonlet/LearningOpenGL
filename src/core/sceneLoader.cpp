@@ -4,25 +4,149 @@
 #include "core/sceneParser.hpp"
 #include "core/sceneLoader.hpp"
 
-#include "utils/primitives.hpp"
 #include "utils/grids.hpp"
+#include "utils/primitives.hpp"
 
 #include <fstream>
 #include <cstring>
 #include <iomanip>
 
+
 SceneLoader::SceneLoader(Scene& scene, Renderer* renderer, LightManager* lightManager) : scene(scene), renderer(renderer), lightManager(lightManager) {}
+
+bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
+#ifndef NDEBUG
+  fprintf(stderr, "[SceneLoader] Scene load start: %f\n", glfwGetTime());
+#endif
+  std::string scenepath = "assets/scenes/" + sceneIn + ".txt";
+  std::string src{};
+
+  if (!loadFile(src, scenepath)) {
+    fprintf(stderr, "[createSceneFromName ERROR] failed to load scene: %s\n", scenepath.c_str());
+    return false;
+  }
+
+  const unsigned char* p = reinterpret_cast<const unsigned char*>(src.c_str());
+  while (*p) {
+    const unsigned char* lineStart = p;
+    const unsigned char* lineEnd = skipToNextLine(p);
+    size_t lineLen = lineEnd - lineStart;
+      
+    // Trim newline characters
+    while (lineLen > 0 && (lineStart[lineLen - 1] == '\n' || lineStart[lineLen - 1] == '\r'))
+      --lineLen;
+
+    // Empty line
+    if (lineLen == 0) {
+      p = lineEnd;
+      continue;
+    }   
+
+    if (!processSceneLine(lineStart, lineLen)) {
+      fprintf(stderr, "[SceneLoader ERROR] Failed to process scene line: %.*s\n", (int)lineLen, lineStart);
+      return false;
+    }
+
+    p = reinterpret_cast<const unsigned char*>(lineEnd);
+  }
+
+#ifndef NDEBUG
+  fprintf(stderr, "[SceneLoader] Scene load finish: %f\n", glfwGetTime());
+#endif
+  return true;
+}
+bool SceneLoader::saveTxtScene(const std::string& sceneName) {
+  std::string scenePath = "assets/scenes/" + sceneName + ".txt";
+  std::ofstream file(scenePath);
+
+  if (!file.is_open()) {
+    fprintf(stderr, "[saveTxtScene ERROR] Failed to open scene file for saving: %s\n", scenePath.c_str());
+    return false;
+  }
+
+  const std::map<std::string, ModelDrawInfo>& meshes = scene.getModelInfos();
+  const std::map<std::string, ModelInstance>& instances = scene.getModelInstances();
+  for (const std::pair<const std::string, ModelInstance>& entry : instances) {
+    const std::string& name = entry.first;
+    const ModelInstance& instance = entry.second;
+
+    std::map<std::string, ModelDrawInfo>::const_iterator mesh = meshes.find(instance.path);
+    if (mesh == meshes.end()) {
+      fprintf(stderr, "[saveTxtScene ERROR] Missing mesh for '%s'\n", name.c_str());
+      continue;
+    }
+
+    file << std::fixed << std::setprecision(6);
+    file << "model, " << name << ", "
+      << instance.path << ", "
+      << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
+      << instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
+      << instance.scale.x << " " << instance.scale.y << " " << instance.scale.z;
+
+    switch (instance.colourMode) {
+    case ColourMode::Solid: file << ", " << instance.colour.x * 255.0f << " " << instance.colour.y * 255.0f << " " << instance.colour.z * 255.0f; break;
+    case ColourMode::Random: file << ", Random"; break;
+    case ColourMode::VerticalGradient: file << ", Rainbow"; break;
+    case ColourMode::PLYColour:
+    default: break;
+    }
+
+    file << "\n";
+  }
+
+  for (int i = 0; i < LightManager::NUMBEROFLIGHTS; ++i) {
+    const Light& light = lightManager->theLights[i];
+
+    if (light.param2.x == 0.0f) continue;
+
+    file << "light, " << i << ", "
+      << light.position.x << " " << light.position.y << " " << light.position.z << " " << light.position.w << ", "
+      << light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
+      << light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
+      << light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
+      << light.param1.x << " " << light.param1.y << " " << light.param1.z << " " << light.param1.w << ", "
+      << light.param2.x << " " << light.param2.y << " " << light.param2.z << " " << light.param2.w << "\n";
+  }
+
+  printf("[saveTxtScene] %s Saved!\n", sceneName.c_str());
+  return true;
+}
+
+bool SceneLoader::processSceneLine(const unsigned char* p, size_t lineLen) {
+  const unsigned char* linePtr = p;
+  if (*linePtr == '\0') return true; 
+  
+  unsigned char name[64]{};
+  linePtr = parseToken(linePtr, name, sizeof(name));
+  const char* nameStr = reinterpret_cast<const char*>(name);
+
+  if (!linePtr || strlen(nameStr) == 0) {
+    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse name\n");
+    return false;
+  }
+  if (*linePtr == ',') ++linePtr;
+
+  bool handled{ true };
+  if (strcmp(nameStr, "model") == 0) handled = handleModelLine(linePtr);
+  else if (strcmp(nameStr, "cubeGrid") == 0) handled = handleCubeGridLine(linePtr);
+  else if (strcmp(nameStr, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
+  else if (strcmp(nameStr, "triangle") == 0) handled = handleTriangleLine(linePtr);
+  else if (strcmp(nameStr, "light") == 0) handled = handleLightLine(linePtr);
+  else if (strcmp(nameStr, "maze") == 0) handled = handleMazeLine(linePtr);
+  else if (strcmp(nameStr, "mazeData") == 0) handled = handleMazeData(linePtr);
+
+  return handled;
+} 
 
 static void applyColourSettings(ModelInstance& instance, const Vec4& colour, const ColourMode& mode) {
   instance.colour = colour;
   instance.colourMode = mode;
 }
-
-bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
+bool SceneLoader::handleSquareGridLine(const unsigned char* p) {
   ParsedGrid grid;
-  PARSE_OR_FALSE(parseCubeGrid, grid, "Failed to parse cubeGrid colour");
+  PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
-  if (!createCubeGrid(*this, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
+  if (!createSquareGrid(*this, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
     fprintf(stderr, "[SceneLoader ERROR] Failed to create cubeGrid\n");
     return false;
   }
@@ -38,21 +162,22 @@ bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
 
   return true;
 }
-bool SceneLoader::handleSquareGridLine(const unsigned char* p) {
+bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
   ParsedGrid grid;
-  PARSE_OR_FALSE(parseSquareGrid, grid, "Failed to parse squareGrid colour");
+  PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
-  if (!createSquareGrid(*this, grid.meshName, 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to create squareGrid\n");
+  if (!createCubeGrid(*this, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to create cubeGrid\n");
     return false;
   }
 
-  for (std::map<std::string, ModelInstance>::iterator it = scene.getModelInstances().begin(); it != scene.getModelInstances().end(); ++it) {
+  std::map<std::string, ModelInstance>& inst = scene.getModelInstances();
+  std::map<std::string, ModelInstance>::iterator it = inst.begin();
+  for (it; it != inst.end(); ++it) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("square_instance_", 0) == 0) 
-      applyColourSettings(instance, grid.colour, grid.colourMode);
+    if (instanceName.rfind("cube_instance_", 0) == 0) applyColourSettings(instance, grid.colour, grid.colourMode);
   }
 
   return true;
@@ -150,12 +275,28 @@ bool SceneLoader::handleLightLine(const unsigned char* p) {
 
 bool SceneLoader::handleMazeLine(const unsigned char* p) {
   ParsedMaze maze;
-  if (!parseMazeHeader(p, maze)) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse maze header\n");
+  PARSE_OR_FALSE(parseMaze, maze, "Failed to parse maze");
+
+  pendingMaze = maze;
+  return true;
+}
+bool SceneLoader::handleMazeData(const unsigned char* p) {
+  if (!pendingMaze.has_value()) {
+    fprintf(stderr, "[SceneLoader ERROR] Unexpected mazeData with no pending maze\n");
     return false;
   }
 
-  pendingMaze = maze;
+  if (!(parseMazeData(p, *pendingMaze, scene))) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to parse mazeData\n");
+    return false;
+  }
+
+  if (!buildMaze(scene, *pendingMaze)) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to build maze\n");
+    return false;
+  }
+
+  pendingMaze.reset();
   return true;
 }
 bool SceneLoader::buildMaze(Scene& scene, const ParsedMaze& maze) {
@@ -180,7 +321,7 @@ bool SceneLoader::buildMaze(Scene& scene, const ParsedMaze& maze) {
       const std::string& mesh = maze.layout[row][col] ? maze.wallType : maze.floorType;
       std::string instanceName = maze.mazeName + "_" + std::to_string(row) + "_" + std::to_string(col);
 
-      Vec4 pos = { static_cast<float>(col), 0.0f, -static_cast<float>(row), 0.0f };
+      Vec4 pos = { static_cast<float>(col) * 100.0f, 0.0f, -static_cast<float>(row) * 100.0f, 0.0f };
       if (!scene.addInstance(instanceName, mesh, Mat4::translation(pos))) {
         fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", instanceName.c_str());
         return false;
@@ -190,134 +331,4 @@ bool SceneLoader::buildMaze(Scene& scene, const ParsedMaze& maze) {
 
   return true;
 }
-bool SceneLoader::handleMazeData(const unsigned char* p) {
-  if (!pendingMaze.has_value()) {
-    fprintf(stderr, "[SceneLoader ERROR] Unexpected mazeData with no pending maze\n");
-    return false;
-  }
-
-  if (!(p = parseMazeData(p, *pendingMaze, scene))) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to parse mazeData\n");
-    return false;
-  }
-
-  if (!buildMaze(scene, *pendingMaze)) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to build maze\n");
-    return false;
-  }
-
-  pendingMaze.reset();
-  return true;
-}
-  
-bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
-  std::string scenepath = "assets/scenes/" + sceneIn + ".txt";
-  std::string src{};
-
-  if (!loadFile(src, scenepath)) {
-    fprintf(stderr, "[createSceneFromName ERROR] failed to load scene: %s\n", scenepath.c_str());
-    return false;
-  }
-
-  const unsigned char* p = reinterpret_cast<const unsigned char*>(src.c_str());
-  while (*p) {
-    const char* lineStart = reinterpret_cast<const char*>(p);
-    const char* lineEnd = reinterpret_cast<const char*>(skipToNextLine(p));
-    size_t lineLen = lineEnd - lineStart;
-
-    while (lineLen > 0 && (lineStart[lineLen - 1] == '\n' || lineStart[lineLen - 1] == '\r'))
-      --lineLen;
-
-    if (lineLen == 0) {
-      p = reinterpret_cast<const unsigned char*>(lineEnd);
-      continue;
-    }
-
-    std::string rawLine(lineStart, lineLen);
-    const unsigned char* linePtr = reinterpret_cast<const unsigned char*>(rawLine.c_str());
-    linePtr = skipWhitespace(linePtr);
-    if (*linePtr == '\0' || *linePtr == '\n') continue;
-
-    //Name 
-    char name[64]{};
-    linePtr = parseToken(linePtr, reinterpret_cast<unsigned char*>(name), sizeof(name));
-    if (!linePtr || strlen(name) == 0) {
-      fprintf(stderr, "[createSceneFromName ERROR] Failed to parse name\n");
-      return false;
-    }
-    if (*linePtr == ',') ++linePtr;
-
-    bool handled{ false };
-    if (strcmp(name, "model") == 0) handled = handleModelLine(linePtr);
-    else if (strcmp(name, "cubeGrid") == 0) handled = handleCubeGridLine(linePtr);
-    else if (strcmp(name, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
-    else if (strcmp(name, "triangle") == 0) handled = handleTriangleLine(linePtr);
-    else if (strcmp(name, "light") == 0) handled = handleLightLine(linePtr);
-    else if (strcmp(name, "maze") == 0) handled = handleMazeLine(linePtr);
-    else if (strcmp(name, "mazeData") == 0) handled = handleMazeData(linePtr);
-    else fprintf(stderr, "[createSce  neFromName ERROR] Invalid scene format after line: '%.*s'\n", static_cast<int>(lineLen), lineStart);
-
-    if (!handled) break;
-    p = reinterpret_cast<const unsigned char*>(lineEnd);
-  }
-
-  return true;
-}
-bool SceneLoader::saveTxtScene(const std::string& sceneName) {
-  std::string scenePath = "assets/scenes/" + sceneName + ".txt";
-  std::ofstream file(scenePath);
-
-  if (!file.is_open()) {
-    fprintf(stderr, "[saveTxtScene ERROR] Failed to open scene file for saving: %s\n", scenePath.c_str());
-    return false;
-  }
-
-  const std::map<std::string, ModelDrawInfo>& meshes = scene.getModelInfos();
-  const std::map<std::string, ModelInstance>& instances = scene.getModelInstances();
-  for (const std::pair<const std::string, ModelInstance>& entry : instances) {
-    const std::string& name = entry.first;
-    const ModelInstance& instance = entry.second;
-
-    std::map<std::string, ModelDrawInfo>::const_iterator mesh = meshes.find(instance.path);
-    if (mesh == meshes.end()) {
-      fprintf(stderr, "[saveTxtScene ERROR] Missing mesh for '%s'\n", name.c_str());
-      continue;
-    }
-
-    file << std::fixed << std::setprecision(6);
-    file << "model, " << name << ", "
-      << instance.path << ", "
-      << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
-      << instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
-      << instance.scale.x << " " << instance.scale.y << " " << instance.scale.z;
-
-    switch (instance.colourMode) {
-    case ColourMode::Solid: file << ", " << instance.colour.x * 255.0f << " " << instance.colour.y * 255.0f << " " << instance.colour.z * 255.0f; break;
-    case ColourMode::Random: file << ", Random"; break;
-    case ColourMode::VerticalGradient: file << ", Rainbow"; break;
-    case ColourMode::PLYColour:
-    default: break;
-    }
-
-    file << "\n";
-  }
-
-  for (int i = 0; i < LightManager::NUMBEROFLIGHTS; ++i) {
-    const Light& light = lightManager->theLights[i];
-
-    if (light.param2.x == 0.0f) continue;
-
-    file << "light, " << i << ", "
-      << light.position.x << " " << light.position.y << " " << light.position.z << " " << light.position.w << ", "
-      << light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
-      << light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
-      << light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
-      << light.param1.x << " " << light.param1.y << " " << light.param1.z << " " << light.param1.w << ", "
-      << light.param2.x << " " << light.param2.y << " " << light.param2.z << " " << light.param2.w << "\n";
-  }
-
-  printf("[saveTxtScene] %s Saved!\n", sceneName.c_str());
-  return true;
-}
-
 

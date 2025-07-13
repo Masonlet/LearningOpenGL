@@ -23,12 +23,10 @@ Engine::Engine() :
   glfwSetWindowUserPointer(window, this);
 
 #ifndef ndebug
-  printf("initgl complete time: %f\n", glfwGetTime());
-
-  printf("opengl info:\n");
-  printf("vendor: %s\n", glGetString(GL_VENDOR));
-  printf("renderer: %s\n", glGetString(GL_RENDERER));
-  printf("version: %s\n", glGetString(GL_VERSION));
+  printf("[Debug] Opengl info:\n");
+  printf("[Debug] Vendor: %s\n", glGetString(GL_VENDOR));
+  printf("[Debug] Renderer: %s\n", glGetString(GL_RENDERER));
+  printf("[Debug] Version: %s\n", glGetString(GL_VERSION));
 #endif
 
   setupShaders();
@@ -49,7 +47,7 @@ void Engine::updateAspect(unsigned int width, unsigned int height) {
 }
 void Engine::setupShaders() {
 #ifndef ndebug
-  printf("shader start time: %f\n", glfwGetTime());
+  printf("[setupShaders] Shader setup start time: %f\n", glfwGetTime());
 #endif
 
   shaderManager.setBasePath("assets/shaders/");
@@ -66,10 +64,6 @@ void Engine::setupShaders() {
     return;
   }
 
-#ifndef ndebug
-  printf("shaders create time: %f\n", glfwGetTime());
-#endif
-
   renderer.initialize(&shaderManager, &vaoManager);
   renderer.setProgram(shaderID);
 
@@ -78,6 +72,10 @@ void Engine::setupShaders() {
   constexpr float bgB = 0.2f;
   constexpr float bgA = 1.0f;
   glClearColor(bgR, bgG, bgB, bgA);
+
+#ifndef ndebug
+  printf("[setupShaders] Shader setup finish time: %f\n", glfwGetTime());
+#endif
 }
 
 void Engine::updateWireframe() {

@@ -8,7 +8,7 @@ constexpr int GL_MINOR{ 3 };
 
 GLFWwindow* WindowManager::create(int width, int height, const char* title) {
 #ifndef NDEBUG
-  fprintf(stderr, "[WindowManager] create() start: %f\n", glfwGetTime());
+  fprintf(stderr, "[WindowManager] create start: %f\n", glfwGetTime());
 #endif
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
@@ -24,23 +24,17 @@ GLFWwindow* WindowManager::create(int width, int height, const char* title) {
   glfwSwapInterval(1); // Enable VSYNC
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-#ifndef NDEBUG
-  fprintf(stderr, "[WindowManager] create() finish: %f\n", glfwGetTime());
+#ifndef NDEBUG 
+  fprintf(stderr, "[WindowManager] create finish: %f\n", glfwGetTime());
 #endif
-
   return window;
 }
 
-void WindowManager::setCallbacks(GLFWwindow* window) {
-  glfwSetKeyCallback(window, key_callback);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-}
-
-void WindowManager::destroy(GLFWwindow* window) {
-  if (window) glfwDestroyWindow(window);
-}
-
 GLFWwindow* WindowManager::initGL(const unsigned int width, const unsigned int height) {
+#ifndef NDEBUG
+  fprintf(stderr, "[WindowManager] initGL start: %f\n", glfwGetTime());
+#endif
+
   glfwSetErrorCallback(error_callback);
 
   if (!glfwInit()) {
@@ -61,7 +55,16 @@ GLFWwindow* WindowManager::initGL(const unsigned int width, const unsigned int h
   }
 
   glViewport(0, 0, width, height);
+
+#ifndef NDEBUG 
+  fprintf(stderr, "[WindowManager] initGL finish: %f\n", glfwGetTime());
+#endif
   return window;
+}
+
+void WindowManager::setCallbacks(GLFWwindow* window) {
+  glfwSetKeyCallback(window, key_callback);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 }
 
 void WindowManager::setupGLState() {
@@ -75,6 +78,10 @@ void WindowManager::setupGLState() {
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void WindowManager::destroy(GLFWwindow* window) {
+  if (window) glfwDestroyWindow(window);
 }
 
 void WindowManager::cleanupGL(const unsigned int program) {

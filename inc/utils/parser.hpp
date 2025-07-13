@@ -9,20 +9,48 @@
 
 #ifndef PARSE_OR_FAIL
 #define PARSE_OR_FAIL(parser, target, errorMsg) \
-    if (!(p = parser(p, target))) { \
-        fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
-        return nullptr; \
-    } \
-    if (*p == ',') ++p;
+  if (!(p = parser(p, target))) { \
+      fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
+      return nullptr; \
+  } \
+  if (*p == ',') ++p;
 #endif
 
 #ifndef PARSE_OR_FALSE
 #define PARSE_OR_FALSE(parser, target, errorMsg) \
-    if (!(p = parser(p, target))) { \
-        fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
-        return false; \
+  if (!(p = parser(p, target))) { \
+      fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
+      return false; \
+  } \
+  if (*p == ',') ++p;
+#endif
+
+#ifndef PARSE_STRING_OR_FAIL
+#define PARSE_STRING_OR_FAIL(p, target, size, label) \
+  do {\
+    char temp[size]{}; \
+    p = parseToken(p, reinterpret_cast<unsigned char*>(temp), size); \
+    if (!p || strlen(temp) == 0) { \
+      fprintf(stderr, "[parse ERROR] Failed to parse %s\n", label); \
+      return nullptr; \
     } \
-    if (*p == ',') ++p;
+    if (*p == ',') ++p; \
+    target = temp; \
+  } while (0)
+#endif
+
+#ifndef PARSE_STRING_OR_FALSE
+#define PARSE_STRING_OR_FALSE(p, target, size, label) \
+  do {\
+    char temp[size]{}; \
+    p = parseToken(p, reinterpret_cast<unsigned char*>(temp), size); \
+    if (!p || strlen(temp) == 0) { \
+      fprintf(stderr, "[parse ERROR] Failed to parse %s\n", label); \
+      return false; \
+    } \
+    if (*p == ',') ++p; \
+    target = temp; \
+  } while (0)
 #endif
 
 const unsigned char* skipToNextLine(const unsigned char* p);
