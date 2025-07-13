@@ -2,6 +2,7 @@
 
 int main() {
 	Engine engine{};
+	engine.initialize();
 
 	/* 
 	* Available Scenes
@@ -15,6 +16,6 @@ int main() {
 	* - Square 
   * - Cube
 	*/
-	engine.run();
+	engine.run("Warehouse");
 	return 0;
 }

@@ -38,7 +38,6 @@ const unsigned char* parseToken(const unsigned char* p, unsigned char* out, cons
     
   return skipWhitespace(p);
 }
-
 const unsigned char* parseFloat(const unsigned char* p, float& out) {
   p = skipWhitespace(p);
   if (!p || *p == '\0') return nullptr;
@@ -60,7 +59,7 @@ const unsigned char* parseStringUInt(const unsigned char* p, unsigned int& out) 
 
   return p;
 }
-const unsigned int parseBinaryUINT(unsigned char* buffer) {
+const unsigned int parseBinaryUINT(const unsigned char* buffer) {
     return (static_cast<unsigned int>(buffer[0]) << 24 | 
       static_cast<unsigned int>(buffer[1]) << 16 |
       static_cast<unsigned int>(buffer[2]) << 8 |
@@ -85,7 +84,7 @@ static const unsigned char* parsePlyPropertyLine(const unsigned char* p, bool& h
   const unsigned char* trimmed = skipWhitespace(p + 8);
 
   char temp[32]{};
-  if (!(trimmed = parseToken(trimmed, (unsigned char*)temp, sizeof(temp))/* ? */)) {
+  if (!(trimmed = parseToken(trimmed, (unsigned char*)temp, sizeof(temp)))) {
     fprintf(stderr, "[parsePlyHeader ERROR] Failed to parse property list count type, type: %s\n", temp);
     return nullptr;
   } 
@@ -244,11 +243,11 @@ const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, Colour
   colourOut = { 1.0f, 1.0f, 1.0f, 0.0f };
   modeOut = ColourMode::PLYColour;
 
-  p = skipWhitespace(p);
-  if (*p == '\0' || *p == '-') 
+  const unsigned char* original = skipWhitespace(p);
+  if (*original == '\0' || *original == '-'){
+    p = original;
     return p;
-
-  const unsigned char* original = p;
+  }
 
   if ((p = parseNumericColour(p, colourOut))) {
     modeOut = ColourMode::Solid;

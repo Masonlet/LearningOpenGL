@@ -6,6 +6,24 @@
 #include <sstream>
 #include <cstring>
 
+std::string ShaderManager::Shader::getType() {
+	switch (this->type)
+	{
+	case Shader::VERTEX_SHADER:
+		return "VERTEX_SHADER";
+		break;
+	case Shader::FRAGMENT_SHADER:
+		return "FRAGMENT_SHADER";
+		break;
+	case Shader::UNKNOWN:
+	default:
+		return "UNKNOWN_SHADER_TYPE";
+		break;
+	}
+
+	return "UNKNOWN_SHADER_TYPE";
+}
+
 bool ShaderManager::useShaderProgram(unsigned int ID) {
 	//Add lookup to see if we really have that ID
 	glUseProgram(ID);

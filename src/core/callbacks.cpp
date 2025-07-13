@@ -35,6 +35,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 				printf("[KEY_CALLBACK] Scene saved successfully!\n");
 			}
     }
+
+		if (key == GLFW_KEY_N) {
+			if (mods & GLFW_MOD_SHIFT)
+				engine->incrementModel();
+			else
+				engine->decrementModel();
+		}
 	}
 }
 

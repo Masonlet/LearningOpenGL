@@ -60,14 +60,12 @@ const unsigned char* skipWhitespace(const unsigned char* p);
 const unsigned char* parseToken     (const unsigned char* p, unsigned char* out, const size_t maxLength);
 const unsigned char* parseFloat     (const unsigned char* p, float& out);	
 const unsigned char* parseStringUInt(const unsigned char* p, unsigned int& out);
-const unsigned int   parseBinaryUINT(unsigned char* buffer);
+const unsigned int   parseBinaryUINT(const unsigned char* buffer);
 
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out);
 const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
 
-const unsigned char* parsePlyHeader(const unsigned char* p, 
-	unsigned int& numVerticesOut, unsigned int& numTrianglesOut, 
-	bool& hasNormalsOut, bool& hasColoursOut);
+const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut);
 
 const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut);
 

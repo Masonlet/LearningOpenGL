@@ -8,17 +8,24 @@ constexpr int default_height{ 1200 };
 
 Engine::Engine() :
   window{ nullptr },
-  currentProgram{ 0 }, currentModel{ 0 }, currentLight{ 0 },
+  currentProgram{ 0 }, currentModel{ 0 },
   height{ default_height }, width{ default_width },
   deltaTime{ 0.0f }, lastTime{ 0.0f },
   aspect{ static_cast<float>(width) / static_cast<float>(height) },
   wireframe{ false },
   sceneLoader(scene, &renderer, &lightManager)
-{
-  window = WindowManager::initGL(width, height);
+{}
+
+Engine::~Engine() {
+  scene.clearModels(vaoManager);
+  WindowManager::destroy(window);
+}
+
+bool Engine::initialize() {
+   window = WindowManager::initGL(width, height);
   if (!window) {
     fprintf(stderr, "failed to initialize opengl\n");
-    return;
+    return false;
   }
   glfwSetWindowUserPointer(window, this);
 
@@ -32,11 +39,8 @@ Engine::Engine() :
   setupShaders();
   WindowManager::setupGLState();
   WindowManager::setCallbacks(window);
-}
 
-Engine::~Engine() {
-  scene.clearModels(vaoManager);
-  WindowManager::destroy(window);
+  return true;
 }
 
 void Engine::updateAspect(unsigned int width, unsigned int height) {
@@ -82,7 +86,7 @@ void Engine::updateWireframe() {
   wireframe = !wireframe;
 }
 
-void Engine::updateDeltaTime(const float currenttime) {
+void Engine::tick(const float currenttime) {
   constexpr float max_delta = 0.1f;
   constexpr float smoothing_factor = 0.9f;
 
@@ -105,7 +109,7 @@ void Engine::updateDeltaTime(const float currenttime) {
   deltaTime = smoothing_factor * deltaTime + (2.0f - smoothing_factor) * rawdelta;
 }
 
-void Engine::run(const std::string& sceneIn) {
+void Engine::run(const std::string& sceneIn = "Default") {
   const std::string sceneName = sceneIn.empty() ? "Default" : sceneIn;
 
   if (!sceneLoader.loadTxtScene(sceneName)) {
@@ -116,12 +120,10 @@ void Engine::run(const std::string& sceneIn) {
   lightManager.GetUniformLocations(currentProgram);
 
   while (!glfwWindowShouldClose(window)) {	
-    const float currenttime = static_cast<float>(glfwGetTime());
-
-    updateDeltaTime(currenttime);
+    tick(static_cast<float>(glfwGetTime()));
     input.Update(window);
-    camera.ProcessInputs(&input, deltaTime);
-    handleModelInput(&input, deltaTime, scene.getModelInstances(), currentModel);
+    camera.ProcessInputs(&input, getDeltaTime());
+    handleModelInput(&input, getDeltaTime(), scene.getModelInstances(), currentModel);
     renderFrame();
 
     glfwSwapBuffers(window); 
@@ -130,6 +132,7 @@ void Engine::run(const std::string& sceneIn) {
 }
 
 void Engine::renderFrame() {
+  // Begin Frame
   glViewport(0, 0, width, height);  
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -147,10 +150,23 @@ void Engine::renderFrame() {
 
   lightManager.UpdateShaderUniforms(currentProgram);
 
+  // Draw Frame
   for (const std::pair<const std::string, ModelInstance>& pair : scene.getModelInstances())
     renderer.drawModel(pair.second, view, projection);
   
+  // End Frame
   glBindVertexArray(0);
 }
 
+void Engine::incrementModel() {
+  if (scene.getModelInstances().empty()) return;
+  currentModel = (currentModel + 1) % static_cast<unsigned int>(scene.getModelInstances().size());
+}
+
+void Engine::decrementModel() {
+  if (scene.getModelInstances().empty()) return;
+  currentModel = (currentModel == 0) 
+    ? static_cast<unsigned int>(scene.getModelInstances().size() - 1) 
+    : currentModel - 1;
+}
 

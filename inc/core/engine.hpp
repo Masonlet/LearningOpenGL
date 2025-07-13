@@ -26,10 +26,16 @@ public:
 	inline SceneLoader& getSceneLoader() { return sceneLoader; }
 
 	inline bool getWireframe() const { return wireframe; }
+	inline float getDeltaTime() const { return deltaTime; }
+
 	void updateWireframe();
 	void updateAspect(unsigned int width, unsigned int height);
 
-	void run(const std::string& sceneIn = "Default");
+	bool initialize();
+	void run(const std::string& sceneIn);
+
+	void incrementModel();
+	void decrementModel();
 
 private:
 	GLFWwindow* window;
@@ -48,11 +54,11 @@ private:
 	float aspect;
 	bool wireframe;
 
-	unsigned int currentProgram, currentModel, currentLight;
+	unsigned int currentProgram, currentModel;
 	float deltaTime, lastTime;
 
 	void setupShaders();	
 
-	void updateDeltaTime(const float currentTime);
+	void tick(const float currentTime);
 	void renderFrame();
 };

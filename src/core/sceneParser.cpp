@@ -64,7 +64,6 @@ const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
 
   return p;
 }
-
 static bool parseMazeLayoutRow(const std::string& line, std::vector<bool>& outRow) {
   outRow.clear();
   for (char c : line) {
@@ -94,13 +93,19 @@ bool parseMazeData(const unsigned char* p, ParsedMaze& maze, Scene& scene) {
     }
 
     std::string line(lineStart, lineLen);
-    if (line == maze.layoutName) return true;
+    if (line == maze.layoutName)
+      break;
 
     std::vector<bool> row;
     if (parseMazeLayoutRow(line, row))
       maze.layout.push_back(std::move(row));
 
     p = reinterpret_cast<const unsigned char*>(lineEnd);
+  }
+
+  if (maze.layout.empty()) {
+    fprintf(stderr, "[SceneLoader ERROR] Maze layout was empty or not found: %s\n", maze.layoutName.c_str());
+    return false;
   }
 
   return true;
