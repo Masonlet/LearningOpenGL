@@ -50,13 +50,15 @@ bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
     p = reinterpret_cast<const unsigned char*>(lineEnd);
   }
 
+  scene.setSceneName(sceneIn);
 #ifndef NDEBUG
   fprintf(stderr, "[SceneLoader] Scene load finish: %f\n", glfwGetTime());
 #endif
   return true;
 }
-bool SceneLoader::saveTxtScene(const std::string& sceneName) {
-  std::string scenePath = "assets/scenes/" + sceneName + ".txt";
+
+bool SceneLoader::saveTxtScene() {
+  std::string scenePath = "../../../assets/scenes/" + scene.getSceneName() + ".txt";
   std::ofstream file(scenePath);
 
   if (!file.is_open()) {
@@ -70,6 +72,12 @@ bool SceneLoader::saveTxtScene(const std::string& sceneName) {
     const std::string& name = entry.first;
     const ModelInstance& instance = entry.second;
 
+    if (name.rfind("triangle_instance", 0) == 0 ||
+      name.rfind("cube_instance_", 0) == 0 ||
+      name.rfind("square_instance_", 0) == 0 ||
+      name.rfind("maze_", 0) == 0) 
+      continue;
+
     std::map<std::string, ModelDrawInfo>::const_iterator mesh = meshes.find(instance.path);
     if (mesh == meshes.end()) {
       fprintf(stderr, "[saveTxtScene ERROR] Missing mesh for '%s'\n", name.c_str());
@@ -81,10 +89,20 @@ bool SceneLoader::saveTxtScene(const std::string& sceneName) {
       << instance.path << ", "
       << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
       << instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
-      << instance.scale.x << " " << instance.scale.y << " " << instance.scale.z;
+      << instance.scale.x << " " << instance.scale.y << " " << instance.scale.z << ", ";
 
     switch (instance.colourMode) {
-    case ColourMode::Solid: file << ", " << instance.colour.x * 255.0f << " " << instance.colour.y * 255.0f << " " << instance.colour.z * 255.0f; break;
+    case ColourMode::Solid: {
+      int r = static_cast<int>(instance.colour.x * 255.0f);
+      int g = static_cast<int>(instance.colour.y * 255.0f);
+      int b = static_cast<int>(instance.colour.z * 255.0f);
+
+      if (r == 255 && g == 0 && b == 0)       file << "Red";
+      else if (r == 0 && g == 255 && b == 0)  file << "Green";
+      else if (r == 0 && g == 0 && b == 255)  file << "Blue";
+      else file << r << " " << g << " " << b;
+      break;
+    }
     case ColourMode::Random: file << ", Random"; break;
     case ColourMode::VerticalGradient: file << ", Rainbow"; break;
     case ColourMode::PLYColour:
@@ -108,7 +126,6 @@ bool SceneLoader::saveTxtScene(const std::string& sceneName) {
       << light.param2.x << " " << light.param2.y << " " << light.param2.z << " " << light.param2.w << "\n";
   }
 
-  printf("[saveTxtScene] %s Saved!\n", sceneName.c_str());
   return true;
 }
 

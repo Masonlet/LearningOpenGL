@@ -5,6 +5,9 @@ int main() {
 	engine.initialize();
 
 	/* 
+	* Saving scene currently only works with models and lights
+	* I have not introduced enough features with primitives to feel worth refactoring the code to make it work
+	* 
 	* Available Scenes
 	* - "" (Empty/Default)
   * - Teacher, Teacher2

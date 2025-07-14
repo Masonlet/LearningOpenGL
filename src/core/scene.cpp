@@ -8,6 +8,10 @@
 #include <fstream>
 #include <iomanip>
 
+void Scene::setSceneName(const std::string& sceneNameIn) {
+  sceneName = sceneNameIn;
+}
+
 void Scene::addModelInfo(const std::string& name, const ModelDrawInfo& info) {
   modelInfos[name] = info;
 }

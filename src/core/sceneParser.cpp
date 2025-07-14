@@ -17,7 +17,7 @@ const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
   return p;
 }
 const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) {
-  PARSE_STRING_OR_FAIL(p, out.meshName, 64, "mesh name");
+  PARSE_STRING_OR_FAIL(p, out.meshName, 64, "triangle name");
 
   Vec3 temp;
   PARSE_OR_FAIL(parseVec3, temp, "Failed to parse position");

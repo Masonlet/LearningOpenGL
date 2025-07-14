@@ -28,7 +28,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		}
 
     if(key == GLFW_KEY_L){
-			if (!engine->getSceneLoader().saveTxtScene("SavedScene")) {
+			if (!engine->getSceneLoader().saveTxtScene()) {
 				fprintf(stderr, "[KEY_CALLBACK] Failed to save scene\n");
 			}
 			else {

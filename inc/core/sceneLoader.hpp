@@ -16,7 +16,7 @@ public:
   Renderer* getRenderer() const { return renderer; }
 
   bool loadTxtScene(const std::string& sceneName);
-  bool saveTxtScene(const std::string& sceneName);
+  bool saveTxtScene();
 
 private:
   Scene& scene;
