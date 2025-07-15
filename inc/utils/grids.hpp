@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/sceneLoader.hpp"
+#include "scene/sceneLoader.hpp"
 #include "math/constants.hpp"
 
 bool createSquareGrid(SceneLoader& loader, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation = DEFAULT_ROTATION, const Vec2& size = DEFAULT_SIZE_2D);

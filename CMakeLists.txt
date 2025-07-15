@@ -14,7 +14,10 @@ file(GLOB_RECURSE SOURCES
 )
 
 # Header files
-file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/inc/*.hpp)
+file(GLOB_RECURSE HEADERS 
+  ${CMAKE_SOURCE_DIR}/inc/*.hpp
+  ${CMAKE_SOURCE_DIR}/inc/*.h
+)
 
 # Assets
 file(GLOB_RECURSE ASSET_SHADERS "${CMAKE_SOURCE_DIR}/assets/shaders/*")

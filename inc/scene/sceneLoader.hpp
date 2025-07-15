@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/scene.hpp"
-#include "core/sceneParser.hpp"
+#include "scene/scene.hpp"
+#include "scene/sceneParser.hpp"
 #include "lights/lightManager.hpp"
 #include "graphics/renderer.hpp"
 

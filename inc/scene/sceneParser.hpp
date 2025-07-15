@@ -5,7 +5,7 @@
 #include "core/colour.hpp"
 #include "math/geometry.hpp"
 
-#include "core/scene.hpp"
+#include "scene/scene.hpp"
 
 #include <string>
 #include <vector>

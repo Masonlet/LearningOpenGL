@@ -3,10 +3,11 @@
 #include "core/windowManager.hpp"
 #include "core/colour.hpp"
 #include "core/modelInstance.hpp"
-#include "core/scene.hpp"
-#include "core/sceneLoader.hpp"
 #include "core/camera.hpp"
 #include "core/inputManager.hpp"
+
+#include "scene/scene.hpp"
+#include "scene/sceneLoader.hpp"
 
 #include "graphics/shaderManager.hpp"
 #include "graphics/vaoManager.hpp"

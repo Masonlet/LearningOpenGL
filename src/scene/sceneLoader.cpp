@@ -1,8 +1,8 @@
 #include "utils/files.hpp"
 #include "utils/parser.hpp"
 
-#include "core/sceneParser.hpp"
-#include "core/sceneLoader.hpp"
+#include "scene/sceneParser.hpp"
+#include "scene/sceneLoader.hpp"
 
 #include "utils/grids.hpp"
 #include "utils/primitives.hpp"

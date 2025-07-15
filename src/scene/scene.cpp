@@ -1,4 +1,4 @@
-#include "core/scene.hpp"
+#include "scene/scene.hpp"
 #include "core/engine.hpp"
 #include "utils/files.hpp"
 #include "utils/parser.hpp"

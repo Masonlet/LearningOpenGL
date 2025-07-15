@@ -1,4 +1,4 @@
-#include "core/sceneParser.hpp"
+#include "scene/sceneParser.hpp"
 #include "utils/parser.hpp"
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
