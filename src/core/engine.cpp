@@ -15,14 +15,13 @@ Engine::Engine() :
   wireframe{ false },
   sceneLoader(scene, &renderer, &lightManager)
 {}
-
 Engine::~Engine() {
   scene.clearModels(vaoManager);
   WindowManager::destroy(window);
 }
 
 bool Engine::initialize() {
-   window = WindowManager::initGL(width, height);
+  window = WindowManager::initGL(width, height);
   if (!window) {
     fprintf(stderr, "failed to initialize opengl\n");
     return false;
@@ -40,6 +39,7 @@ bool Engine::initialize() {
   WindowManager::setupGLState();
   WindowManager::setCallbacks(window);
 
+  lightManager.GetUniformLocations(currentProgram);
   return true;
 }
 
@@ -55,21 +55,21 @@ void Engine::setupShaders() {
 #endif
 
   shaderManager.setBasePath("assets/shaders/");
-
   ShaderManager::Shader vert_shader{ "vertex_shader.glsl" };
   ShaderManager::Shader frag_shader{ "fragment_shader.glsl" };
 
   if (!shaderManager.createProgramFromFile("shader1", vert_shader, frag_shader))
     fprintf(stderr, "[setupShaders ERROR] %s\n", shaderManager.getLastError().c_str());
 
-  unsigned int shaderID = shaderManager.getIDFromFriendlyName("shader1");
-  if (shaderID == 0) {
+  currentProgram = shaderManager.getIDFromFriendlyName("shader1");
+  if (currentProgram == 0) {
     fprintf(stderr, "[setupShaders ERROR] Shader program ID is 0\n");
     return;
   }
+  glUseProgram(currentProgram);
 
   renderer.initialize(&shaderManager, &vaoManager);
-  renderer.setProgram(shaderID);
+  renderer.setProgram(currentProgram);
 
   constexpr float bgR = 0.2f;
   constexpr float bgG = 0.2f;
@@ -109,16 +109,17 @@ void Engine::tick(const float currenttime) {
   deltaTime = smoothing_factor * deltaTime + (2.0f - smoothing_factor) * rawdelta;
 }
 
-void Engine::run(const std::string& sceneIn = "Default") {
+bool Engine::setScene(const std::string& sceneIn = "Default") {
   const std::string sceneName = sceneIn.empty() ? "Default" : sceneIn;
 
   if (!sceneLoader.loadTxtScene(sceneName)) {
     fprintf(stderr, "[SCENE ERROR] Scene '%s' could not be loaded.\n", sceneName.c_str());
-    return;
+    return false;
   }
 
-  lightManager.GetUniformLocations(currentProgram);
-
+  return true;
+}
+void Engine::run() {
   while (!glfwWindowShouldClose(window)) {	
     tick(static_cast<float>(glfwGetTime()));
     input.Update(window);
@@ -133,15 +134,7 @@ void Engine::run(const std::string& sceneIn = "Default") {
 
 void Engine::renderFrame() {
   // Begin Frame
-  glViewport(0, 0, width, height);  
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  unsigned int shaderProgram = renderer.getProgram();
-  if (shaderProgram != currentProgram) {
-    glUseProgram(shaderProgram);
-    currentProgram = shaderProgram;
-    lightManager.GetUniformLocations(shaderProgram);
-  }
 
   const Mat4 view = camera.LookAt();
   const Mat4 projection = camera.Perspective(aspect);

@@ -33,7 +33,8 @@ public:
 	void updateAspect(unsigned int width, unsigned int height);
 
 	bool initialize();
-	void run(const std::string& sceneIn);
+	bool setScene(const std::string& sceneIn);
+	void run();
 
 	void incrementModel();
 	void decrementModel();
