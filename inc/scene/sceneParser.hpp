@@ -19,6 +19,15 @@ struct ParsedModel {
 	Vec4 colour;
 	ColourMode colourMode;
 };
+struct ParsedLight {
+	unsigned int index;
+	Vec4 position;
+	Vec4 diffuse;
+	Vec4 atten;
+	Vec4 direction;
+	Vec4 param1;
+	Vec4 param2;
+};
 
 struct ParsedTriangle {
 	std::string meshName;
@@ -32,15 +41,7 @@ struct ParsedGrid {
 	Vec4 colour;
 	ColourMode colourMode;
 };
-struct ParsedLight {
-	unsigned int index;
-	Vec4 position;
-	Vec4 diffuse;
-	Vec4 atten;
-	Vec4 direction;
-	Vec4 param1;
-	Vec4 param2;
-};
+
 struct ParsedMaze {
 	std::string mazeName;
 	std::string floorType;
@@ -55,4 +56,4 @@ const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out);
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out);
 
 const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out);
-bool parseMazeData(const unsigned char* p, ParsedMaze& maze, Scene& scene);
+bool parseMazeData(const unsigned char* p, ParsedMaze& maze);

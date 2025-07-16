@@ -76,7 +76,7 @@ static bool parseMazeLayoutRow(const std::string& line, std::vector<bool>& outRo
   }
   return !outRow.empty();
 }
-bool parseMazeData(const unsigned char* p, ParsedMaze& maze, Scene& scene) {
+bool parseMazeData(const unsigned char* p, ParsedMaze& maze) {
   PARSE_STRING_OR_FALSE(p, maze.layoutName, 64, "layout name");
 
   while (*p) {

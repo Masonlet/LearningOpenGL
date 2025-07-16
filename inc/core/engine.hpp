@@ -21,10 +21,9 @@ public:
 	~Engine();
 
 	inline Renderer* getRenderer() { return &renderer; }
-
-	inline std::map<std::string, ModelInstance>& getModelInstances() { return scene.getModelInstances(); }
 	inline LightManager* getLightManager() { return &lightManager; }
 	inline SceneLoader& getSceneLoader() { return sceneLoader; }
+	inline std::map<std::string, ModelInstance>& getModelInstances() { return getSceneLoader().getScene().getModelInstances(); }
 
 	inline bool getWireframe() const { return wireframe; }
 	inline float getDeltaTime() const { return deltaTime; }
@@ -42,14 +41,14 @@ public:
 private:
 	GLFWwindow* window;
 	Camera camera;
-	InputManager input;
+	Renderer renderer;
+
+	InputManager inputManager;
 
 	ShaderManager shaderManager;
 	VAOManager vaoManager;
-	Renderer renderer;
 
-	LightManager lightManager;
-	Scene scene;
+	LightManager lightManager;	
 	SceneLoader sceneLoader;
 
 	unsigned int height, width;

@@ -11,8 +11,7 @@
 #include <cstring>
 #include <iomanip>
 
-
-SceneLoader::SceneLoader(Scene& scene, Renderer* renderer, LightManager* lightManager) : scene(scene), renderer(renderer), lightManager(lightManager) {}
+SceneLoader::SceneLoader(Renderer* renderer, LightManager* lightManager) : scene(), renderer(renderer), lightManager(lightManager) {}
 
 bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
 #ifndef NDEBUG
@@ -55,6 +54,31 @@ bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
   fprintf(stderr, "[SceneLoader] Scene load finish: %f\n", glfwGetTime());
 #endif
   return true;
+}
+bool SceneLoader::processSceneLine(const unsigned char* p, size_t lineLen) {
+  const unsigned char* linePtr = p;
+  if (*linePtr == '\0') return true;
+
+  unsigned char name[64]{};
+  linePtr = parseToken(linePtr, name, sizeof(name));
+  const char* nameStr = reinterpret_cast<const char*>(name);
+
+  if (!linePtr || strlen(nameStr) == 0) {
+    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse name\n");
+    return false;
+  }
+  if (*linePtr == ',') ++linePtr;
+
+  bool handled{ true };
+  if (strcmp(nameStr, "model") == 0) handled = handleModelLine(linePtr);
+  else if (strcmp(nameStr, "light") == 0) handled = handleLightLine(linePtr);
+  else if (strcmp(nameStr, "camera") == 0) handled = handleCameraLine(linePtr);
+  else if (strcmp(nameStr, "cubeGrid") == 0) handled = handleCubeGridLine(linePtr);
+  else if (strcmp(nameStr, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
+  else if (strcmp(nameStr, "triangle") == 0) handled = handleTriangleLine(linePtr);
+  else if (strcmp(nameStr, "maze") == 0) handled = handleMazeLine(linePtr);
+  else if (strcmp(nameStr, "mazeData") == 0) handled = handleMazeData(linePtr);
+  return handled;
 }
 
 bool SceneLoader::saveTxtScene() {
@@ -129,36 +153,54 @@ bool SceneLoader::saveTxtScene() {
   return true;
 }
 
-bool SceneLoader::processSceneLine(const unsigned char* p, size_t lineLen) {
-  const unsigned char* linePtr = p;
-  if (*linePtr == '\0') return true; 
-  
-  unsigned char name[64]{};
-  linePtr = parseToken(linePtr, name, sizeof(name));
-  const char* nameStr = reinterpret_cast<const char*>(name);
-
-  if (!linePtr || strlen(nameStr) == 0) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse name\n");
-    return false;
-  }
-  if (*linePtr == ',') ++linePtr;
-
-  bool handled{ true };
-  if (strcmp(nameStr, "model") == 0) handled = handleModelLine(linePtr);
-  else if (strcmp(nameStr, "cubeGrid") == 0) handled = handleCubeGridLine(linePtr);
-  else if (strcmp(nameStr, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
-  else if (strcmp(nameStr, "triangle") == 0) handled = handleTriangleLine(linePtr);
-  else if (strcmp(nameStr, "light") == 0) handled = handleLightLine(linePtr);
-  else if (strcmp(nameStr, "maze") == 0) handled = handleMazeLine(linePtr);
-  else if (strcmp(nameStr, "mazeData") == 0) handled = handleMazeData(linePtr);
-
-  return handled;
-} 
-
 static void applyColourSettings(ModelInstance& instance, const Vec4& colour, const ColourMode& mode) {
   instance.colour = colour;
   instance.colourMode = mode;
 }
+
+bool SceneLoader::handleModelLine(const unsigned char* p) {
+  ParsedModel model{};
+  PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
+
+  ModelDrawInfo drawInfo;
+  drawInfo.meshPath = model.path;
+  drawInfo.colour = model.colour;
+  drawInfo.colourMode = model.colourMode;
+
+  scene.addModelInfo(model.path, drawInfo);
+  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, drawInfo, renderer->getProgram())) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to load model: %s\n", model.path.c_str());
+    return false;
+  }
+  scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ model.position, model.rotation, model.scale }));
+
+  ModelInstance& instance = scene.getModelInstances()[model.meshName];
+  applyColourSettings(instance, model.colour, model.colourMode);
+
+  return true;
+}
+bool SceneLoader::handleLightLine(const unsigned char* p) {
+  ParsedLight lightData{};
+  if (!(p = parseLight(p, lightData))) {
+    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse light\n");
+    return false;
+  }
+  else {
+    Light& light = lightManager->theLights[lightData.index];
+    light.position = lightData.position;
+    light.diffuse = lightData.diffuse;
+    light.atten = lightData.atten;
+    light.direction = lightData.direction;
+    light.param1 = lightData.param1;
+    light.param2 = lightData.param2;
+
+    return true;
+  }
+}
+bool SceneLoader::handleCameraLine(const unsigned char* p) {
+  return p;
+}
+
 bool SceneLoader::handleSquareGridLine(const unsigned char* p) {
   ParsedGrid grid;
   PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
@@ -250,46 +292,6 @@ bool SceneLoader::handleTriangleLine(const unsigned char* p) {
   return true;
 }
 
-bool SceneLoader::handleModelLine(const unsigned char* p) {
-  ParsedModel model{};
-  PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
-
-  ModelDrawInfo drawInfo;
-  drawInfo.meshPath = model.path;
-  drawInfo.colour = model.colour;
-  drawInfo.colourMode = model.colourMode;
-
-  scene.addModelInfo(model.path, drawInfo);
-  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, drawInfo, renderer->getProgram())) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to load model: %s\n", model.path.c_str());
-    return false;
-  }
-  scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ model.position, model.rotation, model.scale }));
-
-  ModelInstance& instance = scene.getModelInstances()[model.meshName];
-  applyColourSettings(instance, model.colour, model.colourMode);
-
-  return true;
-}
-bool SceneLoader::handleLightLine(const unsigned char* p) {
-  ParsedLight lightData{};
-  if (!(p = parseLight(p, lightData))) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse light\n");
-    return false;
-  }
-  else {
-    Light& light = lightManager->theLights[lightData.index];
-    light.position = lightData.position;
-    light.diffuse = lightData.diffuse;
-    light.atten = lightData.atten;
-    light.direction = lightData.direction;
-    light.param1 = lightData.param1;
-    light.param2 = lightData.param2;
-
-    return true;
-  }
-}
-
 bool SceneLoader::handleMazeLine(const unsigned char* p) {
   ParsedMaze maze;
   PARSE_OR_FALSE(parseMaze, maze, "Failed to parse maze");
@@ -303,12 +305,12 @@ bool SceneLoader::handleMazeData(const unsigned char* p) {
     return false;
   }
 
-  if (!(parseMazeData(p, *pendingMaze, scene))) {
+  if (!(parseMazeData(p, *pendingMaze))) {
     fprintf(stderr, "[SceneLoader ERROR] Failed to parse mazeData\n");
     return false;
   }
 
-  if (!buildMaze(scene, *pendingMaze)) {
+  if (!buildMaze(*pendingMaze)) {
     fprintf(stderr, "[SceneLoader ERROR] Failed to build maze\n");
     return false;
   }
@@ -316,7 +318,7 @@ bool SceneLoader::handleMazeData(const unsigned char* p) {
   pendingMaze.reset();
   return true;
 }
-bool SceneLoader::buildMaze(Scene& scene, const ParsedMaze& maze) {
+bool SceneLoader::buildMaze(const ParsedMaze& maze) {
   for (const std::string& modelPath : { maze.wallType, maze.floorType }) {
     ModelDrawInfo existingInfo;
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {
@@ -348,4 +350,3 @@ bool SceneLoader::buildMaze(Scene& scene, const ParsedMaze& maze) {
 
   return true;
 }
-

@@ -13,10 +13,10 @@ Engine::Engine() :
   deltaTime{ 0.0f }, lastTime{ 0.0f },
   aspect{ static_cast<float>(width) / static_cast<float>(height) },
   wireframe{ false },
-  sceneLoader(scene, &renderer, &lightManager)
+  sceneLoader(&renderer, &lightManager)
 {}
 Engine::~Engine() {
-  scene.clearModels(vaoManager);
+  sceneLoader.getScene().clearModels(vaoManager);
   WindowManager::destroy(window);
 }
 
@@ -122,9 +122,9 @@ bool Engine::setScene(const std::string& sceneIn = "Default") {
 void Engine::run() {
   while (!glfwWindowShouldClose(window)) {	
     tick(static_cast<float>(glfwGetTime()));
-    input.Update(window);
-    camera.ProcessInputs(&input, getDeltaTime());
-    handleModelInput(&input, getDeltaTime(), scene.getModelInstances(), currentModel);
+    inputManager.Update(window);
+    camera.ProcessInputs(&inputManager, getDeltaTime());
+    handleModelInput(&inputManager, getDeltaTime(), sceneLoader.getScene().getModelInstances(), currentModel);
     renderFrame();
 
     glfwSwapBuffers(window); 
@@ -144,7 +144,7 @@ void Engine::renderFrame() {
   lightManager.UpdateShaderUniforms(currentProgram);
 
   // Draw Frame
-  for (const std::pair<const std::string, ModelInstance>& pair : scene.getModelInstances())
+  for (const std::pair<const std::string, ModelInstance>& pair : sceneLoader.getScene().getModelInstances())
     renderer.drawModel(pair.second, view, projection);
   
   // End Frame
@@ -152,14 +152,13 @@ void Engine::renderFrame() {
 }
 
 void Engine::incrementModel() {
-  if (scene.getModelInstances().empty()) return;
-  currentModel = (currentModel + 1) % static_cast<unsigned int>(scene.getModelInstances().size());
+  if (sceneLoader.getScene().getModelInstances().empty()) return;
+  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneLoader.getScene().getModelInstances().size());
 }
 
 void Engine::decrementModel() {
-  if (scene.getModelInstances().empty()) return;
+  if (sceneLoader.getScene().getModelInstances().empty()) return;
   currentModel = (currentModel == 0) 
-    ? static_cast<unsigned int>(scene.getModelInstances().size() - 1) 
+    ? static_cast<unsigned int>(sceneLoader.getScene().getModelInstances().size() - 1)
     : currentModel - 1;
 }
-

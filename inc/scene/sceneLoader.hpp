@@ -10,16 +10,16 @@
 
 class SceneLoader {
 public:
-  SceneLoader(Scene& scene, Renderer* renderer, LightManager* lightManager);
+  SceneLoader(Renderer* renderer, LightManager* lightManager);
 
-  Scene& getScene() const { return scene; }
+  Scene& getScene() { return scene; }
   Renderer* getRenderer() const { return renderer; }
 
   bool loadTxtScene(const std::string& sceneName);
   bool saveTxtScene();
 
 private:
-  Scene& scene;
+  Scene scene;
   Renderer* renderer;
   LightManager* lightManager;
 
@@ -33,8 +33,9 @@ private:
 
   bool handleModelLine(const unsigned char* p);
   bool handleLightLine(const unsigned char* p);
+  bool handleCameraLine(const unsigned char* p);
 
   bool handleMazeLine(const unsigned char* p);
   bool handleMazeData(const unsigned char* p);
-  bool buildMaze(Scene& scene, const ParsedMaze& maze);
+  bool buildMaze(const ParsedMaze& maze);
 };

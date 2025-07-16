@@ -1,7 +1,9 @@
-model, ship, GalacticaOriginal_ASCII_no_text.ply, 0.0 0.0 10.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Rainbow
-model, testcar, de--lorean.ply, 0.0 0.0 -100.0, 45.0 0.0 0.0, 1.0 1.0 1.0, 255 255 255
-model, dolphin, with_normals/dolphin_xyz_n_rgba.ply, 0.0 -100.0 -50.0, 0.0 0.0 0.0, 1.0 1.0 1.0
-model, audi, AUDI_TT_COUPE.ply, 0.0 0.0 -75.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Yellow
-model, homer, homer.ply, 0.0 0.0 -2.0, 0.0 0.0 0.0, 100.0 100.0 100.0, Random
-model, warehouse, with_normals/Warehouse_xyz_n_rgba.ply, 0.0 -20.0 0.0, 0.0 0.0 0.0, 10.0 10.0 10.0
-
+model, cow, cow_xyz_n_rgba.ply, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, 255 255 0
+model, dolphin, dolphin_xyz_n_rgba.ply, 0.0 -100.0 -50.0, 0.0 -0.0 0.0, 1.0 1.0 1.0, 
+model, homer, homer_xyz_n_rgba.ply, -30.0 0.0 -50.0, 0.0 -0.0 0.0, 100.0 100.0 100.0, Random
+model, ship, Corellian_Corvette_xyz_n_rgba.ply, 0.0 -20.0 10.0, 0.0 -0.0 0.0, 10.0 10.0 10.0, Rainbow
+model, testcar, de--lorean_xyz_n_rgba.ply, 0.0 0.0 -100.0, 45.0 -0.0 0.0, 1.0 1.0 1.0, 
+model, warehouse, Warehouse_xyz_n_rgba.ply, 0.0 -20.0 0.0, 0.0 -0.0 0.0, 10.0 10.0 10.0, 
+light, 0, 0.0 100.0 100.0 1.0, 50.0 50.0 50.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
+light, 1, 10.0 5.0 0.0 1.0, 100.0 0.0 0.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 -1.0 0.0, 1.0 15.0 25.0 0.0, 1. 0.0 0.0 0.0
+light, 3, -10.0 5.0 0.0 1.0, 0.0 1.5 0.0 1.0, 0.0 0.01 0.005 0.0, -1.0 0.0 0.0 0.0, 2.0 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
