@@ -16,6 +16,29 @@ const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
 
   return p;
 }
+const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
+  PARSE_OR_FAIL(parseStringUInt, out.index, "Failed to parse light index");
+  PARSE_OR_FAIL(parseVec4, out.position, "Failed to parse light position");
+  PARSE_OR_FAIL(parseVec4, out.diffuse, "Failed to parse light diffuse");
+  PARSE_OR_FAIL(parseVec4, out.atten, "Failed to parse light attenuation");
+  PARSE_OR_FAIL(parseVec4, out.direction, "Failed to parse light direction");
+  PARSE_OR_FAIL(parseVec4, out.param1, "Failed to parse light param1");
+  PARSE_OR_FAIL(parseVec4, out.param2, "Failed to parse light param2");
+
+  return p;
+}
+const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
+  PARSE_OR_FAIL(parseStringUInt, out.index, "camera index");
+  PARSE_OR_FAIL(parseVec3, out.position, "camera position");
+  PARSE_OR_FAIL(parseFloat, out.yaw, "camera yaw");
+  PARSE_OR_FAIL(parseFloat, out.pitch, "camera pitch");
+  PARSE_OR_FAIL(parseFloat, out.fov, "camera fov");
+  PARSE_OR_FAIL(parseFloat, out.nearPlane, "camera near plane");
+  PARSE_OR_FAIL(parseFloat, out.farPlane, "camera far plane");
+
+  return p;
+}
+
 const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) {
   PARSE_STRING_OR_FAIL(p, out.meshName, 64, "triangle name");
 
@@ -42,17 +65,6 @@ const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out) {
 
   return p;
 } 
-const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
-  PARSE_OR_FAIL(parseStringUInt, out.index, "Failed to parse light index");
-  PARSE_OR_FAIL(parseVec4, out.position, "Failed to parse light position");
-  PARSE_OR_FAIL(parseVec4, out.diffuse, "Failed to parse light diffuse");
-  PARSE_OR_FAIL(parseVec4, out.atten, "Failed to parse light attenuation");
-  PARSE_OR_FAIL(parseVec4, out.direction, "Failed to parse light direction");
-  PARSE_OR_FAIL(parseVec4, out.param1, "Failed to parse light param1");
-  PARSE_OR_FAIL(parseVec4, out.param2, "Failed to parse light param2");
-
-  return p;
-}
 
 const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   out.layout.clear();

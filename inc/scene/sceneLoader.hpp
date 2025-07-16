@@ -10,7 +10,7 @@
 
 class SceneLoader {
 public:
-  SceneLoader(Renderer* renderer, LightManager* lightManager);
+  SceneLoader(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager);
 
   Scene& getScene() { return scene; }
   Renderer* getRenderer() const { return renderer; }
@@ -22,6 +22,7 @@ private:
   Scene scene;
   Renderer* renderer;
   LightManager* lightManager;
+  CameraManager* cameraManager;
 
   std::optional<ParsedMaze> pendingMaze;
 

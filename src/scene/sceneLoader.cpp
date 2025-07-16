@@ -1,3 +1,5 @@
+#include <glad/glad.h>
+
 #include "utils/files.hpp"
 #include "utils/parser.hpp"
 
@@ -11,7 +13,8 @@
 #include <cstring>
 #include <iomanip>
 
-SceneLoader::SceneLoader(Renderer* renderer, LightManager* lightManager) : scene(), renderer(renderer), lightManager(lightManager) {}
+SceneLoader::SceneLoader(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager) 
+  : scene(), renderer(renderer), lightManager(lightManager), cameraManager(cameraManager) {}
 
 bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
 #ifndef NDEBUG
@@ -50,6 +53,20 @@ bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
   }
 
   scene.setSceneName(sceneIn);
+
+  if (cameraManager->getCameraCount() == 0) {
+    Camera defaultCam;
+    defaultCam.SetPos({ 0.0f, 5.0f, 10.0f });
+    defaultCam.SetYaw(-90.0f);
+    defaultCam.SetPitch(0.0f);
+    defaultCam.SetNear(0.1f);
+    defaultCam.SetFar(10000.0f);
+
+    if (!cameraManager->addCamera(defaultCam)) 
+      fprintf(stderr, "[SceneLoader WARNING] Failed to add fallback camera\n");
+    else 
+      fprintf(stderr, "[SceneLoader INFO] No camera in scene — fallback camera added\n");
+  }
 #ifndef NDEBUG
   fprintf(stderr, "[SceneLoader] Scene load finish: %f\n", glfwGetTime());
 #endif
@@ -185,20 +202,35 @@ bool SceneLoader::handleLightLine(const unsigned char* p) {
     fprintf(stderr, "[createSceneFromName ERROR] Failed to parse light\n");
     return false;
   }
-  else {
-    Light& light = lightManager->theLights[lightData.index];
-    light.position = lightData.position;
-    light.diffuse = lightData.diffuse;
-    light.atten = lightData.atten;
-    light.direction = lightData.direction;
-    light.param1 = lightData.param1;
-    light.param2 = lightData.param2;
 
-    return true;
-  }
+  Light& light = lightManager->theLights[lightData.index];
+  light.position = lightData.position;
+  light.diffuse = lightData.diffuse;
+  light.atten = lightData.atten;
+  light.direction = lightData.direction;
+  light.param1 = lightData.param1;
+  light.param2 = lightData.param2;
+
+  return true;
 }
 bool SceneLoader::handleCameraLine(const unsigned char* p) {
-  return p;
+  ParsedCamera cameraData{};
+  if (!(p = parseCamera(p, cameraData))) {
+    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse camera\n");
+    return false;
+  }
+
+  Camera cam;
+  cam.SetYaw(cameraData.yaw);
+  cam.SetPitch(cameraData.pitch);
+  cam.SetPos(cameraData.position);
+
+  if (!cameraManager->addCamera(cam)) {
+    fprintf(stderr, "[SceneLoader ERROR] Could not add camera index %u\n", cameraData.index);
+    return false;
+  }
+
+  return true;
 }
 
 bool SceneLoader::handleSquareGridLine(const unsigned char* p) {

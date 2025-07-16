@@ -1,3 +1,6 @@
+camera, 0, 0.0 0.0 0.0, -90.0 0.0, 75.0, 0.1 10000
+camera, 1, 0.0 0.0 0.0, -90.0 0.0, 75.0, 0.1 10000
+
 model, cow, cow_xyz_n_rgba.ply, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, 255 255 0
 model, dolphin, dolphin_xyz_n_rgba.ply, 0.0 -100.0 -50.0, 0.0 -0.0 0.0, 1.0 1.0 1.0, 
 model, homer, homer_xyz_n_rgba.ply, -30.0 0.0 -50.0, 0.0 -0.0 0.0, 100.0 100.0 100.0, Random

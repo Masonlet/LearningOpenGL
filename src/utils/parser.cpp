@@ -1,3 +1,5 @@
+#include <glad/glad.h>
+
 #include "utils/parser.hpp"
 
 #include <string>

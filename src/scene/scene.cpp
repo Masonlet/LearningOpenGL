@@ -1,3 +1,5 @@
+#include <glad/glad.h>
+
 #include "scene/scene.hpp"
 #include "core/engine.hpp"
 #include "utils/files.hpp"

@@ -1,3 +1,5 @@
+#include <glad/glad.h> 
+
 #include "utils/grids.hpp"
 #include "utils/primitives.hpp"
 #include "core/meshLoader.hpp"

@@ -9,6 +9,7 @@ Camera::Camera() :
   pos{ INITIAL_POS }, front{ INITIAL_TARGET }, up{ WORLD_UP }, 
   yaw{ DEFAULT_YAW }, pitch{ DEFAULT_PITCH }, 
   lastX{ 0 }, lastY{ 0 }, 
+  fov{ DEFAULT_FOV }, nearPlane{NEAR_PLANE}, farPlane{FAR_PLANE},
   paused{ false } {
   front = front.normalized();
 }

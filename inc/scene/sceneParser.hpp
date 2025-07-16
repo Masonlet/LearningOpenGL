@@ -28,6 +28,13 @@ struct ParsedLight {
 	Vec4 param1;
 	Vec4 param2;
 };
+struct ParsedCamera {
+	unsigned int index;
+	Vec3 position;
+	float yaw, pitch;
+	float fov;
+	float nearPlane, farPlane;
+};
 
 struct ParsedTriangle {
 	std::string meshName;
@@ -51,9 +58,11 @@ struct ParsedMaze {
 };
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out);
+const unsigned char* parseLight(const unsigned char* p, ParsedLight& out);
+const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out);
+
 const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out);
 const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out);
-const unsigned char* parseLight(const unsigned char* p, ParsedLight& out);
 
 const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out);
 bool parseMazeData(const unsigned char* p, ParsedMaze& maze);

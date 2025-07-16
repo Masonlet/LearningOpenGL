@@ -21,6 +21,7 @@ public:
 	~Engine();
 
 	inline Renderer* getRenderer() { return &renderer; }
+	inline CameraManager* getCameraManager() { return &cameraManager; }
 	inline LightManager* getLightManager() { return &lightManager; }
 	inline SceneLoader& getSceneLoader() { return sceneLoader; }
 	inline std::map<std::string, ModelInstance>& getModelInstances() { return getSceneLoader().getScene().getModelInstances(); }
@@ -32,7 +33,7 @@ public:
 	void updateAspect(unsigned int width, unsigned int height);
 
 	bool initialize();
-	bool setScene(const std::string& sceneIn);
+	bool setScene(const std::string& sceneIn = "Default");
 	void run();
 
 	void incrementModel();
@@ -40,14 +41,12 @@ public:
 
 private:
 	GLFWwindow* window;
-	Camera camera;
 	Renderer renderer;
-
-	InputManager inputManager;
-
 	ShaderManager shaderManager;
 	VAOManager vaoManager;
 
+	InputManager inputManager;
+	CameraManager cameraManager;
 	LightManager lightManager;	
 	SceneLoader sceneLoader;
 

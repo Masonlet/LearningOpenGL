@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/modelInstance.hpp"
+#include "core/cameraManager.hpp"
 #include "graphics/vaoManager.hpp"
 
 #include <map>

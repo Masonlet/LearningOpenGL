@@ -13,7 +13,7 @@ Engine::Engine() :
   deltaTime{ 0.0f }, lastTime{ 0.0f },
   aspect{ static_cast<float>(width) / static_cast<float>(height) },
   wireframe{ false },
-  sceneLoader(&renderer, &lightManager)
+  sceneLoader(&renderer, &lightManager, &cameraManager)
 {}
 Engine::~Engine() {
   sceneLoader.getScene().clearModels(vaoManager);
@@ -109,7 +109,7 @@ void Engine::tick(const float currenttime) {
   deltaTime = smoothing_factor * deltaTime + (2.0f - smoothing_factor) * rawdelta;
 }
 
-bool Engine::setScene(const std::string& sceneIn = "Default") {
+bool Engine::setScene(const std::string& sceneIn) {
   const std::string sceneName = sceneIn.empty() ? "Default" : sceneIn;
 
   if (!sceneLoader.loadTxtScene(sceneName)) {
@@ -123,7 +123,7 @@ void Engine::run() {
   while (!glfwWindowShouldClose(window)) {	
     tick(static_cast<float>(glfwGetTime()));
     inputManager.Update(window);
-    camera.ProcessInputs(&inputManager, getDeltaTime());
+    cameraManager.getActiveCamera()->ProcessInputs(&inputManager, getDeltaTime());
     handleModelInput(&inputManager, getDeltaTime(), sceneLoader.getScene().getModelInstances(), currentModel);
     renderFrame();
 
@@ -136,9 +136,9 @@ void Engine::renderFrame() {
   // Begin Frame
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  const Mat4 view = camera.LookAt();
-  const Mat4 projection = camera.Perspective(aspect);
-  const Vec3 eye = camera.Pos();
+  const Mat4 view = cameraManager.getActiveCamera()->LookAt();
+  const Mat4 projection = cameraManager.getActiveCamera()->Perspective(aspect);
+  const Vec3 eye = cameraManager.getActiveCamera()->Pos();
   renderer.updateCameraUniforms(eye, view, projection);
 
   lightManager.UpdateShaderUniforms(currentProgram);
