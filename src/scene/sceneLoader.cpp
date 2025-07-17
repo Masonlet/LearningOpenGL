@@ -208,7 +208,7 @@ bool SceneLoader::handleLightLine(const unsigned char* p) {
   light.diffuse = lightData.diffuse;
   light.atten = lightData.atten;
   light.direction = lightData.direction;
-  light.param1 = lightData.param1;
+  light.param1 = { lightData.type, lightData.param1 };
   light.param2 = lightData.param2;
 
   return true;

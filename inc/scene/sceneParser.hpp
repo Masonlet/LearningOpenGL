@@ -25,7 +25,9 @@ struct ParsedLight {
 	Vec4 diffuse;
 	Vec4 atten;
 	Vec4 direction;
-	Vec4 param1;
+
+	unsigned int type;
+	Vec3 param1;
 	Vec4 param2;
 };
 struct ParsedCamera {

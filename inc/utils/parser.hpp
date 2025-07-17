@@ -68,4 +68,4 @@ const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
 const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut);
 
 const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut);
-
+const unsigned char* parseLightType(const unsigned char* p, unsigned int& typeOut);

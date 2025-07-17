@@ -263,3 +263,33 @@ const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, Colour
 
   return original;
 }
+const unsigned char* parseLightType(const unsigned char* p, unsigned int& typeOut) {
+  typeOut = 0;
+
+  const unsigned char* original = p;
+  if (*original == '\0' || *original == '-') {
+    p = original;
+    return p;
+  }
+
+  float typeNum = 0.0f;
+  const unsigned char* tryNum = parseFloat(original, typeNum);
+  if (tryNum) {
+    typeOut = static_cast<unsigned int>(typeNum);
+    return tryNum;
+  }
+
+  unsigned char typeName[64]{};
+  p = parseToken(original, typeName, sizeof(typeName));
+  if (!p) return nullptr;
+
+  if (strcmp((char*)typeName, "Point") == 0) typeOut = 0;
+  else if (strcmp((char*)typeName, "Spot") == 0) typeOut = 1;
+  else if (strcmp((char*)typeName, "Directional") == 0) typeOut = 2;
+  else {
+    fprintf(stderr, "[parseLightType ERROR] Unknown light type: %s\n", typeName);
+    return nullptr;
+  }
+
+  return p;
+}
