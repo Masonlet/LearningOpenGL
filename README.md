@@ -20,6 +20,8 @@ mkdir build
 cd build 
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
 ```
+`-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` flag generates a `compile_commands.json` file  
+Can be safely omitted on Windows if you're using Visual Studio
 
 ### 3. Build the Project
 - **Linux**:
