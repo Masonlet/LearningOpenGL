@@ -15,8 +15,7 @@ bool CameraManager::addCamera(const Camera& camera) {
 void CameraManager::setActiveCamera(unsigned int index) {
 	if (index < cameras.size() && index >= 0) 
 		activeCameraIndex = index;
-	else 
-		fprintf(stderr, "[CameraManager WARN] No active camera set or active camera invalid.\n");
+	else printf("[CameraManager WARN] No active camera set or active camera invalid.\n");
 }
 Camera* CameraManager::getActiveCamera() {
 	return &cameras[activeCameraIndex];

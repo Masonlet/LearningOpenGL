@@ -1,8 +1,6 @@
 #include <glad/glad.h>
-#include <cstdio>
 
 #include "graphics/renderer.hpp"
-
 
 Renderer::Renderer() : shaderManager(nullptr), vaoManager(nullptr), program(0),
 modelLocation(-1), modelViewLocation(-1), modelProjectionLocation(-1),

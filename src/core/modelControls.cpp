@@ -1,3 +1,6 @@
+#define GLFW_INCLUDE_NONE 
+#include <GLFW/glfw3.h> 
+
 #include "core/modelControls.hpp"
 
 static void processObject(InputManager* input,  Vec4& pos, Vec3& rot, Vec3& scale, float deltaTime){

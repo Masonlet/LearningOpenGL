@@ -1,18 +1,15 @@
 #pragma once
 
-#include "core/windowManager.hpp"
-#include "core/colour.hpp"
 #include "core/modelInstance.hpp"
-#include "core/camera.hpp"
-#include "core/inputManager.hpp"
 
-#include "scene/scene.hpp"
-#include "scene/sceneLoader.hpp"
+#include "core/windowManager.hpp"
+#include "core/cameraManager.hpp"
+#include "core/inputManager.hpp"
+#include "scene/sceneManager.hpp"
 
 #include "graphics/shaderManager.hpp"
 #include "graphics/vaoManager.hpp"
 #include "graphics/renderer.hpp"
-
 #include "lights/lightManager.hpp"
 
 class Engine {
@@ -23,16 +20,16 @@ public:
 	inline Renderer* getRenderer() { return &renderer; }
 	inline CameraManager* getCameraManager() { return &cameraManager; }
 	inline LightManager* getLightManager() { return &lightManager; }
-	inline SceneLoader& getSceneLoader() { return sceneLoader; }
-	inline std::map<std::string, ModelInstance>& getModelInstances() { return getSceneLoader().getScene().getModelInstances(); }
+	inline SceneManager& getSceneManager() { return sceneManager; }
+	inline WindowManager& getWindowManager() { return windowManager; }
+	inline std::map<std::string, ModelInstance>& getModelInstances() { return getSceneManager().getScene().getModelInstances(); }
 
 	inline bool getWireframe() const { return wireframe; }
 	inline float getDeltaTime() const { return deltaTime; }
 
 	void updateWireframe();
-	void updateAspect(unsigned int width, unsigned int height);
 
-	bool initialize();
+	bool initialize(const unsigned int width, const unsigned int height, const char* title);
 	bool setScene(const std::string& sceneIn = "Default");
 	void run();
 
@@ -40,7 +37,7 @@ public:
 	void decrementModel();
 
 private:
-	GLFWwindow* window;
+	WindowManager windowManager;
 	Renderer renderer;
 	ShaderManager shaderManager;
 	VAOManager vaoManager;
@@ -48,17 +45,14 @@ private:
 	InputManager inputManager;
 	CameraManager cameraManager;
 	LightManager lightManager;	
-	SceneLoader sceneLoader;
+	SceneManager sceneManager;
 
-	unsigned int height, width;
-	float aspect;
 	bool wireframe;
 
 	unsigned int currentProgram, currentModel;
 	float deltaTime, lastTime;
 
 	void setupShaders();	
-
 	void tick(const float currentTime);
 	void renderFrame();
 };

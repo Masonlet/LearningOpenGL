@@ -1,7 +1,4 @@
 #include "utils/primitives.hpp"
-#include "graphics/vaoManager.hpp"
-
-#include <cmath>
 
 bool createTriangle(VAOManager* vaoManager, const std::string& name, unsigned int shaderID, const Vec2& size, const Vec4& vertexColour) {
 	ModelDrawInfo info;

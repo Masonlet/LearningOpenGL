@@ -1,54 +1,43 @@
+#include <glad/glad.h> 
+
 #include "core/engine.hpp"
 #include "core/modelControls.hpp"
-#include "core/callbacks.hpp"
-#include "lights/lightHelper.hpp"
 
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };
 
 Engine::Engine() :
-  window{ nullptr },
   currentProgram{ 0 }, currentModel{ 0 },
-  height{ default_height }, width{ default_width },
   deltaTime{ 0.0f }, lastTime{ 0.0f },
-  aspect{ static_cast<float>(width) / static_cast<float>(height) },
   wireframe{ false },
-  sceneLoader(&renderer, &lightManager, &cameraManager)
+  sceneManager(&renderer, &lightManager, &cameraManager)
 {}
 Engine::~Engine() {
-  sceneLoader.getScene().clearModels(vaoManager);
-  WindowManager::destroy(window);
+  sceneManager.getScene().clearModels(vaoManager);
+  windowManager.destroyWindow();
 }
 
-bool Engine::initialize() {
-  window = WindowManager::initGL(width, height);
-  if (!window) {
-    fprintf(stderr, "failed to initialize opengl\n");
+bool Engine::initialize(const unsigned int width, const unsigned int height, const char* title) {
+  if (!windowManager.createWindow(width, height, title)) {
+    fprintf(stderr, "Failed to create window\n");
     return false;
   }
-  glfwSetWindowUserPointer(window, this);
+
+  glfwSetWindowUserPointer(windowManager.getWindow()->getGLFWwindow(), this);
 
 #ifndef ndebug
-  printf("[Debug] Opengl info:\n");
+  printf("[Debug] Opengl info\n");
   printf("[Debug] Vendor: %s\n", glGetString(GL_VENDOR));
   printf("[Debug] Renderer: %s\n", glGetString(GL_RENDERER));
   printf("[Debug] Version: %s\n", glGetString(GL_VERSION));
 #endif
 
   setupShaders();
-  WindowManager::setupGLState();
-  WindowManager::setCallbacks(window);
 
   lightManager.GetUniformLocations(currentProgram);
   return true;
 }
 
-void Engine::updateAspect(unsigned int width, unsigned int height) {
-  this->width = width;
-  this->height = height;
-  this->aspect = static_cast<float>(width) / static_cast<float>(height);
-  glViewport(0, 0, width, height);
-}
 void Engine::setupShaders() {
 #ifndef ndebug
   printf("[setupShaders] Shader setup start time: %f\n", glfwGetTime());
@@ -100,7 +89,7 @@ void Engine::tick(const float currenttime) {
 
   if (rawdelta > max_delta) {
 #ifndef ndebug
-    printf("[warn] deltaTime clamped to %.3f (was %.3f)\n", max_delta, rawdelta);
+    printf("[Tick WARN] deltaTime clamped to %.3f (was %.3f)\n", max_delta, rawdelta);
 #endif
     rawdelta = max_delta;
   }
@@ -108,27 +97,21 @@ void Engine::tick(const float currenttime) {
   lastTime = currenttime;
   deltaTime = smoothing_factor * deltaTime + (2.0f - smoothing_factor) * rawdelta;
 }
-
+  
 bool Engine::setScene(const std::string& sceneIn) {
-  const std::string sceneName = sceneIn.empty() ? "Default" : sceneIn;
-
-  if (!sceneLoader.loadTxtScene(sceneName)) {
-    fprintf(stderr, "[SCENE ERROR] Scene '%s' could not be loaded.\n", sceneName.c_str());
-    return false;
-  }
-
+  if (!sceneManager.loadTxtScene(sceneIn))  return false;
   return true;
 }
 void Engine::run() {
-  while (!glfwWindowShouldClose(window)) {	
+  while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
-    inputManager.Update(window);
+    inputManager.Update(windowManager.getWindow()->getGLFWwindow());
     cameraManager.getActiveCamera()->ProcessInputs(&inputManager, getDeltaTime());
-    handleModelInput(&inputManager, getDeltaTime(), sceneLoader.getScene().getModelInstances(), currentModel);
+    handleModelInput(&inputManager, getDeltaTime(), sceneManager.getScene().getModelInstances(), currentModel);
     renderFrame();
 
-    glfwSwapBuffers(window); 
-    glfwPollEvents();      
+    windowManager.getWindow()->swapBuffers();
+    windowManager.getWindow()->pollEvents();
   }
 }
 
@@ -137,14 +120,14 @@ void Engine::renderFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   const Mat4 view = cameraManager.getActiveCamera()->LookAt();
-  const Mat4 projection = cameraManager.getActiveCamera()->Perspective(aspect);
+  const Mat4 projection = cameraManager.getActiveCamera()->Perspective(windowManager.getWindow()->getAspect());
   const Vec3 eye = cameraManager.getActiveCamera()->Pos();
   renderer.updateCameraUniforms(eye, view, projection);
 
   lightManager.UpdateShaderUniforms(currentProgram);
 
   // Draw Frame
-  for (const std::pair<const std::string, ModelInstance>& pair : sceneLoader.getScene().getModelInstances())
+  for (const std::pair<const std::string, ModelInstance>& pair : sceneManager.getScene().getModelInstances())
     renderer.drawModel(pair.second, view, projection);
   
   // End Frame
@@ -152,13 +135,13 @@ void Engine::renderFrame() {
 }
 
 void Engine::incrementModel() {
-  if (sceneLoader.getScene().getModelInstances().empty()) return;
-  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneLoader.getScene().getModelInstances().size());
+  if (sceneManager.getScene().getModelInstances().empty()) return;
+  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneManager.getScene().getModelInstances().size());
 }
 
 void Engine::decrementModel() {
-  if (sceneLoader.getScene().getModelInstances().empty()) return;
+  if (sceneManager.getScene().getModelInstances().empty()) return;
   currentModel = (currentModel == 0) 
-    ? static_cast<unsigned int>(sceneLoader.getScene().getModelInstances().size() - 1)
+    ? static_cast<unsigned int>(sceneManager.getScene().getModelInstances().size() - 1)
     : currentModel - 1;
 }

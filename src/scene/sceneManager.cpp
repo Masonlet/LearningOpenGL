@@ -1,24 +1,23 @@
 #include <glad/glad.h>
 
+#include "scene/sceneManager.hpp"
+#include "scene/sceneParser.hpp"
+
 #include "utils/files.hpp"
 #include "utils/parser.hpp"
-
-#include "scene/sceneParser.hpp"
-#include "scene/sceneLoader.hpp"
 
 #include "utils/grids.hpp"
 #include "utils/primitives.hpp"
 
 #include <fstream>
-#include <cstring>
 #include <iomanip>
 
-SceneLoader::SceneLoader(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager) 
+SceneManager::SceneManager(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager)
   : scene(), renderer(renderer), lightManager(lightManager), cameraManager(cameraManager) {}
 
-bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
+bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 #ifndef NDEBUG
-  fprintf(stderr, "[SceneLoader] Scene load start: %f\n", glfwGetTime());
+  fprintf(stderr, "[SceneManager] Scene load start: %f\n", glfwGetTime());
 #endif
   std::string scenepath = "assets/scenes/" + sceneIn + ".txt";
   std::string src{};
@@ -45,7 +44,7 @@ bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
     }   
 
     if (!processSceneLine(lineStart, lineLen)) {
-      fprintf(stderr, "[SceneLoader ERROR] Failed to process scene line: %.*s\n", (int)lineLen, lineStart);
+      fprintf(stderr, "[SceneManager ERROR] Failed to process scene line: %.*s\n", (int)lineLen, lineStart);
       return false;
     }
 
@@ -63,18 +62,18 @@ bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
     defaultCam.SetFar(10000.0f);
 
     if (!cameraManager->addCamera(defaultCam)) 
-      fprintf(stderr, "[SceneLoader WARNING] Failed to add fallback camera\n");
+      fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
     else 
 #ifndef NDEBUG
-      fprintf(stderr, "[SceneLoader INFO] No camera in scene, fallback camera added\n");
+      fprintf(stderr, "[SceneManager DEBUG] No camera in scene, fallback camera added\n");
 #endif
   }
 #ifndef NDEBUG
-  fprintf(stderr, "[SceneLoader] Scene load finish: %f\n", glfwGetTime());
+  fprintf(stderr, "[SceneManager] Scene load finish: %f\n", glfwGetTime());
 #endif
   return true;
 }
-bool SceneLoader::processSceneLine(const unsigned char* p, size_t lineLen) {
+bool SceneManager::processSceneLine(const unsigned char* p, size_t lineLen) {
   const unsigned char* linePtr = p;
   if (*linePtr == '\0') return true;
 
@@ -101,7 +100,7 @@ bool SceneLoader::processSceneLine(const unsigned char* p, size_t lineLen) {
   return handled;
 }
 
-bool SceneLoader::saveTxtScene() {
+bool SceneManager::saveTxtScene() {
   std::string scenePath = "../../../assets/scenes/" + scene.getSceneName() + ".txt";
   std::ofstream file(scenePath);
 
@@ -178,7 +177,7 @@ static void applyColourSettings(ModelInstance& instance, const Vec4& colour, con
   instance.colourMode = mode;
 }
 
-bool SceneLoader::handleModelLine(const unsigned char* p) {
+bool SceneManager::handleModelLine(const unsigned char* p) {
   ParsedModel model{};
   PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
 
@@ -189,7 +188,7 @@ bool SceneLoader::handleModelLine(const unsigned char* p) {
 
   scene.addModelInfo(model.path, drawInfo);
   if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, drawInfo, renderer->getProgram())) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to load model: %s\n", model.path.c_str());
+    fprintf(stderr, "[SceneManager ERROR] Failed to load model: %s\n", model.path.c_str());
     return false;
   }
   scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
@@ -199,16 +198,16 @@ bool SceneLoader::handleModelLine(const unsigned char* p) {
 
   return true;
 }
-bool SceneLoader::handleLightLine(const unsigned char* p) {
+bool SceneManager::handleLightLine(const unsigned char* p) {
   ParsedLight lightData{};
   if (!(p = parseLight(p, lightData))) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse light\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to parse light\n");
     return false;
   }
 
   Light* light = lightManager->getLightByName(lightData.name);
   if (!light) {
-    fprintf(stderr, "[SceneLoader ERROR] Unable to store light: %s\n", lightData.name.c_str());
+    fprintf(stderr, "[SceneManager ERROR] Unable to store light: %s\n", lightData.name.c_str());
     return false;
   }
 
@@ -221,10 +220,10 @@ bool SceneLoader::handleLightLine(const unsigned char* p) {
 
   return true;
 }
-bool SceneLoader::handleCameraLine(const unsigned char* p) {
+bool SceneManager::handleCameraLine(const unsigned char* p) {
   ParsedCamera cameraData{};
   if (!(p = parseCamera(p, cameraData))) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse camera\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to parse camera\n");
     return false;
   }
 
@@ -234,19 +233,19 @@ bool SceneLoader::handleCameraLine(const unsigned char* p) {
   cam.SetPos(cameraData.position);
 
   if (!cameraManager->addCamera(cam)) {
-    fprintf(stderr, "[SceneLoader ERROR] Could not add camera index %u\n", cameraData.index);
+    fprintf(stderr, "[SceneManager ERROR] Could not add camera index %u\n", cameraData.index);
     return false;
   }
 
   return true;
 }
 
-bool SceneLoader::handleSquareGridLine(const unsigned char* p) {
+bool SceneManager::handleSquareGridLine(const unsigned char* p) {
   ParsedGrid grid;
   PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
   if (!createSquareGrid(*this, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to create cubeGrid\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
     return false;
   }
 
@@ -261,12 +260,12 @@ bool SceneLoader::handleSquareGridLine(const unsigned char* p) {
 
   return true;
 }
-bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
+bool SceneManager::handleCubeGridLine(const unsigned char* p) {
   ParsedGrid grid;
   PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
   if (!createCubeGrid(*this, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to create cubeGrid\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
     return false;
   }
 
@@ -281,10 +280,10 @@ bool SceneLoader::handleCubeGridLine(const unsigned char* p) {
 
   return true;
 }
-bool SceneLoader::handleTriangleLine(const unsigned char* p) {
+bool SceneManager::handleTriangleLine(const unsigned char* p) {
   ParsedTriangle triangle{};
   if (!(p = parseTriangle(p, triangle))) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to parse triangle\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to parse triangle\n");
     return false;
   }
 
@@ -308,12 +307,12 @@ bool SceneLoader::handleTriangleLine(const unsigned char* p) {
   if (!meshExists) {
     Vec4 bakedVertexColour = { triangle.colour.x, triangle.colour.y, triangle.colour.z, 1.0f };
     if (!createTriangle(renderer->getVAOManager(), sharedName, renderer->getProgram(), { triangle.transform.scale.x, triangle.transform.scale.y }, bakedVertexColour)) {
-      fprintf(stderr, "[createSceneFromName ERROR] Failed to create triangle mesh: %s\n", sharedName.c_str());
+      fprintf(stderr, "[SceneManager ERROR] Failed to create triangle mesh: %s\n", sharedName.c_str());
       return false;
     }
 
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(sharedName, info)) {
-      fprintf(stderr, "[createSceneFromName ERROR] Mesh still not found after creation: %s\n", sharedName.c_str());
+      fprintf(stderr, "[SceneManager ERROR] Mesh still not found after creation: %s\n", sharedName.c_str());
       return false;
     }
 
@@ -323,7 +322,7 @@ bool SceneLoader::handleTriangleLine(const unsigned char* p) {
   std::string instanceName = std::string(triangle.meshName) + "_instance";
   Mat4 transform = Mat4::translation(triangle.transform.position);
   if (!scene.addInstance(instanceName, sharedName, transform)) {
-    fprintf(stderr, "[createSceneFromName ERROR] Failed to add triangle instance\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to add triangle instance\n");
     return false;
   }
 
@@ -332,33 +331,33 @@ bool SceneLoader::handleTriangleLine(const unsigned char* p) {
   return true;
 }
 
-bool SceneLoader::handleMazeLine(const unsigned char* p) {
+bool SceneManager::handleMazeLine(const unsigned char* p) {
   ParsedMaze maze;
   PARSE_OR_FALSE(parseMaze, maze, "Failed to parse maze");
 
   pendingMaze = maze;
   return true;
 }
-bool SceneLoader::handleMazeData(const unsigned char* p) {
+bool SceneManager::handleMazeData(const unsigned char* p) {
   if (!pendingMaze.has_value()) {
-    fprintf(stderr, "[SceneLoader ERROR] Unexpected mazeData with no pending maze\n");
+    fprintf(stderr, "[SceneManager ERROR] Unexpected mazeData with no pending maze\n");
     return false;
   }
 
   if (!(parseMazeData(p, *pendingMaze))) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to parse mazeData\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to parse mazeData\n");
     return false;
   }
 
   if (!buildMaze(*pendingMaze)) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to build maze\n");
+    fprintf(stderr, "[SceneManager ERROR] Failed to build maze\n");
     return false;
   }
 
   pendingMaze.reset();
   return true;
 }
-bool SceneLoader::buildMaze(const ParsedMaze& maze) {
+bool SceneManager::buildMaze(const ParsedMaze& maze) {
   for (const std::string& modelPath : { maze.wallType, maze.floorType }) {
     ModelDrawInfo existingInfo;
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {

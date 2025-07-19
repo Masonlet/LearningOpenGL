@@ -4,8 +4,6 @@
 #include "utils/primitives.hpp"
 #include "core/meshLoader.hpp"
 
-#include <cmath>
-
 static Vec3 calculateGridPosition(const int index, const int gridSize, const Vec2& spacing, bool zUp = false) {
 	int row = index / gridSize;
 	int col = index % gridSize;
@@ -16,7 +14,7 @@ static Vec3 calculateGridPosition(const int index, const int gridSize, const Vec
 		return Vec3{ spacing.x * col, spacing.y * row, 0.0f };
 }
 
-bool createSquareGrid(SceneLoader& loader, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec2& size) {
+bool createSquareGrid(SceneManager& loader, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec2& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
 	std::string sharedName = baseName + "_sharedSquare";
@@ -46,7 +44,7 @@ bool createSquareGrid(SceneLoader& loader, const std::string& baseName, int star
 	return true;
 }
 
-bool createCubeGrid(SceneLoader& loader, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& size) {
+bool createCubeGrid(SceneManager& loader, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
 	std::string sharedName = baseName + "_sharedCube";
@@ -80,7 +78,7 @@ bool createCubeGrid(SceneLoader& loader, const std::string& baseName, int startI
 	return true;
 }
 
-bool createMeshGridFromPath(SceneLoader& loader, const std::string& baseName, const std::string& path, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& scale, bool hasNormals) {
+bool createMeshGridFromPath(SceneManager& loader, const std::string& baseName, const std::string& path, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& scale, bool hasNormals) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	std::string sharedName = baseName + "_sharedMesh";
 

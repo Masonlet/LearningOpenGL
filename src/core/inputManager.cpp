@@ -1,3 +1,5 @@
+#include <GLFW/glfw3.h>
+
 #include "core/inputManager.hpp"
 
 void InputManager::Update(GLFWwindow* window) {

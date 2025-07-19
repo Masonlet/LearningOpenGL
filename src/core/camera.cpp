@@ -1,9 +1,6 @@
 #include "core/camera.hpp"
 #include "math/constants.hpp"
 
-#include <cmath>
-#include <cstdio>
-
 Camera::Camera() :
   moveSpeed{ MOVE_SPEED }, mouseSpeed{ CAMERA_SPEED }, 
   pos{ INITIAL_POS }, front{ INITIAL_TARGET }, up{ WORLD_UP }, 
@@ -112,10 +109,9 @@ void Camera::ProcessMouse(InputManager* input) {
 }
 
 void Camera::print() const {
-  fprintf(stdout, "Pos: %f:%f:%f\n", pos.x, pos.y, pos.z);
-  fprintf(stdout, "Front: %f:%f:%f\n", front.x, front.y, front.z);
-  fprintf(stdout, "Pitch: %f\n", pitch);
-  fprintf(stderr, "\n");
+  printf("\nPos: %f:%f:%f\n", pos.x, pos.y, pos.z);
+  printf("Front: %f:%f:%f\n", front.x, front.y, front.z);
+  printf("Pitch: %f\n\n", pitch);
 }
 
 

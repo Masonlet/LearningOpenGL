@@ -1,9 +1,7 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-
 #include "math/constants.hpp"
-#include "math/vec4.hpp"
+#include "math/vec3.hpp"
 #include "math/mat4.hpp"
 
 #include "core/inputManager.hpp"

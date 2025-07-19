@@ -4,13 +4,10 @@
 #include "math/vec4.hpp"
 #include "core/colour.hpp"
 
-#include <cstddef>
-#include <string>
-
 #ifndef PARSE_OR_FAIL
 #define PARSE_OR_FAIL(parser, target, errorMsg) \
   if (!(p = parser(p, target))) { \
-      fprintf(stderr, "[parse ERROR]: Failed to parse %s\n", errorMsg); \
+      fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
       return nullptr; \
   } \
   if (*p == ',') ++p;
@@ -19,7 +16,7 @@
 #ifndef PARSE_OR_FALSE
 #define PARSE_OR_FALSE(parser, target, errorMsg) \
   if (!(p = parser(p, target))) { \
-      fprintf(stderr, "[parse ERROR]: Failed to parse %s\n", errorMsg); \
+      fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
       return false; \
   } \
   if (*p == ',') ++p;
@@ -31,7 +28,7 @@
     char temp[size]{}; \
     p = parseToken(p, reinterpret_cast<unsigned char*>(temp), size); \
     if (!p || strlen(temp) == 0) { \
-      fprintf(stderr, "[parse ERROR] Failed to parse %s\n", label); \
+      fprintf(stderr, "[Parser ERROR] Failed to parse %s\n", label); \
       return nullptr; \
     } \
     if (*p == ',') ++p; \
@@ -45,7 +42,7 @@
     char temp[size]{}; \
     p = parseToken(p, reinterpret_cast<unsigned char*>(temp), size); \
     if (!p || strlen(temp) == 0) { \
-      fprintf(stderr, "[parse ERROR] Failed to parse %s\n", label); \
+      fprintf(stderr, "[Parser ERROR] Failed to parse %s\n", label); \
       return false; \
     } \
     if (*p == ',') ++p; \
@@ -64,8 +61,6 @@ const unsigned int   parseBinaryUINT(const unsigned char* buffer);
 
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out);
 const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
-
-const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut);
 
 const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut);
 const unsigned char* parseLightType(const unsigned char* p, unsigned int& typeOut);

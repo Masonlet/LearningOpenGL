@@ -1,11 +1,11 @@
+#include <glad/glad.h>
+
 #include "graphics/vaoManager.hpp"
 #include "utils/parser.hpp"
+#include "utils/plyParser.hpp"
 #include "utils/files.hpp"
-#include "core/engine.hpp"
 
-#include <vector>
 #include <sstream>
-#include <cfloat>
 
 #define PARSE_OR_CONTINUE(parser, target, errorMsg) \
     if (!(linePtr = parser(linePtr, target))) { \

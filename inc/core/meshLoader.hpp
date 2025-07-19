@@ -2,6 +2,7 @@
 
 #include "graphics/vaoManager.hpp"
 #include "math/vec3.hpp"
+
 #include <string>
 
 bool createMeshFromPath(

@@ -5,6 +5,7 @@
 float Vec3::length() const { 
 	return sqrt(x * x + y * y + z * z); 
 }
+
 Vec3 Vec3::normalized() const {
 	float len = lengthSquared();
 

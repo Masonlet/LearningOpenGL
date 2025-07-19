@@ -1,10 +1,9 @@
+#include <glad/glad.h>
+
 #include "graphics/shaderManager.hpp"
-#include "core/engine.hpp"
 #include "utils/files.hpp"
 
-#include <cstdio>
 #include <sstream>
-#include <cstring>
 
 std::string ShaderManager::Shader::getType() {
 	switch (this->type)

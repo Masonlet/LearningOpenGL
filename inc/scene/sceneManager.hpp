@@ -1,16 +1,16 @@
 #pragma once
 
 #include "scene/scene.hpp"
-#include "scene/sceneParser.hpp"
 #include "lights/lightManager.hpp"
+#include "core/cameraManager.hpp"
 #include "graphics/renderer.hpp"
+#include "utils/parserObjects.hpp"
 
-#include <string>
 #include <optional>
 
-class SceneLoader {
+class SceneManager {
 public:
-  SceneLoader(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager);
+  SceneManager(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager);
 
   Scene& getScene() { return scene; }
   Renderer* getRenderer() const { return renderer; }

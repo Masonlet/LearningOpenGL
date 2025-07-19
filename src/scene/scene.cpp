@@ -1,14 +1,6 @@
 #include <glad/glad.h>
 
 #include "scene/scene.hpp"
-#include "core/engine.hpp"
-#include "utils/files.hpp"
-#include "utils/parser.hpp"
-#include "utils/primitives.hpp"
-
-#include <cstring>
-#include <fstream>
-#include <iomanip>
 
 void Scene::setSceneName(const std::string& sceneNameIn) {
   sceneName = sceneNameIn;

@@ -1,5 +1,6 @@
+#include <glad/glad.h> 
+
 #include "core/callbacks.hpp"
-#include "core/engine.hpp"
 
 #include <stdio.h>
 
@@ -28,7 +29,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		}
 
     if(key == GLFW_KEY_L){
-			if (!engine->getSceneLoader().saveTxtScene())
+			if (!engine->getSceneManager().saveTxtScene())
 				fprintf(stderr, "[KEY_CALLBACK] Failed to save scene\n");
 			else {
 #ifndef ndebug
@@ -65,15 +66,5 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	lastHeight = height;
 
 	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
-	if (!engine) return;
-	
-#ifndef NDEBUG
-	printf("[INFO] Framebuffer resized: %dx%d\n", width, height);
-#endif
-
-	if (width < 64) width = 64;
-	if (height < 64) height = 64;
-
-	engine->updateAspect(width, height);
-	glViewport(0, 0, width, height);
+	if (engine) engine->getWindowManager().getWindow()->updateViewport(width, height);
 }
