@@ -65,7 +65,9 @@ bool SceneLoader::loadTxtScene(const std::string& sceneIn) {
     if (!cameraManager->addCamera(defaultCam)) 
       fprintf(stderr, "[SceneLoader WARNING] Failed to add fallback camera\n");
     else 
-      fprintf(stderr, "[SceneLoader INFO] No camera in scene — fallback camera added\n");
+#ifndef NDEBUG
+      fprintf(stderr, "[SceneLoader INFO] No camera in scene, fallback camera added\n");
+#endif
   }
 #ifndef NDEBUG
   fprintf(stderr, "[SceneLoader] Scene load finish: %f\n", glfwGetTime());
@@ -159,7 +161,7 @@ bool SceneLoader::saveTxtScene() {
 
     if (light.param2.x == 0.0f) continue;
 
-    file << "light, " << i << ", "
+    file << "light, " << lightManager->getLightName(i) << ", "
       << light.position.x << " " << light.position.y << " " << light.position.z << " " << light.position.w << ", "
       << light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
       << light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
@@ -190,7 +192,7 @@ bool SceneLoader::handleModelLine(const unsigned char* p) {
     fprintf(stderr, "[SceneLoader ERROR] Failed to load model: %s\n", model.path.c_str());
     return false;
   }
-  scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ model.position, model.rotation, model.scale }));
+  scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
 
   ModelInstance& instance = scene.getModelInstances()[model.meshName];
   applyColourSettings(instance, model.colour, model.colourMode);
@@ -204,13 +206,18 @@ bool SceneLoader::handleLightLine(const unsigned char* p) {
     return false;
   }
 
-  Light& light = lightManager->theLights[lightData.index];
-  light.position = lightData.position;
-  light.diffuse = lightData.diffuse;
-  light.atten = lightData.atten;
-  light.direction = lightData.direction;
-  light.param1 = { lightData.type, lightData.param1 };
-  light.param2 = lightData.param2;
+  Light* light = lightManager->getLightByName(lightData.name);
+  if (!light) {
+    fprintf(stderr, "[SceneLoader ERROR] Unable to store light: %s\n", lightData.name.c_str());
+    return false;
+  }
+
+  light->position = { lightData.position, 1.0 };
+  light->diffuse = lightData.diffuse;
+  light->atten = lightData.atten;
+  light->direction = lightData.direction;
+  light->param1 = { lightData.type, lightData.param1 };
+  light->param2 = lightData.param2;
 
   return true;
 }

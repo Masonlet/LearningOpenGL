@@ -10,7 +10,7 @@
 #ifndef PARSE_OR_FAIL
 #define PARSE_OR_FAIL(parser, target, errorMsg) \
   if (!(p = parser(p, target))) { \
-      fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
+      fprintf(stderr, "[parse ERROR]: Failed to parse %s\n", errorMsg); \
       return nullptr; \
   } \
   if (*p == ',') ++p;
@@ -19,7 +19,7 @@
 #ifndef PARSE_OR_FALSE
 #define PARSE_OR_FALSE(parser, target, errorMsg) \
   if (!(p = parser(p, target))) { \
-      fprintf(stderr, "[createSceneFromName ERROR]: %s\n", errorMsg); \
+      fprintf(stderr, "[parse ERROR]: Failed to parse %s\n", errorMsg); \
       return false; \
   } \
   if (*p == ',') ++p;

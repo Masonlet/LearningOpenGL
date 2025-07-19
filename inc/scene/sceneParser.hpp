@@ -13,15 +13,15 @@
 struct ParsedModel {
 	std::string meshName;
 	std::string path;
-	Vec4 position;
+	Vec3 position;
 	Vec3 rotation;
 	Vec3 scale;
 	Vec4 colour;
 	ColourMode colourMode;
 };
 struct ParsedLight {
-	unsigned int index;
-	Vec4 position;
+	std::string name;
+	Vec3 position;
 	Vec4 diffuse;
 	Vec4 atten;
 	Vec4 direction;

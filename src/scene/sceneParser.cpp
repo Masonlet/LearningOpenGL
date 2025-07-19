@@ -2,34 +2,23 @@
 #include "utils/parser.hpp"
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
-  PARSE_STRING_OR_FAIL(p, out.meshName, 64, "mesh name");
-  PARSE_STRING_OR_FAIL(p, out.path, 128, "path");
-
-  Vec3 temp;
-  PARSE_OR_FAIL(parseVec3, temp, "Failed to parse position");
-  out.position = { temp, 0.0f };
-
-  PARSE_OR_FAIL(parseVec3, out.rotation, "Failed to parse rotation");
-  PARSE_OR_FAIL(parseVec3, out.scale, "Failed to parse scale");
-
+  PARSE_STRING_OR_FAIL(p, out.meshName, 64, "model name");
+  PARSE_STRING_OR_FAIL(p, out.path, 128, "parse path");
+  PARSE_OR_FAIL(parseVec3, out.position, "parse position");
+  PARSE_OR_FAIL(parseVec3, out.rotation, "parse rotation");
+  PARSE_OR_FAIL(parseVec3, out.scale, "parse scale");
   p = parseColour(p, out.colour, out.colourMode);
-
   return p;
 }
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
-  PARSE_OR_FAIL(parseStringUInt, out.index, "Failed to parse light index");
+  PARSE_STRING_OR_FAIL(p, out.name, 64, "light name");
   p = parseLightType(p, out.type);
-
-  PARSE_OR_FAIL(parseVec4, out.position, "Failed to parse light position");
-
-  PARSE_OR_FAIL(parseVec4, out.diffuse, "Failed to parse light diffuse");
-  PARSE_OR_FAIL(parseVec4, out.atten, "Failed to parse light attenuation");
-
-  PARSE_OR_FAIL(parseVec4, out.direction, "Failed to parse light direction");
-
-  PARSE_OR_FAIL(parseVec3, out.param1, "Failed to parse light param1");
-  PARSE_OR_FAIL(parseVec4, out.param2, "Failed to parse light param2");
-
+  PARSE_OR_FAIL(parseVec3, out.position, "light position");
+  PARSE_OR_FAIL(parseVec4, out.diffuse, "light diffuse");
+  PARSE_OR_FAIL(parseVec4, out.atten, "light attenuation");
+  PARSE_OR_FAIL(parseVec4, out.direction, "light direction");
+  PARSE_OR_FAIL(parseVec3, out.param1, "light param1");
+  PARSE_OR_FAIL(parseVec4, out.param2, "light param2");
   return p;
 }
 const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
@@ -40,7 +29,6 @@ const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
   PARSE_OR_FAIL(parseFloat, out.fov, "camera fov");
   PARSE_OR_FAIL(parseFloat, out.nearPlane, "camera near plane");
   PARSE_OR_FAIL(parseFloat, out.farPlane, "camera far plane");
-
   return p;
 }
 
@@ -48,37 +36,32 @@ const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) 
   PARSE_STRING_OR_FAIL(p, out.meshName, 64, "triangle name");
 
   Vec3 temp;
-  PARSE_OR_FAIL(parseVec3, temp, "Failed to parse position");
+  PARSE_OR_FAIL(parseVec3, temp, "triangle position");
   out.transform.position = { temp, 0.0f };
 
-  PARSE_OR_FAIL(parseVec3, out.transform.rotation, "Failed to parse rotation");
-  PARSE_OR_FAIL(parseVec3, out.transform.scale, "Failed to parse triangle size");
+  PARSE_OR_FAIL(parseVec3, out.transform.rotation, "triangle rotation");
+  PARSE_OR_FAIL(parseVec3, out.transform.scale, "triangle size");
 
   p = parseColour(p, out.colour, out.colourMode);
 
   return p;
 }
 const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out) {
-  PARSE_OR_FAIL(parseStringUInt, out.layout.count, "Failed to parse cubeGrid count");
-  PARSE_OR_FAIL(parseFloat, out.layout.spacing, "Failed to parse cubeGrid spacing");
-
-  PARSE_OR_FAIL(parseVec3, out.layout.start, "Failed to parse cubeGrid start position");
-  PARSE_OR_FAIL(parseVec3, out.layout.rotation, "Failed to parse cubeGrid rotation");
-  PARSE_OR_FAIL(parseVec3, out.layout.scale, "Failed to parse cubeGrid scale");
-
+  PARSE_OR_FAIL(parseStringUInt, out.layout.count, "cubeGrid count");
+  PARSE_OR_FAIL(parseFloat, out.layout.spacing, "cubeGrid spacing");
+  PARSE_OR_FAIL(parseVec3, out.layout.start, "cubeGrid start position");
+  PARSE_OR_FAIL(parseVec3, out.layout.rotation, "cubeGrid rotation");
+  PARSE_OR_FAIL(parseVec3, out.layout.scale, "cubeGrid scale");
   p = parseColour(p, out.colour, out.colourMode);
-
   return p;
 } 
 
 const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   out.layout.clear();
-
   PARSE_STRING_OR_FAIL(p, out.mazeName, 64, "maze name");
   PARSE_STRING_OR_FAIL(p, out.floorType, 64, "floor mesh");
   PARSE_STRING_OR_FAIL(p, out.wallType, 64, "wall mesh");
   PARSE_STRING_OR_FAIL(p, out.layoutName, 64, "layout name");
-
   return p;
 }
 static bool parseMazeLayoutRow(const std::string& line, std::vector<bool>& outRow) {

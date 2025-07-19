@@ -145,3 +145,18 @@ void LightManager::UpdateShaderUniforms(int shaderProgram) {
             this->theLights[index].param2.w);
     }
 }
+
+Light* LightManager::getLightByName(const std::string& name) {
+  for (int i = 0; i < NUMBEROFLIGHTS; ++i) 
+    if (lightNames[i] == name) 
+      return &theLights[i];
+    
+  for (int i = 0; i < NUMBEROFLIGHTS; ++i) {
+    if (lightNames[i].empty()) {
+      lightNames[i] = name;
+      return &theLights[i];
+    }
+  }
+
+  return nullptr;
+}

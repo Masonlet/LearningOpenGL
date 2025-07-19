@@ -1,6 +1,8 @@
 #pragma once
 #include "math/vec4.hpp"
 
+#include <string>
+
 class Light {
 public:
 	Light();
@@ -34,4 +36,8 @@ public:
 
 	static const int NUMBEROFLIGHTS = 10;
 	Light theLights[NUMBEROFLIGHTS];
+	std::string lightNames[NUMBEROFLIGHTS];
+
+	Light* getLightByName(const std::string& name);
+	const std::string& getLightName(int index) const { return lightNames[index]; }
 };
