@@ -19,7 +19,7 @@ int main() {
 	* - Square 
   * - Cube
 	*/
-	engine.setScene("Warehouse");
+	engine.setScene("SceneTest");
 
 	engine.run();
 	return 0;

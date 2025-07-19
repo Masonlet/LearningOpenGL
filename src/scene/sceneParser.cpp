@@ -18,11 +18,15 @@ const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
 }
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   PARSE_OR_FAIL(parseStringUInt, out.index, "Failed to parse light index");
+  p = parseLightType(p, out.type);
+
   PARSE_OR_FAIL(parseVec4, out.position, "Failed to parse light position");
+
   PARSE_OR_FAIL(parseVec4, out.diffuse, "Failed to parse light diffuse");
   PARSE_OR_FAIL(parseVec4, out.atten, "Failed to parse light attenuation");
+
   PARSE_OR_FAIL(parseVec4, out.direction, "Failed to parse light direction");
-  p = parseLightType(p, out.type);
+
   PARSE_OR_FAIL(parseVec3, out.param1, "Failed to parse light param1");
   PARSE_OR_FAIL(parseVec4, out.param2, "Failed to parse light param2");
 

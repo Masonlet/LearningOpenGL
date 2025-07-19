@@ -95,6 +95,7 @@ bool SceneLoader::processSceneLine(const unsigned char* p, size_t lineLen) {
   else if (strcmp(nameStr, "triangle") == 0) handled = handleTriangleLine(linePtr);
   else if (strcmp(nameStr, "maze") == 0) handled = handleMazeLine(linePtr);
   else if (strcmp(nameStr, "mazeData") == 0) handled = handleMazeData(linePtr);
+  else if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') return true;
   return handled;
 }
 

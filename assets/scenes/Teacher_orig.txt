@@ -1,6 +1,0 @@
-model, cow, cow.ply, 10.0 0.0 0.0, 0.0 0.0 90.0, 1.0 1.0 1.0, 0.0 1.0 0.0 
-model, cow2, cow_XYZ.ply, 10.0 0.0 0.0, 0.0 0.0 0.0, 0.5 0.5 0.5
-model, teapot, Utah_Teapot.ply, 0.0 0.0 0.0, 90.0 0.0 0.0, 0.2 0.2 0.2
-model, dolphin, dolphin.ply, 0.0 10.0 0.0, 0.0 0.0 45.0, 0.02 0.02 0.02
-model, dolphin2, dolphin.ply, 0.0 -10.0 0.0, 0.0 0.0 -45.0, 0.02 0.02 0.02
-model, warehouse, Warehouse_xyz_rgba.ply, 0.0 20.0 0.0, 0.0 90.0 0.0, 1.0 1.0 1.0

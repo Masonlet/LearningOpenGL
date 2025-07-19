@@ -291,5 +291,5 @@ const unsigned char* parseLightType(const unsigned char* p, unsigned int& typeOu
     return nullptr;
   }
 
-  return p;
+  return (*p == ',') ? ++p : p;
 }

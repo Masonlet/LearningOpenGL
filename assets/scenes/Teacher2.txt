@@ -1,7 +1,0 @@
-model, cow, cow_xyz_n_rgba.ply, -10.0 0.0 0.0, 0.0 0.0 90.0, 1.0 1.0 1.0, 0.0 1.0 0.0
-model, cow2, cow_xyz_n_rgba.ply, 10.0 0.0 0.0, 0.0 0.0 0.0, 0.5 0.5 0.5
-model, dolphin, dolphin_xyz_n_rgba.ply, 0.0 10.0 0.0, 0.0 0.0 45.0, 0.02 0.02 0.02
-model, dolphin2, dolphin_xyz_n_rgba.ply, 0.0 -10.0 0.0, 0.0 0.0 -45.0, 0.02 0.02 0.02
-model, warehouse, Warehouse_xyz_n_rgba.ply, 0.0 -20.0 0.0, 0.0 90.0 0.0, 1.0 1.0 1.0
-
-light, 0, 0.0 0.0 0.0 1.0, 1.0 1.0 1.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
