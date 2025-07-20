@@ -21,6 +21,8 @@ struct Mat4 {
   static Mat4 rotateZ(const float angle);
 
   Mat4 operator*(const Mat4& b) const;
+  Vec4 operator*(const Vec4& v) const;
+
   Mat4& operator*=(const Mat4& b);
   bool operator==(const Mat4& b) const;
 

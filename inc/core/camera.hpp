@@ -42,6 +42,7 @@ public:
   inline void SetFov(float fovIn) { fov = fovIn; }
   inline void SetNear(float nearIn) { nearPlane = nearIn; }
   inline void SetFar(float farIn) { farPlane = farIn; }
+  inline void SetMoveSpeed(float speedIn) { moveSpeed = speedIn; }
 
   void ProcessInputs(InputManager* input, const float deltaTime);
   void print() const;
@@ -51,7 +52,8 @@ private:
 	Vec3 pos, front, up;
 	float yaw, pitch;
 	float lastX, lastY;
-  float fov, nearPlane, farPlane;
+  float fov;
+  float nearPlane, farPlane;
   bool paused;
 
 	void ProcessKeyboard(InputManager* input, const float deltaTime);

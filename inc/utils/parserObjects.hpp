@@ -34,6 +34,7 @@ struct ParsedCamera {
 	float yaw, pitch;
 	float fov;
 	float nearPlane, farPlane;
+	float speed;
 };
 
 struct ParsedTriangle {
@@ -50,9 +51,10 @@ struct ParsedGrid {
 };
 
 struct ParsedMaze {
-	std::string mazeName;
-	std::string floorType;
-	std::string wallType;
-	std::string layoutName;
+	std::string mazeName, layoutName;
+	float spacing;
+	Vec3 pos, rot;
+	float wallRot;
+	std::string floorType, wallType;
 	std::vector<std::vector<bool>> layout;
 };

@@ -29,6 +29,7 @@ const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
   PARSE_OR_FAIL(parseFloat, out.fov, "camera fov");
   PARSE_OR_FAIL(parseFloat, out.nearPlane, "camera near plane");
   PARSE_OR_FAIL(parseFloat, out.farPlane, "camera far plane");
+  PARSE_OR_FAIL(parseFloat, out.speed, "camera speed");
   return p;
 }
 
@@ -59,16 +60,20 @@ const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out) {
 const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   out.layout.clear();
   PARSE_STRING_OR_FAIL(p, out.mazeName, 64, "maze name");
+  PARSE_OR_FAIL(parseFloat, out.spacing, "maze spacing");
+  PARSE_OR_FAIL(parseVec3, out.pos, "maze position");
+  PARSE_OR_FAIL(parseVec3, out.rot, "maze rotation");
   PARSE_STRING_OR_FAIL(p, out.floorType, 64, "floor mesh");
   PARSE_STRING_OR_FAIL(p, out.wallType, 64, "wall mesh");
+  PARSE_OR_FAIL(parseFloat, out.wallRot, "maze wall rotation");
   PARSE_STRING_OR_FAIL(p, out.layoutName, 64, "layout name");
   return p;
 }
 static bool parseMazeLayoutRow(const std::string& line, std::vector<bool>& outRow) {
   outRow.clear();
   for (char c : line) {
-    if (c == 'X') outRow.push_back(true);
-    else if (c == '.') outRow.push_back(false);
+    if (c == '.') outRow.push_back(true);
+    else if (c == 'X') outRow.push_back(false);
     else if (c != ' ') {
       fprintf(stderr, "[SceneLoader ERROR] Invalid character '%c' in maze layout line: \"%s\"\n", c, line.c_str());
       return false;

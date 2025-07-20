@@ -245,6 +245,15 @@ Mat4 Mat4::operator*(const Mat4& b) const {
 
   return result;
 }
+Vec4 Mat4::operator*(const Vec4& v) const {
+  Vec4 result;
+  result.x = data[0] * v.x + data[4] * v.y + data[8] * v.z + data[12] * v.w;
+  result.y = data[1] * v.x + data[5] * v.y + data[9] * v.z + data[13] * v.w;
+  result.z = data[2] * v.x + data[6] * v.y + data[10] * v.z + data[14] * v.w;
+  result.w = data[3] * v.x + data[7] * v.y + data[11] * v.z + data[15] * v.w;
+  return result;
+}
+
 Mat4& Mat4::operator*=(const Mat4& b) {
   *this = (*this) * b;
   return *this;

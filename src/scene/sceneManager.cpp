@@ -231,6 +231,7 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
   cam.SetYaw(cameraData.yaw);
   cam.SetPitch(cameraData.pitch);
   cam.SetPos(cameraData.position);
+  cam.SetMoveSpeed(cameraData.speed);
 
   if (!cameraManager->addCamera(cam)) {
     fprintf(stderr, "[SceneManager ERROR] Could not add camera index %u\n", cameraData.index);
@@ -376,13 +377,18 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
 
   for (size_t row = 0; row < maze.layout.size(); ++row) {
     for (size_t col = 0; col < maze.layout[row].size(); ++col) {
-      const std::string& mesh = maze.layout[row][col] ? maze.wallType : maze.floorType;
-      std::string instanceName = maze.mazeName + "_" + std::to_string(row) + "_" + std::to_string(col);
+      Vec4 localPos = { static_cast<float>(col) * maze.spacing, 0.0f, -static_cast<float>(row) * maze.spacing, 1.0f };
+      Mat4 mazeTransform = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
+      Vec4 worldPos = mazeTransform * localPos;
 
-      Vec4 pos = { static_cast<float>(col) * 100.0f, 0.0f, -static_cast<float>(row) * 100.0f, 0.0f };
-      if (!scene.addInstance(instanceName, mesh, Mat4::translation(pos))) {
-        fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", instanceName.c_str());
-        return false;
+      if (maze.layout[row][col]) {
+        std::string floorName = maze.mazeName + "_" + std::to_string(row) + "_" + std::to_string(col);
+       
+        Transform transform{ worldPos, maze.rot, {1.0f, 1.0f, 1.0f} };
+        if (!scene.addInstance(floorName, maze.floorType, Mat4::modelMatrix(transform))) {
+          fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", floorName.c_str());
+          return false;
+        }
       }
     }
   }
