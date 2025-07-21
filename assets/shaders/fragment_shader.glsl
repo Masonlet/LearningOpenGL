@@ -92,8 +92,7 @@ vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal,
 			// NOTE: There isn't any attenuation, like with sunlight.
 			// (This is part of the reason directional lights are fast to calculate)
 
-
-			return finalObjectColour;		
+			continue;		
 		}
 		
 		// Assume it's a point light 

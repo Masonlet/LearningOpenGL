@@ -12,9 +12,9 @@ model, testcar, de--lorean_xyz_n_rgba.ply, 0.0 0.0 -100.0, 45.0 -0.0 0.0, 1.0 1.
 model, warehouse, Warehouse_xyz_n_rgba.ply, 0.0 -20.0 0.0, 0.0 -0.0 0.0, 10.0 10.0 10.0, 
 
 comment, name, type, pos (xyz), diffuse (rgba), atten (xyzw), direction, param1, param2
+light, light3, Directional, -10.0 5.0 0.0, 0.0 1.5 0.0 1.0, 0.0 0.01 0.005 0.0, -1.0 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 light, light1, Point, 0.0 100.0 100.0, 50.0 50.0 50.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 light, light2, Spot, 10.0 5.0 0.0, 100.0 0.0 0.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 -1.0 0.0, 15.0 25.0 0.0, 1. 0.0 0.0 0.0
-light, light3, Directional, -10.0 5.0 0.0, 0.0 1.5 0.0 1.0, 0.0 0.01 0.005 0.0, -1.0 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 
 
 

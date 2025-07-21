@@ -63,10 +63,11 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 
     if (!cameraManager->addCamera(defaultCam)) 
       fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
-    else 
+    else {
 #ifndef NDEBUG
       fprintf(stderr, "[SceneManager DEBUG] No camera in scene, fallback camera added\n");
 #endif
+    }
   }
 #ifndef NDEBUG
   fprintf(stderr, "[SceneManager] Scene load finish: %f\n", glfwGetTime());
