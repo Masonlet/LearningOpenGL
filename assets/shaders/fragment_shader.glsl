@@ -8,68 +8,96 @@ in vec4 vertWorldPosition;
 
 out vec4 pixelColour;
 
-vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular);
+vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, 
+                            vec3 vertexWorldPos, vec4 vertexSpecular);
 							
-struct sLight {
+struct sLight
+{
 	vec4 position;	// xyz, ignoring w (4th parameter)	
 	vec4 diffuse;	
 	vec4 specular;	// rgb = highlight colour, w = power
 	vec4 atten;		// x = constant, y = linear, z = quadratic, w = DistanceCutOff
 	vec4 direction;	// Spot, directional lights, ignoring w (4th parameter)	
-
 	vec4 param1;	// x = lightType, y = inner angle, z = outer angle, w = TBD
-	// lightType 0 = pointlight, 1 = spot light, 2 = directional light, x = 0 for off, 1 for on
-
+	                // 0 = pointlight
+					// 1 = spot light
+					// 2 = directional light
 	vec4 param2;	// x = 0 for off, 1 for on
 };
 
 const int SPOT_LIGHT_TYPE = 1;
 const int DIRECTIONAL_LIGHT_TYPE = 2;
-const int NUMBEROFLIGHTS = 10;
 
+const int NUMBEROFLIGHTS = 10;
 uniform sLight theLights[NUMBEROFLIGHTS];
 
-vec4 calculateLightContrib(vec3 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular);
 
-void main() {
-	vec4 vertSpecular = vec4(1.0f);
-
+void main()
+{
+    //gl_FragColor = vec4(vertColor, 1.0);
+	
+	vec4 vertSpecular = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	
+	pixelColour = vec4(vertColor);
+	
 	vec4 lightContrib = calculateLightContrib(vertColor.rgb, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
 	
-	pixelColour = vec4(lightContrib.rgb, 1.0);
+	pixelColour.rgb = lightContrib.rgb;
 };
 
 // Feeney gave you this (it's inspired by the basic shader in Mike Bailey's Graphic Shaders book)
-vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular ) {
+vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, 
+                            vec3 vertexWorldPos, vec4 vertexSpecular )
+{
 	vec3 norm = normalize(vertexNormal);
+	
 	vec4 finalObjectColour = vec4( 0.0f, 0.0f, 0.0f, 1.0f );
 	
-	for ( int index = 0; index < NUMBEROFLIGHTS; index++ ) {	
-		if ( theLights[index].param2.x == 0.0f ) continue;
+	for ( int index = 0; index < NUMBEROFLIGHTS; index++ )
+	{	
+		// ********************************************************
+		// is light "on"
+		if ( theLights[index].param2.x == 0.0f )
+		{	// it's off
+			continue;
+		}
 		
 		// Cast to an int (note with c'tor)
-		int type = int(theLights[index].param1.x);
+		int intLightType = int(theLights[index].param1.x);
 		
-		// We will do the directional light here... (BEFORE the attenuation, since sunlight has no attenuation, really)
-		if ( type == DIRECTIONAL_LIGHT_TYPE ) /* ==2 */{
+		// We will do the directional light here... 
+		// (BEFORE the attenuation, since sunlight has no attenuation, really)
+		if ( intLightType == DIRECTIONAL_LIGHT_TYPE )		// = 2
+		{
+			// This is supposed to simulate sunlight. 
+			// SO: 
+			// -- There's ONLY direction, no position
+			// -- Almost always, there's only 1 of these in a scene
 			// Cheapest light to calculate. 
-			// This is supposed to simulate sunlight. There's ONLY direction, no position. Almost always, there's only 1 of these in a scene
 
 			vec3 lightContrib = theLights[index].diffuse.rgb;
 			
 			// Get the dot product of the light and normalize
-			float dotProduct = dot( -theLights[index].direction.xyz, normalize(norm.xyz) );	// -1 to 1
+			float dotProduct = dot( -theLights[index].direction.xyz,  
+									   normalize(norm.xyz) );	// -1 to 1
 
 			dotProduct = max( 0.0f, dotProduct );		// 0 to 1
 			
 			lightContrib *= dotProduct;		
 			
-			finalObjectColour.rgb += ( vertexMaterialColour.rgb * theLights[index].diffuse.rgb * lightContrib); //+ (materialSpecular.rgb * lightSpecularContrib.rgb);
-			// NOTE: There isn't any attenuation, like with sunlight. (This is part of the reason directional lights are fast to calculate)	
+			finalObjectColour.rgb += ( vertexMaterialColour.rgb * 
+			                           theLights[index].diffuse.rgb * 
+									   lightContrib); 
+									 //+ (materialSpecular.rgb * lightSpecularContrib.rgb);
+			// NOTE: There isn't any attenuation, like with sunlight.
+			// (This is part of the reason directional lights are fast to calculate)
 
-			finalObjectColour.rgb += vertexMaterialColour.rgb * theLights[index].diffuse.rgb * lightContrib;
-			continue; 
+
+			return finalObjectColour;		
 		}
+		
+		// Assume it's a point light 
+		// intLightType = 0
 		
 		// Contribution for this light
 		vec3 vLightToVertex = theLights[index].position.xyz - vertexWorldPos.xyz;	
@@ -109,7 +137,7 @@ vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 v
 		
 		
 		// But is it a spot light
-		if ( type == SPOT_LIGHT_TYPE )		// = 1
+		if ( intLightType == SPOT_LIGHT_TYPE )		// = 1
 		{	
 		
 
@@ -152,10 +180,12 @@ vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 v
 				lightSpecularContrib *= penumbraRatio;
 			}
 						
-		}
-			
-		finalObjectColour.rgb += (vertexMaterialColour.rgb * lightDiffuseContrib.rgb) + (vertexSpecular.rgb * lightSpecularContrib.rgb );
-	}
+		}// if ( intLightType == 1 )
+		
+					
+		finalObjectColour.rgb += (vertexMaterialColour.rgb * lightDiffuseContrib.rgb)
+								  + (vertexSpecular.rgb * lightSpecularContrib.rgb );
+	}//for(intindex=0...
 	finalObjectColour.a = 1.0f;
 	
 	return finalObjectColour;

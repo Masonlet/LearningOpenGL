@@ -9,6 +9,7 @@ uniform mat4 mModel_InverseTranpose;
 uniform bool bUseOverrideColor;
 uniform vec3 colorOverride;
 
+
 in vec4 vCol;
 in vec4 vPos;
 in vec4 vNorm;
