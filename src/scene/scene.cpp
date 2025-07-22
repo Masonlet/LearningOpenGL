@@ -2,11 +2,16 @@
 
 #include "scene/scene.hpp"
 
+Scene::~Scene() {
+  modelInfos.clear();
+  modelInstances.clear();
+}
+
 void Scene::setSceneName(const std::string& sceneNameIn) {
   sceneName = sceneNameIn;
 }
 
-void Scene::addModelInfo(const std::string& name, const ModelDrawInfo& info) {
+void Scene::addModelInfo(const std::string& name, const ModelDrawInfo* info) {
   modelInfos[name] = info;
 }
 
@@ -35,24 +40,6 @@ bool Scene::addInstance(const std::string& name, const std::string& path, const 
 }
 
 void Scene::clearModels(VAOManager& vaoManager) {
-  std::map<std::string, ModelDrawInfo>::iterator it = modelInfos.begin();
-  for (it; it != modelInfos.end(); ++it) {
-    ModelDrawInfo& info = it->second;
-
-    glDeleteVertexArrays(1, &info.VAO_ID);
-    glDeleteBuffers(1, &info.VertexBufferID);
-    glDeleteBuffers(1, &info.IndexBufferID);
-
-    if (info.vertices) {
-      delete[] info.vertices;
-      info.vertices = nullptr;
-    }
-    if (info.indices) {
-      delete[] info.indices;
-      info.indices = nullptr;
-    }
-  }
-
-  modelInfos.clear();
+  modelInfos.clear();    
   modelInstances.clear();
 }

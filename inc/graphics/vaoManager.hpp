@@ -15,6 +15,13 @@ ModelDrawInfo
 */
 struct ModelDrawInfo {
 	ModelDrawInfo();
+	~ModelDrawInfo();
+
+	ModelDrawInfo(const ModelDrawInfo&) = delete;
+	ModelDrawInfo& operator=(const ModelDrawInfo&) = delete;
+
+	ModelDrawInfo(ModelDrawInfo&& other) noexcept;
+	ModelDrawInfo& operator=(ModelDrawInfo&& other) noexcept;
 
 	std::string meshPath;
 
@@ -40,9 +47,11 @@ public:
 	bool LoadModelFromFile(const std::string& path, ModelDrawInfo& drawInfo);
 	bool LoadModelIntoVAO(std::string fileName, ModelDrawInfo& drawInfo, unsigned int shaderProgramID);
 
-	bool FindDrawInfoByModelName(std::string fileName, ModelDrawInfo& drawInfo);
+	bool FindDrawInfoByModelName(const std::string& fileName, const ModelDrawInfo*& drawInfo);
 
 	std::string GetLastError(bool bAndClear = true);
+
+	void Shutdown();
 
 private:
 	std::map<std::string, ModelDrawInfo> modelName_to_VAOID;

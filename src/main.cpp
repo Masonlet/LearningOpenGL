@@ -1,6 +1,16 @@
+#ifdef _DEBUG
+	#define _CRTDBG_MAP_ALLOC
+	#include <crtdbg.h>
+	#include <cstdlib>
+#endif
+
 #include "core/engine.hpp"
 
 int main() {
+#ifdef _DEBUG
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
 	Engine engine{};
 	engine.initialize(1920, 1200, "Test");
 
@@ -12,4 +22,6 @@ int main() {
 		return -1;
 
 	engine.run();
+
+	return 0;
 }

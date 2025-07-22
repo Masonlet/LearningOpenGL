@@ -110,7 +110,7 @@ bool SceneManager::saveTxtScene() {
     return false;
   }
 
-  const std::map<std::string, ModelDrawInfo>& meshes = scene.getModelInfos();
+  const std::map<std::string, const ModelDrawInfo*>& meshes = scene.getModelInfos();
   const std::map<std::string, ModelInstance>& instances = scene.getModelInstances();
   for (const std::pair<const std::string, ModelInstance>& entry : instances) {
     const std::string& name = entry.first;
@@ -122,7 +122,7 @@ bool SceneManager::saveTxtScene() {
       name.rfind("maze_", 0) == 0) 
       continue;
 
-    std::map<std::string, ModelDrawInfo>::const_iterator mesh = meshes.find(instance.path);
+    std::map<std::string, const ModelDrawInfo*>::const_iterator mesh = meshes.find(instance.path);
     if (mesh == meshes.end()) {
       fprintf(stderr, "[saveTxtScene ERROR] Missing mesh for '%s'\n", name.c_str());
       continue;
@@ -182,13 +182,13 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
   ParsedModel model{};
   PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
 
-  ModelDrawInfo drawInfo;
-  drawInfo.meshPath = model.path;
-  drawInfo.colour = model.colour;
-  drawInfo.colourMode = model.colourMode;
+  ModelDrawInfo* drawInfo = new ModelDrawInfo();
+  drawInfo->meshPath = model.path;
+  drawInfo->colour = model.colour;
+  drawInfo->colourMode = model.colourMode;
 
   scene.addModelInfo(model.path, drawInfo);
-  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, drawInfo, renderer->getProgram())) {
+  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, *drawInfo, renderer->getProgram())) {
     fprintf(stderr, "[SceneManager ERROR] Failed to load model: %s\n", model.path.c_str());
     return false;
   }
@@ -303,7 +303,7 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
     sharedName = "triangle_shared";
   }
 
-  ModelDrawInfo info;
+  const ModelDrawInfo* info = nullptr;
   bool meshExists = !skipCache && renderer->getVAOManager()->FindDrawInfoByModelName(sharedName, info);
 
   if (!meshExists) {
@@ -362,7 +362,8 @@ bool SceneManager::handleMazeData(const unsigned char* p) {
 
 
 static bool addWall(Scene& scene, const ParsedMaze& maze, const std::string& wallName, const std::string& wallDirection, const Vec4& worldPos, const Vec4& wallPos, const Vec3& wallRot) {
-  const std::string name = wallName + wallDirection;
+  std::string name = wallName;
+  name += wallDirection;
 
   const Vec4 pos = worldPos - wallPos;
   const Vec3 rot = maze.rot + wallRot;
@@ -376,14 +377,14 @@ static bool addWall(Scene& scene, const ParsedMaze& maze, const std::string& wal
 }
 bool SceneManager::buildMaze(const ParsedMaze& maze) {
   for (const std::string& modelPath : { maze.wallType, maze.floorType }) {
-    ModelDrawInfo existingInfo;
+    const ModelDrawInfo* existingInfo = nullptr;
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {
       ModelDrawInfo drawInfo;
       drawInfo.meshPath = modelPath;
       drawInfo.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
       drawInfo.colourMode = ColourMode::PLYColour;
 
-      scene.addModelInfo(modelPath, drawInfo);
+      scene.addModelInfo(modelPath, &drawInfo);
       if (!renderer->getVAOManager()->LoadModelIntoVAO(modelPath, drawInfo, renderer->getProgram())) {
         fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());
         return false;

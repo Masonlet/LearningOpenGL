@@ -8,8 +8,6 @@
 #include <string>
 
 struct ModelInstance {
-	ModelInstance() : colourMode(ColourMode::Solid) {};
-
 	Vec4 position;
 	Vec3 rotation;
 	Vec3 scale;
@@ -18,5 +16,5 @@ struct ModelInstance {
 	Mat4 modelMatrix;
 
 	std::string path;
-	ColourMode colourMode;
+	ColourMode colourMode = ColourMode::Solid;
 };

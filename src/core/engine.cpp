@@ -10,10 +10,12 @@ Engine::Engine() :
   currentProgram{ 0 }, currentModel{ 0 },
   deltaTime{ 0.0f }, lastTime{ 0.0f },
   wireframe{ false },
-  sceneManager(&renderer, &lightManager, &cameraManager)
-{}
+  sceneManager(&renderer, &lightManager, &cameraManager){
+}
 Engine::~Engine() {
+  inputManager = {};
   sceneManager.getScene().clearModels(vaoManager);
+  vaoManager.Shutdown();
   windowManager.destroyWindow();
 }
 

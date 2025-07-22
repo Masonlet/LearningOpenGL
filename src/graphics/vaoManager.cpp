@@ -18,6 +18,67 @@
 constexpr Vec4 DEFAULT_NORMAL{ 0.0f, 0.0f, 0.0f, 0.0f };
 constexpr Vec4 DEFAULT_COLOUR{ 0.0f, 1.0f, 0.0f, 0.0f };
 
+ModelDrawInfo::ModelDrawInfo() {
+  this->VAO_ID = 0;
+
+  this->VertexBufferID = 0;
+  this->VertexBuffer_Start_Index = 0;
+  this->numVertices = 0;
+
+  this->IndexBufferID = 0;
+  this->IndexBuffer_Start_Index = 0;
+  this->numIndices = 0;
+  this->numTriangles = 0;
+
+  //"Local" i.e. "CPU Side" temporary array
+  this->vertices = nullptr;
+  this->indices = nullptr;
+
+  this->colour = DEFAULT_COLOUR;
+
+  this->hasNormals = false;
+  this->hasColours = false;
+
+  this->colourMode = ColourMode::PLYColour;
+  this->modelMatrix = Mat4::identity();
+}
+ModelDrawInfo::~ModelDrawInfo() {
+  delete[] vertices;
+  delete[] indices;
+}
+
+ModelDrawInfo::ModelDrawInfo(ModelDrawInfo&& other) noexcept {
+  *this = std::move(other);
+}
+
+ModelDrawInfo& ModelDrawInfo::operator=(ModelDrawInfo&& other) noexcept {
+  if (this != &other) {
+    delete[] vertices;
+    delete[] indices;
+
+    meshPath = std::move(other.meshPath);
+    VAO_ID = other.VAO_ID;
+    VertexBufferID = other.VertexBufferID;
+    IndexBufferID = other.IndexBufferID;
+    VertexBuffer_Start_Index = other.VertexBuffer_Start_Index;
+    IndexBuffer_Start_Index = other.IndexBuffer_Start_Index;
+    numVertices = other.numVertices;
+    numIndices = other.numIndices;
+    numTriangles = other.numTriangles;
+    vertices = other.vertices;
+    indices = other.indices;
+    colour = other.colour;
+    hasNormals = other.hasNormals;
+    hasColours = other.hasColours;
+    colourMode = other.colourMode;
+    modelMatrix = other.modelMatrix;
+
+    other.vertices = nullptr;
+    other.indices = nullptr;
+  }
+  return *this;
+}
+
 const static Vec3 calculateGradient(float y, float minY, float maxY) {
     float range = maxY - minY;
     float normalizedY = (range == 0.0f) ? 0.0f : (y - minY) / range;
@@ -283,31 +344,6 @@ const static unsigned char* parseIndices(ModelDrawInfo& drawInfo,  const unsigne
   return p;
 }
 
-ModelDrawInfo::ModelDrawInfo() {
-  this->VAO_ID = 0;
-
-  this->VertexBufferID = 0;
-  this->VertexBuffer_Start_Index = 0;
-  this->numVertices = 0;
-
-  this->IndexBufferID = 0;
-  this->IndexBuffer_Start_Index = 0;
-  this->numIndices = 0;
-  this->numTriangles = 0;
-
-  //"Local" i.e. "CPU Side" temporary array
-  this->vertices = nullptr;
-  this->indices = nullptr;
-
-  this->colour = DEFAULT_COLOUR;
-
-  this->hasNormals = false;
-  this->hasColours = false;
-
-  this->colourMode = ColourMode::PLYColour;
-  this->modelMatrix = Mat4::identity();
-}
-
 bool VAOManager::LoadPrimitiveIntoVAO(ModelDrawInfo& drawInfo, unsigned int shaderProgramID){
   if (!UploadToGPU(drawInfo, shaderProgramID)) {
     AppendTextToLastError("Failed to upload primitive to GPU", true);
@@ -338,13 +374,13 @@ bool VAOManager::LoadModelIntoVAO(std::string fileName, ModelDrawInfo& drawInfo,
   return UploadToGPU(drawInfo, shaderProgramID);
 }
 
-bool VAOManager::FindDrawInfoByModelName(std::string fileName, ModelDrawInfo& drawInfo) {
+bool VAOManager::FindDrawInfoByModelName(const std::string& fileName, const ModelDrawInfo*& drawInfo) {
   std::map<std::string, ModelDrawInfo>::iterator itDrawInfo = this->modelName_to_VAOID.find(fileName);
 
   if (itDrawInfo == this->modelName_to_VAOID.end())
     return false;
 
-  drawInfo = itDrawInfo->second;
+  drawInfo = &itDrawInfo->second;
   return true;
 }
 
@@ -455,7 +491,14 @@ bool VAOManager::UploadToGPU(ModelDrawInfo& drawInfo, unsigned int shaderProgram
     return false;
   }
 
-  this->modelName_to_VAOID[drawInfo.meshPath] = drawInfo;
+  delete[] drawInfo.vertices;
+  drawInfo.vertices = nullptr;
+
+  delete[] drawInfo.indices;
+  drawInfo.indices = nullptr;
+
+  this->modelName_to_VAOID[drawInfo.meshPath] = std::move(drawInfo);
+
   return true;
 }
 
@@ -474,4 +517,16 @@ void VAOManager::AppendTextToLastError(std::string text, bool addNewLineBefore) 
     ss << '\n';
   ss << text;
   this->lastErrorString = ss.str();
+}
+
+void VAOManager::Shutdown() {
+  for (std::map<std::string, ModelDrawInfo>::iterator it = modelName_to_VAOID.begin(); it != modelName_to_VAOID.end(); ++it){
+    ModelDrawInfo& drawInfo = it->second;
+
+    if (glIsVertexArray(drawInfo.VAO_ID)) glDeleteVertexArrays(1, &drawInfo.VAO_ID);
+    if (glIsBuffer(drawInfo.VertexBufferID))  glDeleteBuffers(1, &drawInfo.VertexBufferID);
+    if (glIsBuffer(drawInfo.IndexBufferID)) glDeleteBuffers(1, &drawInfo.IndexBufferID);
+  }
+
+  modelName_to_VAOID.clear();
 }

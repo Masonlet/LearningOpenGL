@@ -19,7 +19,7 @@ bool createSquareGrid(SceneManager& loader, const std::string& baseName, int sta
 
 	std::string sharedName = baseName + "_sharedSquare";
 
-	ModelDrawInfo drawInfo;
+	const ModelDrawInfo* drawInfo = nullptr;
 	if (!loader.getRenderer()->getVAOManager()->FindDrawInfoByModelName(sharedName, drawInfo)) {
 		if (!createSquare(loader.getRenderer()->getVAOManager(), sharedName, loader.getRenderer()->getProgram(), size))
 			return false;
@@ -47,19 +47,21 @@ bool createSquareGrid(SceneManager& loader, const std::string& baseName, int sta
 bool createCubeGrid(SceneManager& loader, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
-	std::string sharedName = baseName + "_sharedCube";
+	const std::string sharedName = baseName + "_sharedCube";
 
-	ModelDrawInfo info;
+  const ModelDrawInfo* info = nullptr; 
 	if (!loader.getRenderer()->getVAOManager()->FindDrawInfoByModelName(sharedName, info)) {
-		info.meshPath = sharedName;
-		if (!fillCubeMeshData(info, sharedName, size)) return false;
+		ModelDrawInfo temp;
+		temp.meshPath = sharedName;
 
 		// Upload to GPU through VAOManager
-		if (!loader.getRenderer()->getVAOManager()->LoadPrimitiveIntoVAO(info, loader.getRenderer()->getProgram())) {
+		if (!fillCubeMeshData(temp, sharedName, size)) return false;
+		if (!loader.getRenderer()->getVAOManager()->LoadPrimitiveIntoVAO(temp, loader.getRenderer()->getProgram())) {
 			fprintf(stderr, "createCubeGrid: LoadPrimitiveIntoVAO failed for %s\n", sharedName.c_str());
 			return false;
 		}
 
+		loader.getRenderer()->getVAOManager()->FindDrawInfoByModelName(sharedName, info);
 		loader.getScene().addModelInfo(sharedName, info);
 	}
 
@@ -82,7 +84,7 @@ bool createMeshGridFromPath(SceneManager& loader, const std::string& baseName, c
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	std::string sharedName = baseName + "_sharedMesh";
 
-	ModelDrawInfo info;
+	const ModelDrawInfo* info = nullptr;
 	if (!loader.getRenderer()->getVAOManager()->FindDrawInfoByModelName(sharedName, info)) {
 		if (!createMeshFromPath(*loader.getRenderer()->getVAOManager(), sharedName, path, scale, hasNormals))
 			return false;

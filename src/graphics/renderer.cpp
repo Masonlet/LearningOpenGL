@@ -34,7 +34,7 @@ void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat
 }
 
 bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const Mat4& projection) {
-	ModelDrawInfo info;
+	const ModelDrawInfo* info = nullptr;
 	if (!vaoManager->FindDrawInfoByModelName(instance.path, info)) {
 		fprintf(stderr, "[Renderer ERROR] Could not find model: %s\n", instance.path.c_str());
 		return false;
@@ -52,8 +52,8 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 		glUniform1f(useOverrideColourLocation, 0.0f);
 	}
 
-	glBindVertexArray(info.VAO_ID);
-	glDrawElements(GL_TRIANGLES, info.numIndices, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(info->VAO_ID);
+	glDrawElements(GL_TRIANGLES, info->numIndices, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 	return true;
