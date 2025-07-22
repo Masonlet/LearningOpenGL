@@ -21,8 +21,8 @@ constexpr Vec3 INITIAL_POS{ 0.0f, 0.0f, -10.0f };
 constexpr Vec3 INITIAL_TARGET{ 0.0f, 0.0f, -1.0f };
 constexpr Vec3 WORLD_UP{ 0.0f, 1.0f, 0.0f };
 
-constexpr double DEG_TO_RAD{0.01745329251994329576923690768489f};
-inline double radians(double degrees) { return degrees * DEG_TO_RAD; }
+constexpr float DEG_TO_RAD{0.01745329251994329576923690768489f};
+inline float radians(float degrees) { return degrees * DEG_TO_RAD; }
 
-constexpr double RAD_TO_DEG{57.295779513082320876798154814105f};
-inline double degrees(double radians) { return radians * RAD_TO_DEG; }
+constexpr float RAD_TO_DEG{57.295779513082320876798154814105f};
+inline float degrees(float radians) { return radians * RAD_TO_DEG; }
