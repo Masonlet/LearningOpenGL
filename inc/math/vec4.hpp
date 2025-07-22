@@ -27,6 +27,7 @@ struct Vec4 {
 
 	inline float dot(const Vec4& b) const { return x * b.x + y * b.y + z * b.z + w * b.w; }
 
+	inline Vec4 operator+(const Vec4& b) const { return {x + b.x, y + b.y, z + b.z, w + b.w }; }
 	inline Vec4 operator-(const Vec4& b) const { return {x - b.x, y - b.y, z - b.z, w - b.w}; }
 	inline Vec4 operator*(const Vec4& b) const { return {x * b.x, y * b.y, z * b.z, w * b.w}; }
 	inline Vec4& operator+=(const Vec4& b) {

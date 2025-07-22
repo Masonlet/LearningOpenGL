@@ -216,54 +216,6 @@ Mat4 Mat4::rotateZ(const float angle) {
   result.data[5] = c;
   return result;
 }
-Mat4 Mat4::operator*(const Mat4& b) const {
-  Mat4 result{};
-
-  // Column 0
-  result.data[0] = data[0] * b.data[0] + data[4] * b.data[1] + data[8]  * b.data[2] + data[12] * b.data[3];
-  result.data[1] = data[1] * b.data[0] + data[5] * b.data[1] + data[9]  * b.data[2] + data[13] * b.data[3];
-  result.data[2] = data[2] * b.data[0] + data[6] * b.data[1] + data[10] * b.data[2] + data[14] * b.data[3];
-  result.data[3] = data[3] * b.data[0] + data[7] * b.data[1] + data[11] * b.data[2] + data[15] * b.data[3];
-
-  // Column 1
-  result.data[4] = data[0] * b.data[4] + data[4] * b.data[5] + data[8]  * b.data[6] + data[12] * b.data[7];
-  result.data[5] = data[1] * b.data[4] + data[5] * b.data[5] + data[9]  * b.data[6] + data[13] * b.data[7];
-  result.data[6] = data[2] * b.data[4] + data[6] * b.data[5] + data[10] * b.data[6] + data[14] * b.data[7];
-  result.data[7] = data[3] * b.data[4] + data[7] * b.data[5] + data[11] * b.data[6] + data[15] * b.data[7];
-
-  //// Column 2
-  result.data[8]  = data[0] * b.data[8]  + data[4] * b.data[9]  + data[8]  * b.data[10] + data[12] * b.data[11];
-  result.data[9]  = data[1] * b.data[8]  + data[5] * b.data[9]  + data[9]  * b.data[10] + data[13] * b.data[11];
-  result.data[10] = data[2] * b.data[8]  + data[6] * b.data[9]  + data[10] * b.data[10] + data[14] * b.data[11];
-  result.data[11] = data[3] * b.data[8]  + data[7] * b.data[9]  + data[11] * b.data[10] + data[15] * b.data[11];
-
-  //// Column 3
-  result.data[12] = data[0] * b.data[12] + data[4] * b.data[13] + data[8]  * b.data[14] + data[12] * b.data[15];
-  result.data[13] = data[1] * b.data[12] + data[5] * b.data[13] + data[9]  * b.data[14] + data[13] * b.data[15];
-  result.data[14] = data[2] * b.data[12] + data[6] * b.data[13] + data[10] * b.data[14] + data[14] * b.data[15];
-  result.data[15] = data[3] * b.data[12] + data[7] * b.data[13] + data[11] * b.data[14] + data[15] * b.data[15];
-
-  return result;
-}
-Vec4 Mat4::operator*(const Vec4& v) const {
-  Vec4 result;
-  result.x = data[0] * v.x + data[4] * v.y + data[8] * v.z + data[12] * v.w;
-  result.y = data[1] * v.x + data[5] * v.y + data[9] * v.z + data[13] * v.w;
-  result.z = data[2] * v.x + data[6] * v.y + data[10] * v.z + data[14] * v.w;
-  result.w = data[3] * v.x + data[7] * v.y + data[11] * v.z + data[15] * v.w;
-  return result;
-}
-
-Mat4& Mat4::operator*=(const Mat4& b) {
-  *this = (*this) * b;
-  return *this;
-}
-bool Mat4::operator==(const Mat4& b) const {
-  for (int i = 0; i < 16; ++i)
-    if (data[i] != b.data[i])
-      return false;
-  return true;
-}
 
 Transform Mat4::decompose() const {
   Transform t;
@@ -304,7 +256,7 @@ Transform Mat4::decompose() const {
   return t;
 }
 
-void Mat4::print(const char* name = "Matrix")const{
+void Mat4::print(const char* name)const{
   printf("--- %s ---\n", name);
   printf("%.4f  %.4f  %.4f  %.4f\n", data[0], data[4], data[8],  data[12]); 
   printf("%.4f  %.4f  %.4f  %.4f\n", data[1], data[5], data[9],  data[13]);
@@ -312,4 +264,54 @@ void Mat4::print(const char* name = "Matrix")const{
   printf("%.4f  %.4f  %.4f  %.4f\n", data[3], data[7], data[11], data[15]);
   printf("-----------\n");
 }
+
+Mat4 Mat4::operator*(const Mat4& b) const {
+  Mat4 result{};
+
+  // Column 0
+  result.data[0] = data[0] * b.data[0] + data[4] * b.data[1] + data[8] * b.data[2] + data[12] * b.data[3];
+  result.data[1] = data[1] * b.data[0] + data[5] * b.data[1] + data[9] * b.data[2] + data[13] * b.data[3];
+  result.data[2] = data[2] * b.data[0] + data[6] * b.data[1] + data[10] * b.data[2] + data[14] * b.data[3];
+  result.data[3] = data[3] * b.data[0] + data[7] * b.data[1] + data[11] * b.data[2] + data[15] * b.data[3];
+
+  // Column 1
+  result.data[4] = data[0] * b.data[4] + data[4] * b.data[5] + data[8] * b.data[6] + data[12] * b.data[7];
+  result.data[5] = data[1] * b.data[4] + data[5] * b.data[5] + data[9] * b.data[6] + data[13] * b.data[7];
+  result.data[6] = data[2] * b.data[4] + data[6] * b.data[5] + data[10] * b.data[6] + data[14] * b.data[7];
+  result.data[7] = data[3] * b.data[4] + data[7] * b.data[5] + data[11] * b.data[6] + data[15] * b.data[7];
+
+  //// Column 2
+  result.data[8] = data[0] * b.data[8] + data[4] * b.data[9] + data[8] * b.data[10] + data[12] * b.data[11];
+  result.data[9] = data[1] * b.data[8] + data[5] * b.data[9] + data[9] * b.data[10] + data[13] * b.data[11];
+  result.data[10] = data[2] * b.data[8] + data[6] * b.data[9] + data[10] * b.data[10] + data[14] * b.data[11];
+  result.data[11] = data[3] * b.data[8] + data[7] * b.data[9] + data[11] * b.data[10] + data[15] * b.data[11];
+
+  //// Column 3
+  result.data[12] = data[0] * b.data[12] + data[4] * b.data[13] + data[8] * b.data[14] + data[12] * b.data[15];
+  result.data[13] = data[1] * b.data[12] + data[5] * b.data[13] + data[9] * b.data[14] + data[13] * b.data[15];
+  result.data[14] = data[2] * b.data[12] + data[6] * b.data[13] + data[10] * b.data[14] + data[14] * b.data[15];
+  result.data[15] = data[3] * b.data[12] + data[7] * b.data[13] + data[11] * b.data[14] + data[15] * b.data[15];
+
+  return result;
+}
+Vec4 Mat4::operator*(const Vec4& v) const {
+  Vec4 result;
+  result.x = data[0] * v.x + data[4] * v.y + data[8] * v.z + data[12] * v.w;
+  result.y = data[1] * v.x + data[5] * v.y + data[9] * v.z + data[13] * v.w;
+  result.z = data[2] * v.x + data[6] * v.y + data[10] * v.z + data[14] * v.w;
+  result.w = data[3] * v.x + data[7] * v.y + data[11] * v.z + data[15] * v.w;
+  return result;
+}
+
+Mat4& Mat4::operator*=(const Mat4& b) {
+  *this = (*this) * b;
+  return *this;
+}
+bool Mat4::operator==(const Mat4& b) const {
+  for (int i = 0; i < 16; ++i)
+    if (data[i] != b.data[i])
+      return false;
+  return true;
+}
+
 

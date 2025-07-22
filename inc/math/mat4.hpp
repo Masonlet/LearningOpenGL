@@ -27,5 +27,5 @@ struct Mat4 {
   bool operator==(const Mat4& b) const;
 
   Transform decompose() const;
-  void print(const char* name)const;
+  void print(const char* name = "Matrix")const;
 };

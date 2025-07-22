@@ -359,6 +359,21 @@ bool SceneManager::handleMazeData(const unsigned char* p) {
   pendingMaze.reset();
   return true;
 }
+
+
+static bool addWall(Scene& scene, const ParsedMaze& maze, const std::string& wallName, const std::string& wallDirection, const Vec4& worldPos, const Vec4& wallPos, const Vec3& wallRot) {
+  const std::string name = wallName + wallDirection;
+
+  const Vec4 pos = worldPos - wallPos;
+  const Vec3 rot = maze.rot + wallRot;
+  const Transform transform{ pos, rot, {1.0f, 1.0f, 1.0f} };
+  if (!scene.addInstance(name, maze.wallType, Mat4::modelMatrix(transform))) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", name.c_str());
+    return false;
+  }
+
+  return true;
+}
 bool SceneManager::buildMaze(const ParsedMaze& maze) {
   for (const std::string& modelPath : { maze.wallType, maze.floorType }) {
     ModelDrawInfo existingInfo;
@@ -378,19 +393,32 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
 
   for (size_t row = 0; row < maze.layout.size(); ++row) {
     for (size_t col = 0; col < maze.layout[row].size(); ++col) {
-      Vec4 localPos = { static_cast<float>(col) * maze.spacing, 0.0f, -static_cast<float>(row) * maze.spacing, 1.0f };
-      Mat4 mazeTransform = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
-      Vec4 worldPos = mazeTransform * localPos;
+      if (!maze.layout[row][col]) continue;
 
-      if (maze.layout[row][col]) {
-        std::string floorName = maze.mazeName + "_" + std::to_string(row) + "_" + std::to_string(col);
-       
-        Transform transform{ worldPos, maze.rot, {1.0f, 1.0f, 1.0f} };
-        if (!scene.addInstance(floorName, maze.floorType, Mat4::modelMatrix(transform))) {
-          fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", floorName.c_str());
-          return false;
-        }
+      const Vec4 localPos = { static_cast<float>(col) * maze.spacing, 0.0f, -static_cast<float>(row) * maze.spacing, 1.0f };
+      const Mat4 mazeMatrix = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
+      const Vec4 worldPos = mazeMatrix * localPos;
+
+      std::string floorName = maze.mazeName + "_" + std::to_string(row) + "_" + std::to_string(col);
+      Transform floorTransform { worldPos, maze.rot, {1.0f, 1.0f, 1.0f} };
+      if (!scene.addInstance(floorName, maze.floorType, Mat4::modelMatrix(floorTransform))) {
+        fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", floorName.c_str());
+        return false;
       }
+
+      std::string wallName = maze.mazeName + "_" + std::to_string(row) + "_" + std::to_string(col);
+
+      if (row == 0 || !maze.layout[row - 1][col]) 
+        addWall(scene, maze, wallName, "_N", worldPos, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
+
+      if (row + 1 >= maze.layout.size() || !maze.layout[row + 1][col]) 
+        addWall(scene, maze, wallName, "_S", worldPos, { maze.spacing, 0.0f, maze.spacing, 0.0f }, { 0.0f, 180.0f, 0.0f });
+
+      if (col == 0 || !maze.layout[row][col - 1])                         
+        addWall(scene, maze, wallName, "_E", worldPos, { maze.spacing, 0.0f, 0.0f, 0.0f }, { 0.0f, 90.0f, 0.0f });
+
+      if (col + 1 >= maze.layout[row].size() || !maze.layout[row][col + 1]) 
+        addWall(scene, maze, wallName, "_W", worldPos, { 0.0f, 0.0f, maze.spacing, 0.0f }, { 0.0f, -90.0f, 0.0f });
     }
   }
 
