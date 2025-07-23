@@ -70,7 +70,12 @@ const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   PARSE_STRING_OR_FAIL(p, out.floorType5, 64, "floor mesh 5");
   PARSE_STRING_OR_FAIL(p, out.floorType6, 64, "floor mesh 6");
   PARSE_STRING_OR_FAIL(p, out.floorWallType, 64, "floor wall mesh");
-  PARSE_STRING_OR_FAIL(p, out.wallType, 64, "wall mesh");
+  PARSE_STRING_OR_FAIL(p, out.wallType1, 64, "wall mesh 1");
+  PARSE_STRING_OR_FAIL(p, out.wallType2, 64, "wall mesh 2");
+  PARSE_STRING_OR_FAIL(p, out.wallType3, 64, "wall mesh 3");
+  PARSE_STRING_OR_FAIL(p, out.wallType4, 64, "wall mesh 4");
+  PARSE_STRING_OR_FAIL(p, out.wallType5, 64, "wall mesh 5");
+  PARSE_STRING_OR_FAIL(p, out.wallType6, 64, "wall mesh 6");
   PARSE_STRING_OR_FAIL(p, out.entranceType, 64, "entrance mesh");
   PARSE_STRING_OR_FAIL(p, out.exitType, 64, "exit mesh");
   PARSE_STRING_OR_FAIL(p, out.exteriorWallType, 64, "exterior wall mesh");

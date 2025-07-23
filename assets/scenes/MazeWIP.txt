@@ -4,8 +4,8 @@ comment, DO NOT ROTATE MAZES -- have some bug where rotation breaks tiles someti
 
 light, whitePoint, Point, 5000.0 10000.0 -3500.0, 200000.0 200000.0 200000.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 
-comment, maze name, maze spacing, maze start pos, maze start rotation, floor mesh 1, floor mesh 2, floor mesh 3, floor mesh 4, floor mesh 5, floor wall mesh 6, wall mesh, entrance mesh, exit mesh, exterior wall mesh, wall rotation, maze data name
-maze, testMaze, 500.0, 0.0 0.0 0.0, 0.0 0.0 0.0, SM_Env_Dwarf_Floor_01.ply, SM_Env_Dwarf_Floor_02.ply, SM_Env_Dwarf_Floor_03.ply, SM_Env_Dwarf_Floor_04.ply, SM_Env_Dwarf_Floor_05.ply, SM_Env_Dwarf_Floor_06.ply, SM_Env_Dwarf_Floor_07.ply, SM_Env_Dwarf_Wall_01.ply, SM_Env_Dwarf_Wall_Archway_01.ply, SM_Env_Dwarf_Wall_Archway_02.ply, SM_Env_Dwarf_Wall_02.ply, 0.0, mazeData1
+comment, maze name, maze spacing, maze start pos, maze start rotation, floor mesh 1, floor mesh 2, floor mesh 3, floor mesh 4, floor mesh 5, floor wall mesh 6, wall mesh 1, wall mesh 2, wall mesh 3, wall mesh 4, wall mesh 5, wall mesh 6, entrance mesh, exit mesh, exterior wall mesh, wall rotation, maze data name
+maze, testMaze, 500.0, 0.0 0.0 0.0, 0.0 0.0 0.0, SM_Env_Dwarf_Floor_01.ply, SM_Env_Dwarf_Floor_02.ply, SM_Env_Dwarf_Floor_03.ply, SM_Env_Dwarf_Floor_04.ply, SM_Env_Dwarf_Floor_05.ply, SM_Env_Dwarf_Floor_06.ply, SM_Env_Dwarf_Floor_07.ply, SM_Env_Dwarf_Wall_01.ply, SM_Env_Dwarf_Wall_02.ply, SM_Env_Dwarf_Wall_03.ply, SM_Env_Dwarf_Wall_04.ply, SM_Env_Dwarf_Wall_05.ply, SM_Env_Dwarf_Wall_06.ply, SM_Env_Dwarf_Wall_Archway_01.ply, SM_Env_Dwarf_Wall_Archway_02.ply, SM_Env_Dwarf_Wall_Window_01.ply, 0.0, mazeData1
 
 comment, maze data name maze data
 mazeData, mazeData1
