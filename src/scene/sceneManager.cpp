@@ -381,7 +381,7 @@ static bool addWall(Scene& scene, const std::string& meshName, const std::string
   return true;
 }
 bool SceneManager::buildMaze(const ParsedMaze& maze) {
-  for (const std::string& modelPath : { maze.floorType1, maze.floorType2, maze.floorType3, maze.floorType4, maze.floorType5, maze.floorType6, maze.floorWallType, maze.wallType, maze.entranceType, maze.exteriorWallType }) {
+  for (const std::string& modelPath : { maze.floorType1, maze.floorType2, maze.floorType3, maze.floorType4, maze.floorType5, maze.floorType6, maze.floorWallType, maze.wallType, maze.entranceType, maze.exitType, maze.exteriorWallType }) {
     const ModelDrawInfo* existingInfo = nullptr;
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {
       ModelDrawInfo drawInfo;
@@ -397,6 +397,7 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
     }
   }
 
+  bool hasEntrance{ false };
   for (size_t row = 0; row < maze.layout.size(); ++row) {
     for (size_t col = 0; col < maze.layout[row].size(); ++col) {
       if (maze.layout[row][col]) {
@@ -408,7 +409,13 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
         bool wallExists{ false };     
         if (row == 0 || !maze.layout[row - 1][col]) {
           std::string mazeType = maze.wallType;
-          if (row == 0) mazeType = maze.entranceType;
+          if (row == 0) {
+            if (!hasEntrance) {
+              mazeType = maze.entranceType;
+              hasEntrance = true;
+            }
+            else mazeType = maze.exitType;
+          }
 
           addWall(scene, mazeType, "wall" + iteration, "_N", worldPos, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, maze.rot);
           wallExists = true;
@@ -416,7 +423,13 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
 
         if (row + 1 >= maze.layout.size() || !maze.layout[row + 1][col]) {
           std::string mazeType = maze.wallType;
-          if (row + 1 >= maze.layout.size()) mazeType = maze.entranceType;
+          if (row + 1 >= maze.layout.size()) {
+            if (!hasEntrance) {
+              mazeType = maze.entranceType;
+              hasEntrance = true;
+            }
+            else mazeType = maze.exitType;
+          }
 
           addWall(scene, mazeType, "wall" + iteration, "_S", worldPos, { maze.spacing, 0.0f, maze.spacing, 0.0f }, { 0.0f, 180.0f, 0.0f }, maze.rot);
           wallExists = true;
@@ -424,15 +437,26 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
 
         if (col == 0 || !maze.layout[row][col - 1]) {
           std::string mazeType = maze.wallType;
-          if (col == 0) mazeType = maze.entranceType;
-
+          if (col == 0) {
+            if (!hasEntrance) {
+              mazeType = maze.entranceType;
+              hasEntrance = true;
+            }
+            else mazeType = maze.exitType;
+          }
           addWall(scene, mazeType, "wall" + iteration, "_E", worldPos, { maze.spacing, 0.0f, 0.0f, 0.0f }, { 0.0f, 90.0f, 0.0f }, maze.rot);
           wallExists = true;
         }
 
         if (col + 1 >= maze.layout[row].size() || !maze.layout[row][col + 1]) {
           std::string mazeType = maze.wallType;
-          if (col + 1 >= maze.layout[row].size()) mazeType = maze.entranceType;
+          if (col + 1 >= maze.layout[row].size()) {
+            if (!hasEntrance) {
+              mazeType = maze.entranceType;
+              hasEntrance = true;
+            }
+            else mazeType = maze.exitType;
+          }
 
           addWall(scene, mazeType, "wall" + iteration, "_W", worldPos, { 0.0f, 0.0f, maze.spacing, 0.0f }, { 0.0f, -90.0f, 0.0f }, maze.rot);
           wallExists = true;
