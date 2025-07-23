@@ -381,7 +381,7 @@ static bool addWall(Scene& scene, const std::string& meshName, const std::string
   return true;
 }
 bool SceneManager::buildMaze(const ParsedMaze& maze) {
-  for (const std::string& modelPath : { maze.floorType, maze.floorWallType, maze.wallType, maze.entranceType, maze.exteriorWallType }) {
+  for (const std::string& modelPath : { maze.floorType1, maze.floorType2, maze.floorType3, maze.floorType4, maze.floorType5, maze.floorType6, maze.floorWallType, maze.wallType, maze.entranceType, maze.exteriorWallType }) {
     const ModelDrawInfo* existingInfo = nullptr;
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {
       ModelDrawInfo drawInfo;
@@ -400,12 +400,12 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
   for (size_t row = 0; row < maze.layout.size(); ++row) {
     for (size_t col = 0; col < maze.layout[row].size(); ++col) {
       if (maze.layout[row][col]) {
-        const std::string iteration = "_" + std::to_string(row) + "_" + std::to_string(col);
+       const std::string iteration = "_" + std::to_string(row) + "_" + std::to_string(col);
         const Vec4 localPos = { static_cast<float>(col) * maze.spacing, 0.0f, -static_cast<float>(row) * maze.spacing, 1.0f };
         const Mat4 mazeMatrix = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
         const Vec4 worldPos = mazeMatrix * localPos;
 
-        bool wallExists{ false };
+        bool wallExists{ false };     
         if (row == 0 || !maze.layout[row - 1][col]) {
           std::string mazeType = maze.wallType;
           if (row == 0) mazeType = maze.entranceType;
@@ -438,7 +438,19 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
           wallExists = true;
         }
 
-        const std::string& floorMesh = wallExists ? maze.floorWallType : maze.floorType;
+        int variant = rand() % 6;
+        std::string floorMesh;
+
+        if (wallExists) floorMesh = maze.floorWallType;
+        else {
+          if (variant == 0)      floorMesh = maze.floorType1;
+          else if (variant == 1) floorMesh = maze.floorType2;
+          else if (variant == 2) floorMesh = maze.floorType3;
+          else if (variant == 3) floorMesh = maze.floorType4;
+          else if (variant == 4) floorMesh = maze.floorType5;
+          else                   floorMesh = maze.floorType6;
+        }
+
         Transform floorTransform{ worldPos, maze.rot, {1.0f, 1.0f, 1.0f} };
         if (!scene.addInstance("floor" + iteration, floorMesh, Mat4::modelMatrix(floorTransform))) {
           fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", iteration.c_str());
