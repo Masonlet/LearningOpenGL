@@ -1,6 +1,8 @@
-camera, 0, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 10000, 200
+camera, FreeCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200
+camera, DungeonCam, -250.0 350.0 -5800.0, -90.0 0.0, 75.0, 0.1 25000, 200, 500
+camera, ModernCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200, 500
 
-comment, DO NOT ROTATE MAZES -- have some bug where rotation breaks tiles sometimes, need to figure it out.
+comment, DO NOT ROTATE MAZES
 
 light, whitePoint, Point, 5000.0 10000.0 -3500.0, 200000.0 200000.0 200000.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 

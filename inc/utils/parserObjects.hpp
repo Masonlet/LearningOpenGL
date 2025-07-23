@@ -19,22 +19,24 @@ struct ParsedModel {
 };
 struct ParsedLight {
 	std::string name;
+	unsigned int type;
+
 	Vec3 position;
 	Vec4 diffuse;
 	Vec4 atten;
 	Vec4 direction;
-
-	unsigned int type;
 	Vec3 param1;
 	Vec4 param2;
 };
 struct ParsedCamera {
-	unsigned int index;
+	unsigned int type;
+
 	Vec3 position;
 	float yaw, pitch;
 	float fov;
 	float nearPlane, farPlane;
 	float speed;
+	float moveDistance;
 };
 
 struct ParsedTriangle {

@@ -65,10 +65,59 @@ Mat4 Camera::Perspective(const float aspect) const {
 };
 
 void Camera::ProcessInputs(InputManager* input, float deltaTime) {
+  switch (type) {
+  case 0: 
+    UpdateFreeCam(input, deltaTime);
+    break;
+  case 1: 
+    UpdateDungeonCam(input, deltaTime);
+    break;
+  case 2:
+    UpdateModernCam(input, deltaTime);
+    break;
+  }
+}
+
+void Camera::UpdateFreeCam(InputManager* input, float deltaTime) {
   ProcessKeyboard(input, deltaTime);
   ProcessMouse(input);
 }
+void Camera::UpdateDungeonCam(InputManager* input, float deltaTime) {
+  if (input->IsKeyPressed(GLFW_KEY_A)) yaw -= 90.0f;
+  if (input->IsKeyPressed(GLFW_KEY_D)) yaw += 90.0f;
 
+  yaw = std::round(yaw / 90.0f) * 90.0f;
+  yaw = fmod(yaw + 360.0f, 360.0f);
+
+  front = Vec3{ cos(radians(yaw)), 0.0f, sin(radians(yaw)) }.normalized();
+  Vec3 right = front.cross(WORLD_UP).normalized();
+  up = right.cross(front).normalized();
+
+  if (input->IsKeyPressed(GLFW_KEY_W)) pos += front * moveDistance;
+  if (input->IsKeyPressed(GLFW_KEY_S)) pos -= front * moveDistance;
+
+  pitch = 0.0f;
+}
+void Camera::UpdateModernCam(InputManager* input, float deltaTime) {
+  ProcessMouse(input);
+
+  Vec3 flatFront = front;
+  flatFront.y = 0.0f;
+  flatFront = flatFront.normalized();
+
+  Vec3 right = flatFront.cross(WORLD_UP).normalized();
+
+  Vec3 moveDir{ 0.0f };
+  if (input->IsKeyDown(GLFW_KEY_W)) moveDir += flatFront;
+  if (input->IsKeyDown(GLFW_KEY_S)) moveDir -= flatFront;
+  if (input->IsKeyDown(GLFW_KEY_D)) moveDir += right;
+  if (input->IsKeyDown(GLFW_KEY_A)) moveDir -= right;
+
+  if (moveDir.length() > 0.0f) {
+    moveDir = moveDir.normalized();
+    pos += moveDir * moveSpeed * deltaTime;
+  }
+}
 void Camera::ProcessKeyboard(InputManager* input, const float deltaTime) {
   if (input->IsKeyDown(GLFW_KEY_W)) MoveForward(deltaTime);
   if (input->IsKeyDown(GLFW_KEY_A)) MoveLeft(deltaTime);
@@ -108,7 +157,7 @@ void Camera::ProcessMouse(InputManager* input) {
   up = right.cross(front).normalized();
 }
 
-void Camera::print() const {
+void Camera::Print() const {
   printf("\nPos: %f:%f:%f\n", pos.x, pos.y, pos.z);
   printf("Front: %f:%f:%f\n", front.x, front.y, front.z);
   printf("Pitch: %f\n\n", pitch);

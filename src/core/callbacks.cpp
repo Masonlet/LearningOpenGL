@@ -48,9 +48,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
 			int camIndex = key - GLFW_KEY_0;
 			engine->getCameraManager()->setActiveCamera(camIndex);
-#ifndef ndebug
-			printf("[KEY_CALLBACK] Switched to camera %d\n", camIndex);
-#endif
 		}
 	}
 }

@@ -22,7 +22,7 @@ const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   return p;
 }
 const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
-  PARSE_OR_FAIL(parseStringUInt, out.index, "camera index");
+  p = parseCameraType(p, out.type);
   PARSE_OR_FAIL(parseVec3, out.position, "camera position");
   PARSE_OR_FAIL(parseFloat, out.yaw, "camera yaw");
   PARSE_OR_FAIL(parseFloat, out.pitch, "camera pitch");
@@ -30,6 +30,7 @@ const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
   PARSE_OR_FAIL(parseFloat, out.nearPlane, "camera near plane");
   PARSE_OR_FAIL(parseFloat, out.farPlane, "camera far plane");
   PARSE_OR_FAIL(parseFloat, out.speed, "camera speed");
+  if (out.type != 0) PARSE_OR_FAIL(parseFloat, out.moveDistance, "camera move distance");
   return p;
 }
 

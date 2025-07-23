@@ -64,3 +64,4 @@ const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
 
 const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut);
 const unsigned char* parseLightType(const unsigned char* p, unsigned int& typeOut);
+const unsigned char* parseCameraType(const unsigned char* p, unsigned int& typeOut);

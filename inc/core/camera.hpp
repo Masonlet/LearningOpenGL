@@ -5,6 +5,10 @@
 #include "math/mat4.hpp"
 
 #include "core/inputManager.hpp"
+#include "core/modelInstance.hpp"
+
+#include <map>
+#include <string>
 
 class Camera {
 public:
@@ -26,6 +30,8 @@ public:
   inline float Near() const { return nearPlane; }
   inline float Far() const { return farPlane; }
   inline float Paused() const { return paused; }
+	inline unsigned int Type() const { return type; }
+  inline float MoveDistance() const { return moveDistance; }
 
   inline void MoveForward(const float deltaTime) { pos += front * (deltaTime * moveSpeed); }
   inline void MoveBackward(const float deltaTime) { pos -= front * (deltaTime * moveSpeed); }
@@ -39,16 +45,19 @@ public:
   inline void SetPitch(const float pitchIn) { pitch = pitchIn; }
   inline void SetX(const float x) { lastX = x; }
   inline void SetY(const float y) { lastY = y; }
-  inline void SetFov(float fovIn) { fov = fovIn; }
-  inline void SetNear(float nearIn) { nearPlane = nearIn; }
-  inline void SetFar(float farIn) { farPlane = farIn; }
-  inline void SetMoveSpeed(float speedIn) { moveSpeed = speedIn; }
+  inline void SetFov(const float fovIn) { fov = fovIn; }
+  inline void SetNear(const float nearIn) { nearPlane = nearIn; }
+  inline void SetFar(const float farIn) { farPlane = farIn; }
+  inline void SetMoveSpeed(const float speedIn) { moveSpeed = speedIn; }
+	inline void SetType(const unsigned int typeIn) { type = typeIn; }
+  inline void SetMoveDistance(const float moveDistanceIn) { moveDistance = moveDistanceIn; }
 
   void ProcessInputs(InputManager* input, const float deltaTime);
-  void print() const;
+  void Print() const;
 
 private:
-	float moveSpeed, mouseSpeed;
+  unsigned int type;
+	float moveSpeed, mouseSpeed, moveDistance;
 	Vec3 pos, front, up;
 	float yaw, pitch;
 	float lastX, lastY;
@@ -56,6 +65,10 @@ private:
   float nearPlane, farPlane;
   bool paused;
 
-	void ProcessKeyboard(InputManager* input, const float deltaTime);
-	void ProcessMouse(InputManager* input);
+	void UpdateFreeCam(InputManager* input, const float deltaTime);
+  void UpdateDungeonCam(InputManager* input, const float deltaTime);
+  void UpdateModernCam(InputManager* input, const float deltaTime);
+
+  void ProcessKeyboard(InputManager* input, const float deltaTime);
+  void ProcessMouse(InputManager* input);
 };

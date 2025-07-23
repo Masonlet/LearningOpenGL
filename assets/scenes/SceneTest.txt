@@ -1,7 +1,5 @@
 comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane
-comment, camera, 0, 0.0 0.0 0.0, -90.0 0.0, 75.0, 0.1 10000
-
-
+camera, FreeCam, 0.0 0.0 0.0, 0.0 0.0, 75.0, 0.1 10000, 500
 
 comment, name, meshPath, pos(xyz), rot(xyz), scale(xyz), colour(Int, Named Coloured, Random, Rainbow, Blank for PLY data)
 model, cow, cow_xyz_n_rgba.ply, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, 255 255 0
@@ -16,8 +14,6 @@ light, greenDirectional, Directional, -10.0 5.0 0.0, 0.0 1.5 0.0 1.0, 0.0 0.01 0
 light, whitePoint, Point, 0.0 100.0 100.0, 50.0 50.0 50.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 light, bluePoint, Point, 0.0 100.0 -100.0, 0.0 0.0 50.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
 light, redSpot, Spot, 10.0 5.0 0.0, 100.0 0.0 0.0 1.0, 0.0 0.01 0.005 0.0, 0.0 0.0 -1.0 0.0, 15.0 25.0 0.0, 1.0 0.0 0.0 0.0
-
-
 
 comment, name, pos (xyz), rot (xyz), scale (xyz), colour
 comment, triangle, tri1, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Red

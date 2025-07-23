@@ -184,3 +184,33 @@ const unsigned char* parseLightType(const unsigned char* p, unsigned int& typeOu
 
   return (*p == ',') ? ++p : p;
 }
+
+const unsigned char* parseCameraType(const unsigned char* p, unsigned int& typeOut) {
+  typeOut = 0;
+  const unsigned char* original = p;
+  if (*original == '\0' || *original == '-') {
+    p = original;
+    return p;
+  }
+
+  float typeNum = 0.0f;
+  const unsigned char* tryNum = parseFloat(original, typeNum);
+  if (tryNum) {
+    typeOut = static_cast<unsigned int>(typeNum);
+    return tryNum;
+  }
+
+  unsigned char typeName[64]{}; 
+  p = parseToken(original, typeName, sizeof(typeName));
+  if (!p) return nullptr;
+
+  if (strcmp((char*)typeName, "FreeCam") == 0) typeOut = 0;
+  else if (strcmp((char*)typeName, "DungeonCam") == 0) typeOut = 1;
+  else if (strcmp((char*)typeName, "ModernCam") == 0) typeOut = 2;
+  else {
+    fprintf(stderr, "[parseCameraType ERROR] Unknown camera type: %s\n", typeName);
+    return nullptr;
+  }
+
+	return (*p == ',') ? ++p : p;
+}

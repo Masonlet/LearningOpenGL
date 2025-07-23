@@ -3,8 +3,10 @@
 #include "core/inputManager.hpp"
 
 void InputManager::Update(GLFWwindow* window) {
-  for (int i = 0; i < TRACKED_KEY_COUNT; ++i)
+  for (int i = 0; i < TRACKED_KEY_COUNT; ++i) {
+    previousKeyState[i] = keyState[i];
     keyState[i] = glfwGetKey(window, trackedKeys[i]) == GLFW_PRESS;
+  }
   
   double xpos, ypos;
   glfwGetCursorPos(window, &xpos, &ypos);
@@ -34,6 +36,13 @@ bool InputManager::IsKeyDown(int key) const {
   for (int i = 0; i < TRACKED_KEY_COUNT; ++i)
     if (trackedKeys[i] == key)
       return keyState[i];
+
+  return false;
+}
+bool InputManager::IsKeyPressed(int key) const {
+  for (int i = 0; i < TRACKED_KEY_COUNT; ++i)
+    if (trackedKeys[i] == key)
+      return keyState[i] && !previousKeyState[i]; 
 
   return false;
 }

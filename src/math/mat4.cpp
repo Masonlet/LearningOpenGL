@@ -180,6 +180,7 @@ Mat4 Mat4::scale(const Vec3& t) {
 
 	return result;
 }
+
 Mat4 Mat4::rotateX(const float angle) {
 	Mat4 result = Mat4::identity();
 	const float rad = radians(angle);

@@ -60,6 +60,7 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
     defaultCam.SetPitch(0.0f);
     defaultCam.SetNear(0.1f);
     defaultCam.SetFar(10000.0f);
+    defaultCam.SetType(0);
 
     if (!cameraManager->addCamera(defaultCam)) 
       fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
@@ -233,9 +234,13 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
   cam.SetPitch(cameraData.pitch);
   cam.SetPos(cameraData.position);
   cam.SetMoveSpeed(cameraData.speed);
+	cam.SetType(cameraData.type);
+  if (cam.Type() != 0) {
+    cam.SetMoveDistance(cameraData.moveDistance);
+  }
 
   if (!cameraManager->addCamera(cam)) {
-    fprintf(stderr, "[SceneManager ERROR] Could not add camera index %u\n", cameraData.index);
+    fprintf(stderr, "[SceneManager ERROR] Could not add camera\n");
     return false;
   }
 

@@ -34,7 +34,7 @@ public:
 	void GetUniformLocations(int shaderProgram);
 	void UpdateShaderUniforms(int shaderProgram);
 
-	static const int NUMBEROFLIGHTS = 10;
+	static const int NUMBEROFLIGHTS = 50;
 	Light theLights[NUMBEROFLIGHTS];
 	std::string lightNames[NUMBEROFLIGHTS];
 

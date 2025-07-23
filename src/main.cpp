@@ -22,6 +22,5 @@ int main() {
 		return -1;
 
 	engine.run();
-
 	return 0;
 }

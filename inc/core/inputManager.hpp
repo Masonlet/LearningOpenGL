@@ -10,6 +10,8 @@ public:
   void Update(GLFWwindow* window);
 
   bool IsKeyDown(int key) const;
+  bool IsKeyPressed(int key) const;
+
   inline Vec2 GetMouseDelta() const { return mouseDelta;  }
 
   void SetCursorLocked(bool locked);
@@ -26,6 +28,7 @@ private:
   };
 
   bool keyState[TRACKED_KEY_COUNT];
+  bool previousKeyState[TRACKED_KEY_COUNT]{};
 
   Vec2 mouseDelta{ 0.0f, 0.0f };
   double lastMouseX{ 0.0 }, lastMouseY{ 0.0 };
