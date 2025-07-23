@@ -15,7 +15,7 @@
       if (*linePtr == ',') ++linePtr; \
     }
     
-constexpr Vec4 DEFAULT_NORMAL{ 0.0f, 0.0f, 0.0f, 0.0f };
+constexpr Vec3 DEFAULT_NORMAL{ 0.0f, 0.0f, 0.0f };
 constexpr Vec4 DEFAULT_COLOUR{ 0.0f, 1.0f, 0.0f, 0.0f };
 
 ModelDrawInfo::ModelDrawInfo() {
@@ -171,7 +171,6 @@ const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigne
             PARSE_OR_CONTINUE(parseFloat, v.norm.x, "Failed to parse normal X");
             PARSE_OR_CONTINUE(parseFloat, v.norm.y, "Failed to parse normal Y");
             PARSE_OR_CONTINUE(parseFloat, v.norm.z, "Failed to parse normal Z");
-            v.norm.w = 0.0f;
         } 
         else v.norm = DEFAULT_NORMAL;
 
@@ -469,7 +468,7 @@ bool VAOManager::UploadToGPU(ModelDrawInfo& drawInfo, unsigned int shaderProgram
   GLint vnorm_location = glGetAttribLocation(shaderProgramID, "vNorm");
   if (vnorm_location != -1) {
     glEnableVertexAttribArray(vnorm_location);
-    glVertexAttribPointer(vnorm_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, norm));
+    glVertexAttribPointer(vnorm_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, norm));
   }
 
   GLint vcol_location = glGetAttribLocation(shaderProgramID, "vCol");

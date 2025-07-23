@@ -64,7 +64,10 @@ const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   PARSE_OR_FAIL(parseVec3, out.pos, "maze position");
   PARSE_OR_FAIL(parseVec3, out.rot, "maze rotation");
   PARSE_STRING_OR_FAIL(p, out.floorType, 64, "floor mesh");
+  PARSE_STRING_OR_FAIL(p, out.floorWallType, 64, "floor wall mesh");
   PARSE_STRING_OR_FAIL(p, out.wallType, 64, "wall mesh");
+  PARSE_STRING_OR_FAIL(p, out.entranceType, 64, "entrance mesh");
+  PARSE_STRING_OR_FAIL(p, out.exteriorWallType, 64, "exterior wall mesh");
   PARSE_OR_FAIL(parseFloat, out.wallRot, "maze wall rotation");
   PARSE_STRING_OR_FAIL(p, out.layoutName, 64, "layout name");
   return p;

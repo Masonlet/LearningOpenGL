@@ -55,6 +55,6 @@ struct ParsedMaze {
 	float spacing;
 	Vec3 pos, rot;
 	float wallRot;
-	std::string floorType, wallType;
+	std::string floorType, floorWallType, wallType, entranceType, exteriorWallType;
 	std::vector<std::vector<bool>> layout;
 };
