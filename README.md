@@ -1,6 +1,7 @@
 # LearningOpenGL
-
 A modular OpenGL engine written in C++
+
+# Features
 - Custom Scene Loader & Scene Saver supporting Models, Lights, Cameras
 - Primitive Generation: Triangles, Squares, Cubes, SquareGrids, CubeGrids
 - Lighting, Transformation handling, and multi-camera support
