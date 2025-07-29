@@ -198,11 +198,11 @@ const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigne
                     const unsigned char* q = temp;
                     valid = true;
 
-                    if (!(q = parseStringUInt(q, ri))) valid = false;
-                    if (!(q = parseStringUInt(q, gi))) valid = false;
-                    if (!(q = parseStringUInt(q, bi))) valid = false;
+                    if (!(q = parseUInt(q, ri))) valid = false;
+                    if (!(q = parseUInt(q, gi))) valid = false;
+                    if (!(q = parseUInt(q, bi))) valid = false;
                     
-                    const unsigned char* parsedAlpha = parseStringUInt(q, ai);
+                    const unsigned char* parsedAlpha = parseUInt(q, ai);
                     if (!parsedAlpha) ai = 255;
                     else q = parsedAlpha;
 
@@ -289,7 +289,7 @@ const static unsigned char* parseIndices(ModelDrawInfo& drawInfo,  const unsigne
     }
 
     unsigned int count = 0;
-    if (!(linePtr = parseStringUInt(linePtr, count))) {
+    if (!(linePtr = parseUInt(linePtr, count))) {
       p = reinterpret_cast<const unsigned char*>(lineEnd);
       continue;
     }
@@ -302,9 +302,9 @@ const static unsigned char* parseIndices(ModelDrawInfo& drawInfo,  const unsigne
     unsigned int i0 = 0, i1 = 0, i2 = 0;
     bool valid = true;
 
-    if (!(linePtr = parseStringUInt(linePtr, i0))) valid = false;
-    if (!(linePtr = parseStringUInt(linePtr, i1))) valid = false;
-    if (!(linePtr = parseStringUInt(linePtr, i2))) valid = false;
+    if (!(linePtr = parseUInt(linePtr, i0))) valid = false;
+    if (!(linePtr = parseUInt(linePtr, i1))) valid = false;
+    if (!(linePtr = parseUInt(linePtr, i2))) valid = false;
 
     if (valid) {
       unsigned int base = triangleIndex * 3;

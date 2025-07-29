@@ -50,7 +50,7 @@ const unsigned char* parseFloat(const unsigned char* p, float& out) {
   return reinterpret_cast<const unsigned char*>(end);
 }
 
-const unsigned char* parseStringUInt(const unsigned char* p, unsigned int& out) {
+const unsigned char* parseUInt(const unsigned char* p, unsigned int& out) {
   p = skipWhitespace(p);
   if (!p || *p == '\0' || *p < '0' || *p > '9') return nullptr;
 
@@ -66,6 +66,35 @@ const unsigned int parseBinaryUINT(const unsigned char* buffer) {
       static_cast<unsigned int>(buffer[2]) << 8 |
       static_cast<unsigned int>(buffer[3]));
 }
+
+const unsigned char* parseBool(const unsigned char* p, bool& out) {
+  p = skipWhitespace(p);
+  if (!p || *p == '\0') return nullptr;
+
+  if (strncmp(reinterpret_cast<const char*>(p), "true", 4) == 0) {
+    out = true;
+    p += 4;
+  }
+  else if (*p == '1') {
+    out = true;
+    ++p;
+  }
+  else if (strncmp(reinterpret_cast<const char*>(p), "false", 5) == 0) {
+    out = false;
+    p += 5;
+  }
+  else if (*p == '0') {
+    out = false;
+    ++p;
+  }
+  else {
+    return nullptr;
+  }
+
+  if (*p == ',') ++p;
+  return p;
+}
+
 
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out) {
     if (!(p = parseFloat(p, out.x)) || 

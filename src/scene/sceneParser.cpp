@@ -50,7 +50,7 @@ const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) 
   return p;
 }
 const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out) {
-  PARSE_OR_FAIL(parseStringUInt, out.layout.count, "cubeGrid count");
+  PARSE_OR_FAIL(parseUInt, out.layout.count, "cubeGrid count");
   PARSE_OR_FAIL(parseFloat, out.layout.spacing, "cubeGrid spacing");
   PARSE_OR_FAIL(parseVec3, out.layout.start, "cubeGrid start position");
   PARSE_OR_FAIL(parseVec3, out.layout.rotation, "cubeGrid rotation");
@@ -65,6 +65,8 @@ const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   PARSE_OR_FAIL(parseFloat, out.spacing, "maze spacing");
   PARSE_OR_FAIL(parseVec3, out.pos, "maze position");
   PARSE_OR_FAIL(parseVec3, out.rot, "maze rotation");
+  PARSE_OR_FAIL(parseUInt, out.wallHeight, "maze wall height");
+  PARSE_OR_FAIL(parseBool, out.hasRoof, "maze ceiling flag");
   PARSE_STRING_OR_FAIL(p, out.floorType1, 64, "floor mesh 1");
   PARSE_STRING_OR_FAIL(p, out.floorType2, 64, "floor mesh 2");
   PARSE_STRING_OR_FAIL(p, out.floorType3, 64, "floor mesh 3");

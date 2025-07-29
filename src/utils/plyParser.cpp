@@ -8,11 +8,11 @@ static const unsigned char* parsePlyElementLine(const unsigned char* p, unsigned
 
   if (strncmp((const char*)trimmed, "vertex", 6) == 0 && (trimmed[6] == ' ' || trimmed[6] == '\t')) {
     trimmed = skipWhitespace(trimmed + 6);
-    return parseStringUInt(trimmed, verticesOut);
+    return parseUInt(trimmed, verticesOut);
   }
   else if (strncmp((const char*)trimmed, "face", 4) == 0 && (trimmed[4] == ' ' || trimmed[4] == '\t')) {
     trimmed = skipWhitespace(trimmed + 4);
-    return parseStringUInt(trimmed, trianglesOut);
+    return parseUInt(trimmed, trianglesOut);
   }
 
   return p;
