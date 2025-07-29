@@ -9,6 +9,7 @@
 int main() {
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetBreakAlloc(1807984);
 #endif
 
 	Engine engine{};
@@ -18,7 +19,7 @@ int main() {
 	* Saving scene currently only works with models and lights
 	* I have not introduced enough features with primitives to feel worth refactoring the code to make it work
 	*/
-	if (!engine.setScene("MazeWIP")) 
+	if (!engine.setScene("SceneTest")) 
 		return -1;
 
 	engine.run();

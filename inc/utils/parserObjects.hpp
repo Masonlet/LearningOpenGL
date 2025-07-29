@@ -9,56 +9,47 @@
 #include <vector>
 
 struct ParsedModel {
-	std::string meshName;
-	std::string path;
-	Vec3 position;
-	Vec3 rotation;
-	Vec3 scale;
-	Vec4 colour;
-	ColourMode colourMode;
+	std::string meshName, path;
+	Vec3 position{0.0f}, rotation{0.0f}, scale{1.0f};
+	Vec4 colour{1.0f}, specular{1.0f, 1.0f, 1.0f, 32.0f};
+	ColourMode colourMode{ColourMode::Solid};
 };
 struct ParsedLight {
 	std::string name;
-	unsigned int type;
-
-	Vec3 position;
-	Vec4 diffuse;
-	Vec4 atten;
-	Vec4 direction;
-	Vec3 param1;
-	Vec4 param2;
+	Vec3 position{0.0f};
+	Vec4 diffuse{1.0f}, atten{1.0f, 0.0f, 0.0f, 10000.0f}, direction{0.0f, -1.0f, 0.0f, 0.0f};
+	unsigned int param1Type{ 1 };
+	Vec3 param1Direction{ 0.0f };
+	Vec4 param2{1.0f};
 };
 struct ParsedCamera {
-	unsigned int type;
+	unsigned int type{ 0 };
 
-	Vec3 position;
-	float yaw, pitch;
-	float fov;
-	float nearPlane, farPlane;
-	float speed;
-	float moveDistance;
+	Vec3 position{0.0f};
+	float yaw{0.0f}, pitch{0.0f};
+	float fov{75.0f}, nearPlane{0.1f}, farPlane{10000.0f};
+	float speed{200.0f}, moveDistance{1.0f};
 };
 
 struct ParsedTriangle {
 	std::string meshName;
 	Triangle transform;
-	Vec4 colour;
-	ColourMode colourMode;
+	Vec4 colour{1.0f};
+	ColourMode colourMode{ColourMode::Solid};
 };
 struct ParsedGrid {
 	std::string meshName;
 	Grid layout;
-	Vec4 colour;
-	ColourMode colourMode{ ColourMode::Solid };
+	Vec4 colour{1.0f};
+	ColourMode colourMode{ColourMode::Solid};
 };
 
 struct ParsedMaze {
 	std::string mazeName, layoutName;
-	float spacing;
-	Vec3 pos, rot;
-	float wallRot;
+	Vec3 pos{ 0.0f }, rot{ 0.0f };
+	float spacing{ 0.0f }, wallRot{ 0.0f };
+	std::vector<std::vector<bool>> layout{};
 	std::string floorType1, floorType2, floorType3, floorType4, floorType5, floorType6, floorWallType;
 	std::string wallType1, wallType2, wallType3, wallType4, wallType5, wallType6;
 	std::string entranceType, exitType, exteriorWallType;
-	std::vector<std::vector<bool>> layout;
 };

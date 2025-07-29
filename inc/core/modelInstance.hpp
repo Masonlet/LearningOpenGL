@@ -11,7 +11,7 @@ struct ModelInstance {
 	Vec4 position;
 	Vec3 rotation;
 	Vec3 scale;
-	Vec4 colour;
+	Vec4 colour, specular;
 
 	Mat4 modelMatrix;
 
