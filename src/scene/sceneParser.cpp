@@ -8,16 +8,17 @@ const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
   PARSE_OR_FAIL(parseVec3, out.rotation, "parse rotation");
   PARSE_OR_FAIL(parseVec3, out.scale, "parse scale");
   p = parseColour(p, out.colour, out.colourMode);
+  PARSE_OR_FAIL(parseVec4, out.specular, "parse specular");
   return p;
 }
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   PARSE_STRING_OR_FAIL(p, out.name, 64, "light name");
-  p = parseLightType(p, out.type);
+  p = parseLightType(p, out.param1Type);
   PARSE_OR_FAIL(parseVec3, out.position, "light position");
   PARSE_OR_FAIL(parseVec4, out.diffuse, "light diffuse");
   PARSE_OR_FAIL(parseVec4, out.atten, "light attenuation");
   PARSE_OR_FAIL(parseVec4, out.direction, "light direction");
-  PARSE_OR_FAIL(parseVec3, out.param1, "light param1");
+  PARSE_OR_FAIL(parseVec3, out.param1Direction, "light param1");
   PARSE_OR_FAIL(parseVec4, out.param2, "light param2");
   return p;
 }

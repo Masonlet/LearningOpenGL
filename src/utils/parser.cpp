@@ -103,30 +103,32 @@ static const unsigned char* parseNumericColour(const unsigned char* p, Vec4& col
   return p;
 }
 static const unsigned char* parseSpecialColour(const char* name, ColourMode& modeOut) {
-    if (strcmp(name, "Random") == 0) {
-      modeOut = ColourMode::Random;
-      return reinterpret_cast<const unsigned char*>(name + strlen(name));
-  }
-    else if (strcmp(name, "Rainbow") == 0) {
-      modeOut = ColourMode::VerticalGradient;
-      return reinterpret_cast<const unsigned char*>(name + strlen(name));
-  }
+  if (strcmp(name, "Random") == 0) modeOut = ColourMode::Random;
+  else if (strcmp(name, "Rainbow") == 0) modeOut = ColourMode::VerticalGradient;
+  else if (strcmp(name, "PLY") == 0) modeOut = ColourMode::PLYColour;
+  else return nullptr;
 
-  return nullptr;
+  return reinterpret_cast<const unsigned char*>(name + strlen(name));
 }
 static const unsigned char* parseNamedColour(const unsigned char* p, Vec4& colour, ColourMode& mode) {
   char colourName[64]{};
-  p = parseToken(p, (unsigned char*)colourName, sizeof(colourName));
+  const unsigned char* tokenEnd = parseToken(p, (unsigned char*)colourName, sizeof(colourName));
   if (!p) return nullptr;
 
   Vec3 tempColour = { 1.0f, 1.0f, 1.0f };
+
   if (strcmp(colourName, "Red") == 0) tempColour = { 1.0f, 0.0f, 0.0f };
   else if (strcmp(colourName, "Green") == 0) tempColour = { 0.0f, 1.0f, 0.0f };
   else if (strcmp(colourName, "Blue") == 0) tempColour = { 0.0f, 0.0f, 1.0f };
   else if (strcmp(colourName, "Yellow") == 0) tempColour = { 1.0f, 1.0f, 0.0f };
   else if (strcmp(colourName, "White") == 0) tempColour = { 1.0f, 1.0f, 1.0f };
   else if (strcmp(colourName, "Gray") == 0 || strcmp(colourName, "Grey") == 0) tempColour = { 0.5f, 0.5f, 0.5f };
-  else return parseSpecialColour(colourName, mode);
+  else {  
+    const unsigned char* special = parseSpecialColour(colourName, mode);
+    if (!special) return nullptr;
+    if (*tokenEnd == ',') ++tokenEnd;
+    return tokenEnd;
+  }
 
   colour = { tempColour, 0.0f };
   mode = ColourMode::Solid;
@@ -134,23 +136,18 @@ static const unsigned char* parseNamedColour(const unsigned char* p, Vec4& colou
 }
 const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut) {
   colourOut = { 1.0f, 1.0f, 1.0f, 0.0f };
-  modeOut = ColourMode::PLYColour;
+  modeOut = ColourMode::Solid;
 
   const unsigned char* original = skipWhitespace(p);
   if (*original == '\0' || *original == '-'){
-    p = original;
+    p = original; 
     return p;
   }
 
-  if ((p = parseNumericColour(p, colourOut))) {
-    modeOut = ColourMode::Solid;
-    return p;
-  }
-
+  if ((p = parseNumericColour(p, colourOut))) return p;
+ 
   p = original;
-  if ((p = parseNamedColour(p, colourOut, modeOut))) {
-    return p;
-  }
+  if ((p = parseNamedColour(p, colourOut, modeOut))) return p;
 
   return original;
 }

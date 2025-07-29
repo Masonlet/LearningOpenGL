@@ -27,6 +27,6 @@ private:
 	unsigned int program;
 	int modelLocation, modelViewLocation, modelProjectionLocation;
 	int modelInverseTransposeLocation;
-	int useOverrideColourLocation;
-	int colourOverrideLocation;
+	int colourOverrideLocation, useOverrideColourLocation;
+	int modelSpecularLocation;
 };

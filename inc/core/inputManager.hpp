@@ -18,7 +18,7 @@ public:
   inline bool IsCursorLocked() const { return cursorLocked; }
 
 private:
-  static constexpr  int TRACKED_KEY_COUNT = 20;
+  static constexpr  int TRACKED_KEY_COUNT{ 20 };
   static constexpr int trackedKeys[TRACKED_KEY_COUNT] = {
     GLFW_KEY_W, GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_D,
     GLFW_KEY_SPACE, GLFW_KEY_LEFT_CONTROL,
@@ -27,11 +27,10 @@ private:
     GLFW_KEY_R, GLFW_KEY_F, GLFW_KEY_T, GLFW_KEY_G, GLFW_KEY_Y, GLFW_KEY_H
   };
 
-  bool keyState[TRACKED_KEY_COUNT];
-  bool previousKeyState[TRACKED_KEY_COUNT]{};
+  bool keyState[TRACKED_KEY_COUNT]{false};
+  bool previousKeyState[TRACKED_KEY_COUNT]{false};
 
   Vec2 mouseDelta{ 0.0f, 0.0f };
   double lastMouseX{ 0.0 }, lastMouseY{ 0.0 };
-  bool firstMouse = true;
-  bool cursorLocked = true;
+  bool firstMouse{ true }, cursorLocked{ true };
 };

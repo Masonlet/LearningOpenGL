@@ -38,8 +38,3 @@ bool Scene::addInstance(const std::string& name, const std::string& path, const 
   modelInstances[name] = instance;
   return true;
 }
-
-void Scene::clearModels(VAOManager& vaoManager) {
-  modelInfos.clear();    
-  modelInstances.clear();
-}

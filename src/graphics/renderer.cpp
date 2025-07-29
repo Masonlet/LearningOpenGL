@@ -3,9 +3,10 @@
 #include "graphics/renderer.hpp"
 
 Renderer::Renderer() : shaderManager(nullptr), vaoManager(nullptr), program(0),
-modelLocation(-1), modelViewLocation(-1), modelProjectionLocation(-1),
-modelInverseTransposeLocation(-1), useOverrideColourLocation(-1), colourOverrideLocation(-1) {
-}
+											 modelLocation(-1), modelViewLocation(-1), modelProjectionLocation(-1),
+											 modelInverseTransposeLocation(-1), 
+											 useOverrideColourLocation(-1), colourOverrideLocation(-1),
+											 modelSpecularLocation(-1){}
 
 Renderer::~Renderer() {}
 
@@ -25,6 +26,8 @@ void Renderer::setProgram(unsigned int program) {
 
 	useOverrideColourLocation = glGetUniformLocation(program, "bUseOverrideColour");
 	colourOverrideLocation = glGetUniformLocation(program, "colourOverride");
+
+	modelSpecularLocation = glGetUniformLocation(program, "vertSpecular");
 }
 
 void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) {
@@ -44,6 +47,7 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 
 	Mat4 modelIT = instance.modelMatrix.inverse().transpose();
 	glUniformMatrix4fv(modelInverseTransposeLocation, 1, GL_FALSE, modelIT.data);
+	glUniform4fv(modelSpecularLocation, 1, &instance.specular.x);
 
 	if (instance.colourMode == ColourMode::Solid) {
 		glUniform1f(useOverrideColourLocation, 1.0f);
