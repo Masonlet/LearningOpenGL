@@ -14,7 +14,6 @@ Engine::Engine() :
 }
 Engine::~Engine() {
   inputManager = {};
-  sceneManager.getScene().clearModels(vaoManager);
   vaoManager.Shutdown();
   windowManager.destroyWindow();
 }

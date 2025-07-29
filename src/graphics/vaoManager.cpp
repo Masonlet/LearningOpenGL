@@ -30,7 +30,6 @@ ModelDrawInfo::ModelDrawInfo() {
   this->numIndices = 0;
   this->numTriangles = 0;
 
-  //"Local" i.e. "CPU Side" temporary array
   this->vertices = nullptr;
   this->indices = nullptr;
 
@@ -39,12 +38,18 @@ ModelDrawInfo::ModelDrawInfo() {
   this->hasNormals = false;
   this->hasColours = false;
 
-  this->colourMode = ColourMode::PLYColour;
   this->modelMatrix = Mat4::identity();
+	this->colourMode = ColourMode::Solid; 
 }
 ModelDrawInfo::~ModelDrawInfo() {
-  delete[] vertices;
-  delete[] indices;
+  if (vertices) {
+    delete[] vertices;
+    vertices = nullptr;
+  }
+  if (indices) {
+    delete[] indices;
+    indices = nullptr;
+  }
 }
 
 ModelDrawInfo::ModelDrawInfo(ModelDrawInfo&& other) noexcept {
@@ -148,15 +153,9 @@ const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigne
             continue;
         }
 
-        std::string badLine(lineStart, lineStart + lineLen);
-
         //Pos
         bool valid = true; 
         PARSE_OR_CONTINUE(parseFloat, v.pos.x, "Failed to parse position X");
-        if (!valid) {
-          fprintf(stderr, "Line contents: \"%s\"\n", badLine.c_str());
-        }
-
         PARSE_OR_CONTINUE(parseFloat, v.pos.y, "Failed to parse position Y");
         PARSE_OR_CONTINUE(parseFloat, v.pos.z, "Failed to parse position Z");
         v.pos.w = 1.0f;
@@ -199,19 +198,10 @@ const static unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigne
                     const unsigned char* q = temp;
                     valid = true;
 
-                    if (!(q = parseStringUInt(q, ri))) {
-                        //fprintf(stderr, "[VERTEX PARSE WARNING] failed to parse colour int R, Line: %s\n", badLine.c_str());
-                        valid = false;
-                    }
-                    if (!(q = parseStringUInt(q, gi))) {
-                        //fprintf(stderr, "[VERTEX PARSE WARNING] failed to parse colour int G, Line: %s\n", badLine.c_str());
-                        valid = false;
-                    }
-                    if (!(q = parseStringUInt(q, bi))) {
-                        //fprintf(stderr, "[VERTEX PARSE WARNING] failed to parse colour int B, Line: %s\n", badLine.c_str());
-                        valid = false;
-                    }
-
+                    if (!(q = parseStringUInt(q, ri))) valid = false;
+                    if (!(q = parseStringUInt(q, gi))) valid = false;
+                    if (!(q = parseStringUInt(q, bi))) valid = false;
+                    
                     const unsigned char* parsedAlpha = parseStringUInt(q, ai);
                     if (!parsedAlpha) ai = 255;
                     else q = parsedAlpha;
@@ -298,17 +288,13 @@ const static unsigned char* parseIndices(ModelDrawInfo& drawInfo,  const unsigne
       continue;
     }
 
-    std::string badLine(lineStart, lineStart + lineLen);
-
     unsigned int count = 0;
     if (!(linePtr = parseStringUInt(linePtr, count))) {
-      fprintf(stderr, "[parseIndices ERROR] Failed to read face count, Line: %s\n", badLine.c_str());
       p = reinterpret_cast<const unsigned char*>(lineEnd);
       continue;
     }
 
     if (count != 3) {
-      fprintf(stderr, "[parseIndices WARNING] Skipping non-triangle face (%u), Line: %s\n", count, badLine.c_str());
       p = reinterpret_cast<const unsigned char*>(lineEnd);
       continue;
     }
@@ -316,18 +302,9 @@ const static unsigned char* parseIndices(ModelDrawInfo& drawInfo,  const unsigne
     unsigned int i0 = 0, i1 = 0, i2 = 0;
     bool valid = true;
 
-    if (!(linePtr = parseStringUInt(linePtr, i0))) {
-      fprintf(stderr, "[parseIndices ERROR] Failed to parse index 0, Line: %s\n", badLine.c_str());
-      valid = false;
-    }
-    if (!(linePtr = parseStringUInt(linePtr, i1))) {
-      fprintf(stderr, "[parseIndices ERROR] Failed to parse index 1, Line: %s\n", badLine.c_str());
-      valid = false;
-    }
-    if (!(linePtr = parseStringUInt(linePtr, i2))) {
-      fprintf(stderr, "[parseIndices ERROR] Failed to parse index 2, Line: %s\n", badLine.c_str());
-      valid = false;
-    }
+    if (!(linePtr = parseStringUInt(linePtr, i0))) valid = false;
+    if (!(linePtr = parseStringUInt(linePtr, i1))) valid = false;
+    if (!(linePtr = parseStringUInt(linePtr, i2))) valid = false;
 
     if (valid) {
       unsigned int base = triangleIndex * 3;

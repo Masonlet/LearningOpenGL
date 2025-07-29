@@ -183,21 +183,29 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
   ParsedModel model{};
   PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
 
-  ModelDrawInfo* drawInfo = new ModelDrawInfo();
-  drawInfo->meshPath = model.path;
-  drawInfo->colour = model.colour;
-  drawInfo->colourMode = model.colourMode;
+  ModelDrawInfo tempInfo{};
+  tempInfo.meshPath = model.path;
+  tempInfo.colour = model.colour;
+  tempInfo.colourMode = model.colourMode;
 
-  scene.addModelInfo(model.path, drawInfo);
-  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, *drawInfo, renderer->getProgram())) {
+  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, tempInfo, renderer->getProgram())) {
     fprintf(stderr, "[SceneManager ERROR] Failed to load model: %s\n", model.path.c_str());
     return false;
   }
+
+  const ModelDrawInfo* drawInfo = nullptr;
+  if (!renderer->getVAOManager()->FindDrawInfoByModelName(model.path, drawInfo)) {
+    fprintf(stderr, "[SceneManager ERROR] Draw info not found after loading\n");
+    return false;
+  }
+
+  scene.addModelInfo(model.path, drawInfo);
   scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
 
   ModelInstance& instance = scene.getModelInstances()[model.meshName];
   applyColourSettings(instance, model.colour, model.colourMode);
   instance.specular = model.specular;
+  instance.scale = model.scale;
 
   return true;
 }
@@ -303,7 +311,7 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
     int g = static_cast<int>(triangle.colour.y * 255.0f);
     int b = static_cast<int>(triangle.colour.z * 255.0f);
     sharedName = std::string(triangle.meshName) + "_solid_" + std::to_string(r) + "_" + std::to_string(g) + "_" + std::to_string(b);
-    skipCache = true; // always bake solid-colored triangles fresh
+    skipCache = true;
   }
   else {
     sharedName = "triangle_shared";
@@ -366,20 +374,40 @@ bool SceneManager::handleMazeData(const unsigned char* p) {
   return true;
 }
 
-
-static bool addWall(Scene& scene, const std::string& meshName, const std::string& wallName, const std::string& wallDirection, const Vec4& worldPos, const Vec4& wallPos, const Vec3& wallRot, const Vec3& baseRot) {
-  std::string name = wallName;
-  name += wallDirection;
-
-  const Vec4 pos = worldPos - wallPos;
-  const Vec3 rot = baseRot + wallRot;
-  const Transform transform{ pos, rot, {1.0f, 1.0f, 1.0f} };
-  if (!scene.addInstance(name, meshName, Mat4::modelMatrix(transform))) {
-    fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", name.c_str());
+static bool addFloor(Scene& scene, const std::string& name, const std::string& mesh, const Vec4& worldPos, const Vec3& rotation) {
+  Transform t{ worldPos, rotation, {1,1,1} };
+  
+  if (!scene.addInstance(name, mesh, Mat4::modelMatrix(t))) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to add floor instance: %s\n", name.c_str());
     return false;
   }
 
   ModelInstance& instance = scene.getModelInstances()[name];
+  instance.position = worldPos;
+  instance.rotation = rotation;
+
+  return true;
+}
+static bool addWall(Scene& scene, const Vec4& worldPos, const Vec4& wallOffset, const Vec3& wallRot, const Vec3& baseRot, bool& hasEntrance,
+  const std::string& meshName, const std::string& wallName, const std::string& entranceMesh, const std::string& exitMesh, const bool condition = true) {
+  if (!condition) return false;
+
+  std::string finalMesh = meshName;
+  if (!hasEntrance) {
+    finalMesh = entranceMesh;
+    hasEntrance = true;
+  }
+  else finalMesh = exitMesh;
+
+  const Vec4 pos = worldPos - wallOffset;
+  const Vec3 rot = baseRot + wallRot;
+  const Transform transform{ pos, rot, {1.0f, 1.0f, 1.0f} };
+  if (!scene.addInstance(wallName, meshName, Mat4::modelMatrix(transform))) {
+    fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", wallName.c_str());
+    return false;
+  }
+
+  ModelInstance& instance = scene.getModelInstances()[wallName];
   instance.position = pos;
   instance.rotation = rot;
 
@@ -387,136 +415,69 @@ static bool addWall(Scene& scene, const std::string& meshName, const std::string
 }
 bool SceneManager::buildMaze(const ParsedMaze& maze) {
   for (const std::string& modelPath : { maze.floorType1, maze.floorType2, maze.floorType3, maze.floorType4, maze.floorType5, maze.floorType6, maze.floorWallType, maze.wallType1, maze.wallType2, maze.wallType3, maze.wallType4, maze.wallType5, maze.wallType6, maze.entranceType, maze.exitType, maze.exteriorWallType }) {
-    const ModelDrawInfo* existingInfo = nullptr;
-    if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, existingInfo)) {
-      ModelDrawInfo drawInfo;
-      drawInfo.meshPath = modelPath;
-      drawInfo.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
-      drawInfo.colourMode = ColourMode::PLYColour;
+    const ModelDrawInfo* drawInfo = nullptr;
+    if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, drawInfo)) {
+      ModelDrawInfo tempInfo;
+      tempInfo.meshPath = modelPath;
+      tempInfo.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
+      tempInfo.colourMode = ColourMode::PLYColour;
 
-      scene.addModelInfo(modelPath, &drawInfo);
-      if (!renderer->getVAOManager()->LoadModelIntoVAO(modelPath, drawInfo, renderer->getProgram())) {
+      if (!renderer->getVAOManager()->LoadModelIntoVAO(modelPath, tempInfo, renderer->getProgram())) {
         fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());
         return false;
       }
+
+      if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, drawInfo)) {
+        fprintf(stderr, "[SceneLoader ERROR] Draw info still missing after loading: %s\n", modelPath.c_str());
+        return false;
+      }
     }
+
+    scene.addModelInfo(modelPath, drawInfo);
   }
 
   bool hasEntrance{ false };
+  const Mat4 mazeMatrix = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
   for (size_t row = 0; row < maze.layout.size(); ++row) {
     for (size_t col = 0; col < maze.layout[row].size(); ++col) {
+      const std::string iteration = std::to_string(row) + "_" + std::to_string(col);
+      const Vec4 localPos = { static_cast<float>(col) * maze.spacing, 0.0f, -static_cast<float>(row) * maze.spacing, 1.0f };
+      const Vec4 worldPos = mazeMatrix * localPos;
+
       if (maze.layout[row][col]) {
-        const std::string iteration = "_" + std::to_string(row) + "_" + std::to_string(col);
-        const Vec4 localPos = { static_cast<float>(col) * maze.spacing, 0.0f, -static_cast<float>(row) * maze.spacing, 1.0f };
-        const Mat4 mazeMatrix = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
-        const Vec4 worldPos = mazeMatrix * localPos;
+        bool wallExists{ false };  
 
-        bool wallExists{ false };    
-        int variant = rand() % 6;
+        const std::string wallVariants[] = {maze.wallType1, maze.wallType2, maze.wallType3, maze.wallType4, maze.wallType5, maze.wallType6};
+        std::string wallMesh = wallVariants[rand() % 6];
 
-        std::string wallMesh;
-        if (variant == 0)      wallMesh = maze.wallType1;
-        else if (variant == 1) wallMesh = maze.wallType2;
-        else if (variant == 2) wallMesh = maze.wallType3;
-        else if (variant == 3) wallMesh = maze.wallType4;
-        else if (variant == 4) wallMesh = maze.wallType5;
-        else                   wallMesh = maze.wallType6;
+				const bool northCondition = (row == 0 || !maze.layout[row - 1][col]);
+        wallExists = addWall(scene, worldPos, {0.0f,0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f}, maze.rot, hasEntrance, wallMesh, maze.mazeName + "_wall_" + iteration + "_N", maze.entranceType, maze.exitType, northCondition);
 
-        if (row == 0 || !maze.layout[row - 1][col]) {
-          std::string mazeType = wallMesh;
-          if (row == 0) {
-            if (!hasEntrance) {
-              mazeType = maze.entranceType;
-              hasEntrance = true;
-            }
-            else mazeType = maze.exitType;
-          }
+				const bool southCondition = (row + 1 >= maze.layout.size() || !maze.layout[row + 1][col]);
+        wallExists = addWall(scene, worldPos, {maze.spacing,0.0f,maze.spacing,0.0f}, {0.0f,180.0f,0.0f}, maze.rot, hasEntrance, wallMesh, maze.mazeName + "_wall_" + iteration + "_S", maze.entranceType, maze.exitType, southCondition);
 
-          addWall(scene, mazeType, maze.mazeName + "_wall_" + iteration, "_N", worldPos, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, maze.rot);
-          wallExists = true;
-        }
+        const bool eastCondition = (col == 0 || !maze.layout[row][col - 1]);
+        wallExists = addWall(scene, worldPos, { maze.spacing, 0.0f, 0.0f, 0.0f }, { 0.0f, 90.0f, 0.0f }, maze.rot, hasEntrance, wallMesh, maze.mazeName + "_wall_" + iteration + "_E", maze.entranceType, maze.exitType, eastCondition);
 
-        if (row + 1 >= maze.layout.size() || !maze.layout[row + 1][col]) {
-          std::string mazeType = wallMesh;
-          if (row + 1 >= maze.layout.size()) {
-            if (!hasEntrance) {
-              mazeType = maze.entranceType;
-              hasEntrance = true;
-            }
-            else mazeType = maze.exitType;
-          }
+        const bool westCondition = (col + 1 >= maze.layout[row].size() || !maze.layout[row][col + 1]);
+        wallExists = addWall(scene, worldPos, { 0.0f, 0.0f, maze.spacing, 0.0f }, { 0.0f, -90.0f, 0.0f }, maze.rot, hasEntrance, wallMesh, maze.mazeName + "_wall_" + iteration + "_W", maze.entranceType, maze.exitType, westCondition);
 
-          addWall(scene, mazeType, maze.mazeName + "_wall_" + iteration, "_S", worldPos, { maze.spacing, 0.0f, maze.spacing, 0.0f }, { 0.0f, 180.0f, 0.0f }, maze.rot);
-          wallExists = true;
-        }
-
-        if (col == 0 || !maze.layout[row][col - 1]) {
-          std::string mazeType = wallMesh;
-          if (col == 0) {
-            if (!hasEntrance) {
-              mazeType = maze.entranceType;
-              hasEntrance = true;
-            }
-            else mazeType = maze.exitType;
-          }
-          addWall(scene, mazeType, maze.mazeName + "_wall_" + iteration, "_E", worldPos, { maze.spacing, 0.0f, 0.0f, 0.0f }, { 0.0f, 90.0f, 0.0f }, maze.rot);
-          wallExists = true;
-        }
-
-        if (col + 1 >= maze.layout[row].size() || !maze.layout[row][col + 1]) {
-          std::string mazeType = wallMesh;
-          if (col + 1 >= maze.layout[row].size()) {
-            if (!hasEntrance) {
-              mazeType = maze.entranceType;
-              hasEntrance = true;
-            }
-            else mazeType = maze.exitType;
-          }
-
-          addWall(scene, mazeType, maze.mazeName + "_wall_" + iteration, "_W", worldPos, { 0.0f, 0.0f, maze.spacing, 0.0f }, { 0.0f, -90.0f, 0.0f }, maze.rot);
-          wallExists = true;
-        }
-
-        std::string floorMesh;
-
-        if (wallExists) floorMesh = maze.floorWallType;
-        else {
-          if (variant == 0)      floorMesh = maze.floorType1;
-          else if (variant == 1) floorMesh = maze.floorType2;
-          else if (variant == 2) floorMesh = maze.floorType3;
-          else if (variant == 3) floorMesh = maze.floorType4;
-          else if (variant == 4) floorMesh = maze.floorType5;
-          else                   floorMesh = maze.floorType6;
-        }
-
-        Transform floorTransform{ worldPos, maze.rot, {1.0f, 1.0f, 1.0f} };
-        if (!scene.addInstance(maze.mazeName + "_floor_" + iteration, floorMesh, Mat4::modelMatrix(floorTransform))) {
-          fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", iteration.c_str());
-          return false;
-        }
-
-        ModelInstance& instance = scene.getModelInstances()[maze.mazeName + "_floor_" + iteration];
-        instance.position = worldPos;
-        instance.rotation = maze.rot;
+        const std::string floorVariants[] = {maze.floorType1, maze.floorType2, maze.floorType3, maze.floorType4, maze.floorType5, maze.floorType6 };
+        std::string floorMesh = floorVariants[rand() % 6];
+        if (!addFloor(scene, maze.mazeName + "_floor_" + iteration, floorMesh, worldPos, maze.rot)) return false;
       }
       else {
         if (row == 0 || row == maze.layout.size() - 1 || col == 0 || col == maze.layout[row].size() - 1) {
-          const std::string iteration = "_" + std::to_string(row) + "_" + std::to_string(col);
-          const Vec4 localPos = { static_cast<float>(col) * maze.spacing, 0.0f, -static_cast<float>(row) * maze.spacing, 1.0f };
-          const Mat4 mazeMatrix = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
-          const Vec4 worldPos = mazeMatrix * localPos;
+          bool unusedFlag;
 
-          if (row == 0)
-            addWall(scene, maze.exteriorWallType, maze.mazeName + "_exterior_wall_" + iteration, "_N", worldPos, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, maze.rot);
-
+          if (row == 0)               
+            addWall(scene, worldPos, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, maze.rot, unusedFlag, maze.exteriorWallType, maze.mazeName + "_exteriorwall_" + iteration + "_N", maze.entranceType, maze.exitType);
           if (row == maze.layout.size() - 1) 
-            addWall(scene, maze.exteriorWallType, maze.mazeName + "_exterior_wall_" + iteration, "_S", worldPos, { maze.spacing, 0.0f, maze.spacing, 0.0f }, { 0.0f, 180.0f, 0.0f }, maze.rot);
-      
-          if (col == 0) 
-            addWall(scene, maze.exteriorWallType, maze.mazeName + "_exterior_wall_" + iteration, "_E", worldPos, { maze.spacing, 0.0f, 0.0f, 0.0f }, { 0.0f, 90.0f, 0.0f }, maze.rot);
-        
-          if (col == maze.layout[row].size() - 1) 
-            addWall(scene, maze.exteriorWallType, maze.mazeName + "_exterior_wall_" + iteration, "_W", worldPos, { 0.0f, 0.0f, maze.spacing, 0.0f }, { 0.0f, -90.0f, 0.0f }, maze.rot);
+            addWall(scene, worldPos, { maze.spacing, 0.0f, maze.spacing, 0.0f }, { 0.0f, 180.0f, 0.0f }, maze.rot, unusedFlag, maze.exteriorWallType, maze.mazeName + "_exteriorwall_" + iteration + "_S", maze.entranceType, maze.exitType);
+          if (col == 0)  
+            addWall(scene, worldPos, { maze.spacing, 0.0f, 0.0f, 0.0f }, { 0.0f, 90.0f, 0.0f }, maze.rot, unusedFlag, maze.exteriorWallType, maze.mazeName + "_exteriorwall_" + iteration + "_E", maze.entranceType, maze.exitType);
+          if (col == maze.layout[row].size() - 1)
+            addWall(scene, worldPos, { 0.0f, 0.0f, maze.spacing, 0.0f }, { 0.0f, -90.0f, 0.0f }, maze.rot, unusedFlag, maze.exteriorWallType, maze.mazeName + "_exteriorwall_" + iteration + "_W", maze.entranceType, maze.exitType);
         }
       }
     }
