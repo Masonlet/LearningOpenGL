@@ -13,7 +13,7 @@
 #include <iomanip>
 
 SceneManager::SceneManager(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager)
-  : scene(), renderer(renderer), lightManager(lightManager), cameraManager(cameraManager) {}
+                         : renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), scene() {}
 
 bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 #ifndef NDEBUG

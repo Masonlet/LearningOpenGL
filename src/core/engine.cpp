@@ -26,7 +26,7 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 
   glfwSetWindowUserPointer(windowManager.getWindow()->getGLFWwindow(), this);
 
-#ifndef ndebug
+#ifndef NDEBUG
   printf("[Debug] Opengl info\n");
   printf("[Debug] Vendor: %s\n", glGetString(GL_VENDOR));
   printf("[Debug] Renderer: %s\n", glGetString(GL_RENDERER));
@@ -40,7 +40,7 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 }
 
 void Engine::setupShaders() {
-#ifndef ndebug
+#ifndef NDEBUG
   printf("[setupShaders] Shader setup start time: %f\n", glfwGetTime());
 #endif
 
@@ -67,7 +67,7 @@ void Engine::setupShaders() {
   constexpr float bgA = 1.0f;
   glClearColor(bgR, bgG, bgB, bgA);
 
-#ifndef ndebug
+#ifndef NDEBUG
   printf("[setupShaders] Shader setup finish time: %f\n", glfwGetTime());
 #endif
 }
@@ -89,7 +89,7 @@ void Engine::tick(const float currenttime) {
   float rawdelta = currenttime - lastTime;
 
   if (rawdelta > max_delta) {
-#ifndef ndebug
+#ifndef NDEBUG
     printf("[Tick WARN] deltaTime clamped to %.3f (was %.3f)\n", max_delta, rawdelta);
 #endif
     rawdelta = max_delta;

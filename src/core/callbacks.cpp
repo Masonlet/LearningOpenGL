@@ -32,7 +32,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			if (!engine->getSceneManager().saveTxtScene())
 				fprintf(stderr, "[KEY_CALLBACK] Failed to save scene\n");
 			else {
-#ifndef ndebug
+#ifndef _DEBUG
 				printf("[KEY_CALLBACK] Scene saved successfully!\n");
 #endif
 			}

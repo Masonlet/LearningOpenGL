@@ -1,4 +1,4 @@
-#version 420
+#version 330
 
 const int SPOT_LIGHT_TYPE = 1;
 const int DIRECTIONAL_LIGHT_TYPE = 2;
@@ -6,13 +6,13 @@ const int DIRECTIONAL_LIGHT_TYPE = 2;
 const int NUMBEROFLIGHTS = 50;
 
 struct Light {
-	vec4 position;	// xyz, w = TBD
-	vec4 diffuse;	// rgb = highlight colour, w = TBD
+	vec4 position;	// xyz = position, ignoring w = TBD
+	vec4 diffuse;	// rgb = diffuse colour, w = intensity
 	vec4 specular;	// rgb = highlight colour, w = power
-	vec4 atten;		// x = constant, y = linear, z = quadratic, w = DistanceCutOff
-	vec4 direction;	// Spot, directional lights, w = TBD
-	vec4 param1;	// x = lightType (0 = pointlight, 1 = spot light, 2 = directional light), y = inner angle, z = outer angle, w = TBD
-	vec4 param2;	// x = Enabled (0 for off, 1 for on), y = TBD, z = TBD, w = TBD
+	vec4 atten;		// x = constant, y = linear, z = quadratic, w = cutoff distance
+	vec4 direction;	// xyz = direction (spot/directional), w = unused
+	vec4 param1;	// x = lightType (0 = Point, 1 = Spot, 2 = Directional), y = inner angle (spot), z = outer angle (spot), w = TBD
+	vec4 param2;	// x = enabled (0 = off, 1 = on), yzw = TBD
 };
 
 uniform Light theLights[NUMBEROFLIGHTS];
@@ -24,7 +24,7 @@ in vec4 vertNormal;
 in vec4 vertWorldPosition;
 
 out vec4 pixelColour;
-						
+		
 vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular ) {
 	vec3 norm = normalize(vertexNormal);
 	vec4 finalObjectColour = vec4( 0.0f, 0.0f, 0.0f, 1.0f );
