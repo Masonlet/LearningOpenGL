@@ -128,9 +128,21 @@ void Engine::renderFrame() {
   lightManager.UpdateShaderUniforms(currentProgram);
 
   // Draw Frame
-  for (const std::pair<const std::string, ModelInstance>& pair : sceneManager.getScene().getModelInstances())
-    renderer.drawModel(pair.second, view, projection);
-  
+  const std::map<std::string, ModelInstance>& instances = sceneManager.getScene().getModelInstances();
+  for (std::map<std::string, ModelInstance>::const_iterator it = instances.begin(); it != instances.end(); ++it) {
+    const ModelInstance& instance = it->second;
+    if (instance.colour.w >= 1.0f) {
+      renderer.drawModel(instance, view, projection);
+    }
+  }
+
+  for (std::map<std::string, ModelInstance>::const_iterator it = instances.begin(); it != instances.end(); ++it) {
+    const ModelInstance& instance = it->second;
+    if (instance.colour.w < 1.0f) {
+      renderer.drawModel(instance, view, projection);
+    }
+  }
+
   // End Frame
   glBindVertexArray(0);
 }

@@ -117,18 +117,19 @@ const unsigned char* parseVec4(const unsigned char* p, Vec4& out) {
 }
 
 static const unsigned char* parseNumericColour(const unsigned char* p, Vec4& colourOut) {
-  Vec3 tempColour = { 1.0f, 1.0f, 1.0f };
+  Vec4 tempColour = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-  if (!(p = parseVec3(p, tempColour)))
+  if (!(p = parseVec4(p, tempColour)))
     return nullptr;
 
-  if (tempColour.x > 1.0f || tempColour.y > 1.0f || tempColour.z > 1.0f) {
+  if (tempColour.x > 1.0f || tempColour.y > 1.0f || tempColour.z > 1.0f || tempColour.w > 1.0f) {
     tempColour.x /= 255.0f;
     tempColour.y /= 255.0f;
     tempColour.z /= 255.0f;
+    tempColour.w /= 255.0f;
   }
 
-  colourOut = { tempColour, 0.0f };
+  colourOut = tempColour;
   return p;
 }
 static const unsigned char* parseSpecialColour(const char* name, ColourMode& modeOut) {
@@ -159,12 +160,12 @@ static const unsigned char* parseNamedColour(const unsigned char* p, Vec4& colou
     return tokenEnd;
   }
 
-  colour = { tempColour, 0.0f };
+  colour = { tempColour, 1.0f };
   mode = ColourMode::Solid;
   return p;
 }
 const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut) {
-  colourOut = { 1.0f, 1.0f, 1.0f, 0.0f };
+  colourOut = { 1.0f, 1.0f, 1.0f, 1.0f };
   modeOut = ColourMode::Solid;
 
   const unsigned char* original = skipWhitespace(p);

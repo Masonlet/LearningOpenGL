@@ -5,8 +5,8 @@ uniform mat4 mView;
 uniform mat4 mModel;
 uniform mat4 mModel_InverseTranpose;
 
-uniform bool bUseOverrideColor;
-uniform vec3 colorOverride;
+uniform bool bUseOverrideColour;
+uniform vec4 colourOverride;
 
 in vec4 vCol;
 in vec4 vPos;
@@ -23,6 +23,6 @@ void main() {
 	vertNormal = mModel_InverseTranpose * vec4(vNorm.xyz, 1.0f);
 	vertNormal.xyz = normalize(vertNormal.xyz);
 
-	if (bUseOverrideColor) vertColor = vec4(colorOverride.rgb, 1.0f);
-	else vertColor = vec4(vCol.rgb, 1.0f);
+	if (bUseOverrideColour) vertColor = colourOverride;
+	else vertColor = vCol;
 };
