@@ -25,7 +25,7 @@ in vec4 vertWorldPosition;
 
 out vec4 pixelColour;
 		
-vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular ) {
+vec4 calculateLightContrib( vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular ) {
 	vec3 norm = normalize(vertexNormal);
 	vec4 finalObjectColour = vec4( 0.0f, 0.0f, 0.0f, 1.0f );
 	
@@ -110,7 +110,7 @@ vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 v
 				
 		finalObjectColour.rgb += (vertexMaterialColour.rgb * lightDiffuseContrib.rgb) + (vertexSpecular.rgb * lightSpecularContrib.rgb );
 	}
-	finalObjectColour.a = 1.0f;
+	finalObjectColour.a = vertexMaterialColour.a;
 	
 	return finalObjectColour;
 }
@@ -118,7 +118,7 @@ vec4 calculateLightContrib( vec3 vertexMaterialColour, vec3 vertexNormal, vec3 v
 void main() {
 	pixelColour = vec4(vertColor);
 	
-	vec4 lightContrib = calculateLightContrib(vertColor.rgb, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
+	vec4 lightContrib = calculateLightContrib(vertColor, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
 	
 	pixelColour.rgb = lightContrib.rgb;
 };

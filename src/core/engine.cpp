@@ -128,9 +128,35 @@ void Engine::renderFrame() {
   lightManager.UpdateShaderUniforms(currentProgram);
 
   // Draw Frame
-  for (const std::pair<const std::string, ModelInstance>& pair : sceneManager.getScene().getModelInstances())
-    renderer.drawModel(pair.second, view, projection);
-  
+  std::vector<const ModelInstance*> transparentInstances;
+  const std::map<std::string, ModelInstance>& instances = sceneManager.getScene().getModelInstances();
+  for (std::map<std::string, ModelInstance>::const_iterator it = instances.begin(); it != instances.end(); ++it) {
+    const ModelInstance& instance = it->second;
+
+    if (instance.colour.w >= 1.0f) renderer.drawModel(instance, view, projection);
+    else transparentInstances.push_back(&instance);
+  }
+
+  for (size_t i = 0; i < transparentInstances.size(); ++i) {
+    for (size_t j = 0; j < transparentInstances.size() - i - 1; ++j) {
+      const Vec4& a = transparentInstances[j]->position;
+      const Vec4& b = transparentInstances[j + 1]->position;
+
+      float distA = (a.x - eye.x) * (a.x - eye.x) + (a.y - eye.y) * (a.y - eye.y) + (a.z - eye.z) * (a.z - eye.z);
+      float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
+
+      if (distA < distB) {
+        const ModelInstance* temp = transparentInstances[j];
+        transparentInstances[j] = transparentInstances[j + 1];
+        transparentInstances[j + 1] = temp;
+      }
+    }
+  }
+
+  for (const ModelInstance* instance : transparentInstances) {
+		renderer.drawModel(*instance, view, projection);
+  }
+
   // End Frame
   glBindVertexArray(0);
 }

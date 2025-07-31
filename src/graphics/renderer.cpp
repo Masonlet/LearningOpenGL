@@ -44,7 +44,6 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 	}
 
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.data);
-
 	Mat4 modelIT = instance.modelMatrix.inverse().transpose();
 	glUniformMatrix4fv(modelInverseTransposeLocation, 1, GL_FALSE, modelIT.data);
 	glUniform4fv(modelSpecularLocation, 1, &instance.specular.x);
@@ -56,9 +55,15 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 		glUniform1f(useOverrideColourLocation, 0.0f);
 	}
 
+	if (instance.colour.w < 1.0f)
+		glDepthMask(GL_FALSE);
+
 	glBindVertexArray(info->VAO_ID);
 	glDrawElements(GL_TRIANGLES, info->numIndices, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+
+	if (instance.colour.w < 1.0f)
+		glDepthMask(GL_TRUE);
 
 	return true;
 }
