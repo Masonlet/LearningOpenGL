@@ -65,3 +65,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
 	if (engine) engine->getWindowManager().getWindow()->updateViewport(width, height);
 }
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
+	if (!engine) return;
+
+	Camera* cam = engine->getCameraManager()->getActiveCamera();
+	if (!cam) return;
+
+	cam->setFov(static_cast<float>(-yoffset * 2.0f));
+}

@@ -49,40 +49,47 @@ Mat4 Camera::LookAt() const {
 }
 
 Mat4 Camera::Perspective(const float aspect) const {
-  const float tanHalfFov = tanf(radians(DEFAULT_FOV) / 2.0f);
-  const float zRange = FAR_PLANE - NEAR_PLANE;
+  const float tanHalfFov = tanf(radians(fov) / 2.0f);
+  const float zRange = farPlane - nearPlane;
 
   Mat4 projection{};
 
   projection.data[0] = 1.0f / (aspect * tanHalfFov);
   projection.data[5] = 1.0f / tanHalfFov;
-  projection.data[10] = -(FAR_PLANE + NEAR_PLANE) / zRange;
+  projection.data[10] = -(farPlane + nearPlane) / zRange;
   projection.data[11] = -1.0f;
-  projection.data[14] = -(2.0f * FAR_PLANE * NEAR_PLANE) / zRange;
+  projection.data[14] = -(2.0f * farPlane * nearPlane) / zRange;
   projection.data[15] = 0.0f;
 
   return projection;
 };
 
-void Camera::ProcessInputs(InputManager* input, float deltaTime) {
+void Camera::setFov(const float delta) {
+  fov += delta;
+
+  if (fov < 1.0f) fov = 1.0f;
+  if (fov > 120.0f) fov = 120.0f;
+}
+
+void Camera::processInputs(InputManager* input, float deltaTime) {
   switch (type) {
   case 0: 
-    UpdateFreeCam(input, deltaTime);
+    updateFreeCam(input, deltaTime);
     break;
   case 1: 
-    UpdateDungeonCam(input, deltaTime);
+    updateDungeonCam(input, deltaTime);
     break;
   case 2:
-    UpdateModernCam(input, deltaTime);
+    updateModernCam(input, deltaTime);
     break;
   }
 }
 
-void Camera::UpdateFreeCam(InputManager* input, float deltaTime) {
-  ProcessKeyboard(input, deltaTime);
-  ProcessMouse(input);
+void Camera::updateFreeCam(InputManager* input, float deltaTime) {
+  processKeyboard(input, deltaTime);
+  processMouse(input);
 }
-void Camera::UpdateDungeonCam(InputManager* input, float deltaTime) {
+void Camera::updateDungeonCam(InputManager* input, float deltaTime) {
   if (input->IsKeyPressed(GLFW_KEY_A)) yaw -= 90.0f;
   if (input->IsKeyPressed(GLFW_KEY_D)) yaw += 90.0f;
 
@@ -98,8 +105,8 @@ void Camera::UpdateDungeonCam(InputManager* input, float deltaTime) {
 
   pitch = 0.0f;
 }
-void Camera::UpdateModernCam(InputManager* input, float deltaTime) {
-  ProcessMouse(input);
+void Camera::updateModernCam(InputManager* input, float deltaTime) {
+  processMouse(input);
 
   Vec3 flatFront = front;
   flatFront.y = 0.0f;
@@ -118,17 +125,17 @@ void Camera::UpdateModernCam(InputManager* input, float deltaTime) {
     pos += moveDir * moveSpeed * deltaTime;
   }
 }
-void Camera::ProcessKeyboard(InputManager* input, const float deltaTime) {
-  if (input->IsKeyDown(GLFW_KEY_W)) MoveForward(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_A)) MoveLeft(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_S)) MoveBackward(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_D)) MoveRight(deltaTime);
+void Camera::processKeyboard(InputManager* input, const float deltaTime) {
+  if (input->IsKeyDown(GLFW_KEY_W)) moveForward(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_A)) moveLeft(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_S)) moveBackward(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_D)) moveRight(deltaTime);
 
-  if (input->IsKeyDown(GLFW_KEY_SPACE)) MoveUp(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_LEFT_CONTROL)) MoveDown(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_SPACE)) moveUp(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_LEFT_CONTROL)) moveDown(deltaTime);
 }
 
-void Camera::ProcessMouse(InputManager* input) {
+void Camera::processMouse(InputManager* input) {
   if (!input->IsCursorLocked())
     return;
 
@@ -157,7 +164,7 @@ void Camera::ProcessMouse(InputManager* input) {
   up = right.cross(front).normalized();
 }
 
-void Camera::Print() const {
+void Camera::print() const {
   printf("\nPos: %f:%f:%f\n", pos.x, pos.y, pos.z);
   printf("Front: %f:%f:%f\n", front.x, front.y, front.z);
   printf("Pitch: %f\n\n", pitch);

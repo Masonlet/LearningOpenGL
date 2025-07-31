@@ -55,12 +55,12 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 
   if (cameraManager->getCameraCount() == 0) {
     Camera defaultCam;
-    defaultCam.SetPos({ 0.0f, 5.0f, 10.0f });
-    defaultCam.SetYaw(-90.0f);
-    defaultCam.SetPitch(0.0f);
-    defaultCam.SetNear(0.1f);
-    defaultCam.SetFar(10000.0f);
-    defaultCam.SetType(0);
+    defaultCam.setPos({ 0.0f, 5.0f, 10.0f });
+    defaultCam.setYaw(-90.0f);
+    defaultCam.setPitch(0.0f);
+    defaultCam.setNear(0.1f);
+    defaultCam.setFar(10000.0f);
+    defaultCam.setType(0);
 
     if (!cameraManager->addCamera(defaultCam)) 
       fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
@@ -239,13 +239,13 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
   }
 
   Camera cam;
-  cam.SetYaw(cameraData.yaw);
-  cam.SetPitch(cameraData.pitch);
-  cam.SetPos(cameraData.position);
-  cam.SetMoveSpeed(cameraData.speed);
-	cam.SetType(cameraData.type);
-  if (cam.Type() != 0) {
-    cam.SetMoveDistance(cameraData.moveDistance);
+  cam.setYaw(cameraData.yaw);
+  cam.setPitch(cameraData.pitch);
+  cam.setPos(cameraData.position);
+  cam.setMoveSpeed(cameraData.speed);
+	cam.setType(cameraData.type);
+  if (cam.getType() != 0) {
+    cam.setMoveDistance(cameraData.moveDistance);
   }
 
   if (!cameraManager->addCamera(cam)) {

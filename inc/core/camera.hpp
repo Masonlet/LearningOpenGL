@@ -19,41 +19,41 @@ public:
 
 	Mat4 Perspective(const float aspect) const;
 
-	inline Vec3 Pos() const { return pos; }
-  inline float Yaw() const { return yaw; }
-  inline float Pitch() const { return pitch; }
-	inline float MoveSpeed() const { return moveSpeed; }
-  inline float MouseSpeed() const { return mouseSpeed; }
-  inline float LastX() const { return lastX; }
-  inline float LastY() const { return lastY; }
-  inline float Fov() const { return fov; }
-  inline float Near() const { return nearPlane; }
-  inline float Far() const { return farPlane; }
-  inline float Paused() const { return paused; }
-	inline unsigned int Type() const { return type; }
-  inline float MoveDistance() const { return moveDistance; }
+	inline Vec3 getPos() const { return pos; }
+  inline float getYaw() const { return yaw; }
+  inline float getPitch() const { return pitch; }
+	inline float getMoveSpeed() const { return moveSpeed; }
+  inline float getMouseSpeed() const { return mouseSpeed; }
+  inline float getLastX() const { return lastX; }
+  inline float getLastY() const { return lastY; }
+  inline float getFov() const { return fov; }
+  inline float getNearPlane() const { return nearPlane; }
+  inline float getFarPlane() const { return farPlane; }
+  inline float getPaused() const { return paused; }
+  inline float getMoveDistance() const { return moveDistance; }
+  inline unsigned int getType() const { return type; }
 
-  inline void MoveForward(const float deltaTime) { pos += front * (deltaTime * moveSpeed); }
-  inline void MoveBackward(const float deltaTime) { pos -= front * (deltaTime * moveSpeed); }
-  inline void MoveLeft(const float deltaTime) { pos -= GetRight() * (deltaTime * moveSpeed); }
-  inline void MoveRight(const float deltaTime) { pos += GetRight() * (deltaTime * moveSpeed); }
-  inline void MoveUp(const float deltaTime) { pos += up * (deltaTime * moveSpeed); }
-  inline void MoveDown(const float deltaTime) { pos -= up * (deltaTime * moveSpeed); }
+  inline void setPos(const Vec3 posIn) { pos = posIn; }
+  inline void setYaw(const float yawIn) { yaw = yawIn; }
+  inline void setPitch(const float pitchIn) { pitch = pitchIn; }
+  inline void setX(const float x) { lastX = x; }
+  inline void setY(const float y) { lastY = y; }
+  inline void setNear(const float nearIn) { nearPlane = nearIn; }
+  inline void setFar(const float farIn) { farPlane = farIn; }
+  inline void setMoveSpeed(const float speedIn) { moveSpeed = speedIn; }
+	inline void setType(const unsigned int typeIn) { type = typeIn; }
+  inline void setMoveDistance(const float moveDistanceIn) { moveDistance = moveDistanceIn; }
+  void setFov(const float fovIn);
 
-  inline void SetPos(const Vec3 posIn) { pos = posIn; }
-  inline void SetYaw(const float yawIn) { yaw = yawIn; }
-  inline void SetPitch(const float pitchIn) { pitch = pitchIn; }
-  inline void SetX(const float x) { lastX = x; }
-  inline void SetY(const float y) { lastY = y; }
-  inline void SetFov(const float fovIn) { fov = fovIn; }
-  inline void SetNear(const float nearIn) { nearPlane = nearIn; }
-  inline void SetFar(const float farIn) { farPlane = farIn; }
-  inline void SetMoveSpeed(const float speedIn) { moveSpeed = speedIn; }
-	inline void SetType(const unsigned int typeIn) { type = typeIn; }
-  inline void SetMoveDistance(const float moveDistanceIn) { moveDistance = moveDistanceIn; }
+  inline void moveForward(const float deltaTime) { pos += front * (deltaTime * moveSpeed); }
+  inline void moveBackward(const float deltaTime) { pos -= front * (deltaTime * moveSpeed); }
+  inline void moveLeft(const float deltaTime) { pos -= GetRight() * (deltaTime * moveSpeed); }
+  inline void moveRight(const float deltaTime) { pos += GetRight() * (deltaTime * moveSpeed); }
+  inline void moveUp(const float deltaTime) { pos += up * (deltaTime * moveSpeed); }
+  inline void moveDown(const float deltaTime) { pos -= up * (deltaTime * moveSpeed); }
 
-  void ProcessInputs(InputManager* input, const float deltaTime);
-  void Print() const;
+  void processInputs(InputManager* input, const float deltaTime);
+  void print() const;
 
 private:
   unsigned int type;
@@ -65,10 +65,10 @@ private:
   float nearPlane, farPlane;
   bool paused;
 
-	void UpdateFreeCam(InputManager* input, const float deltaTime);
-  void UpdateDungeonCam(InputManager* input, const float deltaTime);
-  void UpdateModernCam(InputManager* input, const float deltaTime);
+	void updateFreeCam(InputManager* input, const float deltaTime);
+  void updateDungeonCam(InputManager* input, const float deltaTime);
+  void updateModernCam(InputManager* input, const float deltaTime);
 
-  void ProcessKeyboard(InputManager* input, const float deltaTime);
-  void ProcessMouse(InputManager* input);
+  void processKeyboard(InputManager* input, const float deltaTime);
+  void processMouse(InputManager* input);
 };

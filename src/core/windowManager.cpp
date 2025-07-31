@@ -35,6 +35,8 @@ bool WindowManager::createWindow(const unsigned int width, const unsigned int he
 
   glfwSetKeyCallback(window->getGLFWwindow(), key_callback);
   glfwSetFramebufferSizeCallback(window->getGLFWwindow(), framebuffer_size_callback);
+  glfwSetScrollCallback(window->getGLFWwindow(), scroll_callback);
+
   glfwSetInputMode(window->getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSwapInterval(1);
 

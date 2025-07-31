@@ -107,7 +107,7 @@ void Engine::run() {
   while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
     inputManager.Update(windowManager.getWindow()->getGLFWwindow());
-    cameraManager.getActiveCamera()->ProcessInputs(&inputManager, getDeltaTime());
+    cameraManager.getActiveCamera()->processInputs(&inputManager, getDeltaTime());
     handleModelInput(&inputManager, getDeltaTime(), sceneManager.getScene().getModelInstances(), currentModel);
     renderFrame();
 
@@ -122,7 +122,7 @@ void Engine::renderFrame() {
 
   const Mat4 view = cameraManager.getActiveCamera()->LookAt();
   const Mat4 projection = cameraManager.getActiveCamera()->Perspective(windowManager.getWindow()->getAspect());
-  const Vec3 eye = cameraManager.getActiveCamera()->Pos();
+  const Vec3 eye = cameraManager.getActiveCamera()->getPos();
   renderer.updateCameraUniforms(eye, view, projection);
 
   lightManager.UpdateShaderUniforms(currentProgram);
