@@ -19,6 +19,7 @@ public:
 
 	Mat4 Perspective(const float aspect) const;
 
+  inline std::string getName() const { return name; }
 	inline Vec3 getPos() const { return pos; }
   inline float getYaw() const { return yaw; }
   inline float getPitch() const { return pitch; }
@@ -33,7 +34,8 @@ public:
   inline float getMoveDistance() const { return moveDistance; }
   inline unsigned int getType() const { return type; }
 
-  inline void setPos(const Vec3 posIn) { pos = posIn; }
+	inline void setName(const std::string& nameIn) { name = nameIn; }
+  inline void setPos(const Vec3& posIn) { pos = posIn; }
   inline void setYaw(const float yawIn) { yaw = yawIn; }
   inline void setPitch(const float pitchIn) { pitch = pitchIn; }
   inline void setX(const float x) { lastX = x; }
@@ -56,6 +58,7 @@ public:
   void print() const;
 
 private:
+  std::string name;
   unsigned int type;
 	float moveSpeed, mouseSpeed, moveDistance;
 	Vec3 pos, front, up;

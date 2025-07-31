@@ -9,7 +9,7 @@
 #include <vector>
 
 struct ParsedModel {
-	std::string meshName, path;
+	std::string name, path;
 	Vec3 position{0.0f}, rotation{0.0f}, scale{1.0f};
 	Vec4 colour{1.0f}, specular{1.0f, 1.0f, 1.0f, 32.0f};
 	ColourMode colourMode{ColourMode::Solid};
@@ -23,6 +23,7 @@ struct ParsedLight {
 	Vec4 param2{1.0f};
 };
 struct ParsedCamera {
+	std::string name;
 	unsigned int type{ 0 };
 
 	Vec3 position{0.0f};
@@ -32,13 +33,13 @@ struct ParsedCamera {
 };
 
 struct ParsedTriangle {
-	std::string meshName;
+	std::string name;
 	Triangle transform;
 	Vec4 colour{1.0f};
 	ColourMode colourMode{ColourMode::Solid};
 };
 struct ParsedGrid {
-	std::string meshName;
+	std::string name;
 	Grid layout;
 	Vec4 colour{1.0f};
 	ColourMode colourMode{ColourMode::Solid};

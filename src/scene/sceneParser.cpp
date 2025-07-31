@@ -2,7 +2,7 @@
 #include "utils/parser.hpp"
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
-  PARSE_STRING_OR_FAIL(p, out.meshName, 64, "model name");
+  PARSE_STRING_OR_FAIL(p, out.name, 64, "model name");
   PARSE_STRING_OR_FAIL(p, out.path, 128, "parse path");
   PARSE_OR_FAIL(parseVec3, out.position, "parse position");
   PARSE_OR_FAIL(parseVec3, out.rotation, "parse rotation");
@@ -23,6 +23,7 @@ const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   return p;
 }
 const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
+	PARSE_STRING_OR_FAIL(p, out.name, 64, "camera name");
   p = parseCameraType(p, out.type);
   PARSE_OR_FAIL(parseVec3, out.position, "camera position");
   PARSE_OR_FAIL(parseFloat, out.yaw, "camera yaw");
@@ -36,7 +37,7 @@ const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
 }
 
 const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) {
-  PARSE_STRING_OR_FAIL(p, out.meshName, 64, "triangle name");
+  PARSE_STRING_OR_FAIL(p, out.name, 64, "triangle name");
 
   Vec3 temp;
   PARSE_OR_FAIL(parseVec3, temp, "triangle position");

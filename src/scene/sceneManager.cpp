@@ -12,8 +12,8 @@
 #include <fstream>
 #include <iomanip>
 
-SceneManager::SceneManager(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager)
-                         : renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), scene() {}
+SceneManager::SceneManager(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager) 
+  : renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), scene() {}
 
 bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 #ifndef NDEBUG
@@ -111,6 +111,33 @@ bool SceneManager::saveTxtScene() {
     return false;
   }
 
+  file << std::fixed << std::setprecision(3);
+
+  file << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
+  const std::map<std::string, Camera>& cameras = cameraManager->getAllCameras();
+  for (std::map<std::string, Camera>::const_iterator camIt = cameras.begin(); camIt != cameras.end(); ++camIt) {
+    const std::string& name = camIt->first;
+    const Camera& cam = camIt->second;
+    const Vec3& pos = cam.getPos();
+
+    std::string camType = (cam.getType() == 0) ? "FreeCam" : 
+                          (cam.getType() == 1) ? "DungeonCam" :
+                          /*  .getType() == 2)*/ "ModernCam";
+    
+    file << "camera, " << name << ", " << camType << ", "
+      << pos.x << " " << pos.y << " " << pos.z << ", "
+      << cam.getYaw() << " " << cam.getPitch() << ", "
+      << cam.getFov() << ", "
+      << cam.getNearPlane() << " " << cam.getFarPlane() << ", "
+      << cam.getMoveSpeed();
+
+    if (cam.getType() != 0) 
+      file << ", " << cam.getMoveDistance();
+    
+    file << '\n';
+  }
+
+  file << "\ncomment, name, meshPath, pos(xyz), rot(xyz), scale(xyz), colour(Int, Named Coloured, Random, Rainbow, PLY), specular(rgb, power)\n";
   const std::map<std::string, const ModelDrawInfo*>& meshes = scene.getModelInfos();
   const std::map<std::string, ModelInstance>& instances = scene.getModelInstances();
   for (const std::pair<const std::string, ModelInstance>& entry : instances) {
@@ -129,7 +156,6 @@ bool SceneManager::saveTxtScene() {
       continue;
     }
 
-    file << std::fixed << std::setprecision(6);
     file << "model, " << name << ", "
       << instance.path << ", "
       << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
@@ -141,33 +167,39 @@ bool SceneManager::saveTxtScene() {
       int r = static_cast<int>(instance.colour.x * 255.0f);
       int g = static_cast<int>(instance.colour.y * 255.0f);
       int b = static_cast<int>(instance.colour.z * 255.0f);
+      int a = static_cast<int>(instance.colour.w * 255.0f);
 
       if (r == 255 && g == 0 && b == 0)       file << "Red";
       else if (r == 0 && g == 255 && b == 0)  file << "Green";
       else if (r == 0 && g == 0 && b == 255)  file << "Blue";
-      else file << r << " " << g << " " << b;
+      else file << r << " " << g << " " << b << " " << a;
       break;
     }
-    case ColourMode::Random: file << ", Random"; break;
-    case ColourMode::VerticalGradient: file << ", Rainbow"; break;
-    case ColourMode::PLYColour:
+    case ColourMode::Random: file << "Random"; break;
+    case ColourMode::VerticalGradient: file << "Rainbow"; break;
+    case ColourMode::PLYColour: file << "PLY"; break;
     default: break;
     }
-
-    file << "\n";
+    
+    file << ", " << instance.specular.x << " " << instance.specular.y << " " << instance.specular.z << " " << instance.specular.w << "\n";
   }
 
+  file << "\ncomment, name, type, pos (xyz), diffuse (rgba), atten (xyzw), direction, param1 (spotlight inner, spotight outer), param2 (on/off)\n";
   for (int i = 0; i < LightManager::NUMBEROFLIGHTS; ++i) {
     const Light& light = lightManager->theLights[i];
 
     if (light.param2.x == 0.0f) continue;
-
-    file << "light, " << lightManager->getLightName(i) << ", "
-      << light.position.x << " " << light.position.y << " " << light.position.z << " " << light.position.w << ", "
+    //
+    std::string camType = (light.param1.x == 0) ? "Point" :
+                          (light.param1.x == 1) ? "Spot" :
+                          /*     param1.x == 2)*/ "Directional";
+    //
+    file << "light, " << lightManager->getLightName(i) << ", " << camType << ", "
+      << light.position.x << " " << light.position.y << " " << light.position.z << ", "
       << light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
       << light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
       << light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
-      << light.param1.x << " " << light.param1.y << " " << light.param1.z << " " << light.param1.w << ", "
+      << light.param1.y << " " << light.param1.z << " " << light.param1.w << ", "
       << light.param2.x << " " << light.param2.y << " " << light.param2.z << " " << light.param2.w << "\n";
   }
 
@@ -200,9 +232,9 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
   }
 
   scene.addModelInfo(model.path, drawInfo);
-  scene.addInstance(model.meshName, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
+  scene.addInstance(model.name, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
 
-  ModelInstance& instance = scene.getModelInstances()[model.meshName];
+  ModelInstance& instance = scene.getModelInstances()[model.name];
   applyColourSettings(instance, model.colour, model.colourMode);
   instance.specular = model.specular;
   instance.scale = model.scale;
@@ -239,6 +271,7 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
   }
 
   Camera cam;
+  cam.setName(cameraData.name);
   cam.setYaw(cameraData.yaw);
   cam.setPitch(cameraData.pitch);
   cam.setPos(cameraData.position);
@@ -310,7 +343,7 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
     int r = static_cast<int>(triangle.colour.x * 255.0f);
     int g = static_cast<int>(triangle.colour.y * 255.0f);
     int b = static_cast<int>(triangle.colour.z * 255.0f);
-    sharedName = std::string(triangle.meshName) + "_solid_" + std::to_string(r) + "_" + std::to_string(g) + "_" + std::to_string(b);
+    sharedName = std::string(triangle.name) + "_solid_" + std::to_string(r) + "_" + std::to_string(g) + "_" + std::to_string(b);
     skipCache = true;
   }
   else {
@@ -335,7 +368,7 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
     scene.addModelInfo(sharedName, info);
   }
 
-  std::string instanceName = std::string(triangle.meshName) + "_instance";
+  std::string instanceName = std::string(triangle.name) + "_instance";
   Mat4 transform = Mat4::translation(triangle.transform.position);
   if (!scene.addInstance(instanceName, sharedName, transform)) {
     fprintf(stderr, "[SceneManager ERROR] Failed to add triangle instance\n");
@@ -389,7 +422,7 @@ static bool addFloor(Scene& scene, const std::string& name, const std::string& m
   return true;
 }
 static bool addWall(Scene& scene, const ParsedMaze& maze, const Vec4& worldPos, const Vec4& wallOffset, const Vec3& baseRot, bool& hasEntrance,
-  const std::string& meshName, const std::string& wallName, const bool condition = true) {
+  const std::string& name, const std::string& wallName, const bool condition = true) {
   if (!condition) return false;
 
   std::string finalMesh = hasEntrance ? maze.exitType : maze.entranceType;
@@ -404,7 +437,7 @@ static bool addWall(Scene& scene, const ParsedMaze& maze, const Vec4& worldPos, 
 
     std::string instanceName = wallName + "_" + std::to_string(level);
     const Transform transform{ stackedPos, rot, {1.0f, 1.0f, 1.0f} };
-    if (!scene.addInstance(instanceName, meshName, Mat4::modelMatrix(transform))) {
+    if (!scene.addInstance(instanceName, name, Mat4::modelMatrix(transform))) {
       fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", wallName.c_str());
       return false;
     }
