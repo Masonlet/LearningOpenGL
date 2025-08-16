@@ -1,13 +1,8 @@
 #pragma once
 
-#include "math/constants.hpp"
 #include "math/vec3.hpp"
 #include "math/mat4.hpp"
-
 #include "core/inputManager.hpp"
-#include "core/modelInstance.hpp"
-
-#include <map>
 #include <string>
 
 class Camera {
@@ -16,7 +11,6 @@ public:
 
 	Vec3 GetRight() const;
 	Mat4 LookAt() const;
-
 	Mat4 Perspective(const float aspect) const;
 
   inline std::string getName() const { return name; }

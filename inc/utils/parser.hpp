@@ -22,8 +22,18 @@
   if (*p == ',') ++p;
 #endif
 
-#ifndef PARSE_STRING_OR_FAIL
-#define PARSE_STRING_OR_FAIL(p, target, size, label) \
+#ifndef PARSE_OR_INVALID
+#define PARSE_OR_INVALID(parser, target, errorMsg) \
+    if (!(linePtr = parser(linePtr, target))) { \
+        fprintf(stderr, "[vaoManager ERROR]: %s\n", errorMsg); \
+        valid = false; \
+    } else { \
+      if (*linePtr == ',') ++linePtr; \
+    }
+#endif
+
+#ifndef PARSE_STRING_OR_NULL
+#define PARSE_STRING_OR_NULL(p, target, size, label) \
   do {\
     char temp[size]{}; \
     p = parseToken(p, reinterpret_cast<unsigned char*>(temp), size); \
@@ -53,15 +63,15 @@
 const unsigned char* skipToNextLine(const unsigned char* p);
 const unsigned char* skipToNextWord(const unsigned char* p);
 const unsigned char* skipWhitespace(const unsigned char* p);
+const unsigned char* skipWhitespaceComma(const unsigned char* p);
+
+const unsigned char* trimEOL(const unsigned char* p, const unsigned char* e);
 
 const unsigned char* parseToken     (const unsigned char* p, unsigned char* out, const size_t maxLength);
 const unsigned char* parseFloat     (const unsigned char* p, float& out);	
-
 const unsigned char* parseUInt(const unsigned char* p, unsigned int& out);
 const unsigned int   parseBinaryUINT(const unsigned char* buffer);
-
 const unsigned char* parseBool(const unsigned char* p, bool& out);
-
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out);
 const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
 

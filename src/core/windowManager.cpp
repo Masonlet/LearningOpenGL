@@ -7,8 +7,7 @@ constexpr int GL_MAJOR{ 3 };
 constexpr int GL_MINOR{ 3 };
 
 WindowManager::WindowManager() : window(nullptr) {
-  if (!glfwInit()) 
-    fprintf(stderr, "Failed to initialize GLFW\n");
+  if (!glfwInit()) fprintf(stderr, "Failed to initialize GLFW\n");
 }
 
 WindowManager::~WindowManager() {

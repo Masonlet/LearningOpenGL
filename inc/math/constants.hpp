@@ -1,7 +1,8 @@
 #pragma once
 
-#include <math/vec2.hpp>
-#include <math/vec3.hpp>
+#include "math/vec2.hpp"
+#include "math/vec3.hpp"
+#include "math/vec4.hpp"
 
 constexpr Vec2 DEFAULT_SIZE_2D{ 1.0f, 1.0f };
 constexpr Vec3 DEFAULT_SIZE_3D{ 1.0f, 1.0f, 1.0f };
@@ -20,6 +21,9 @@ constexpr float DEFAULT_PITCH{ 0.0f };
 constexpr Vec3 INITIAL_POS{ 0.0f, 0.0f, -10.0f };
 constexpr Vec3 INITIAL_TARGET{ 0.0f, 0.0f, -1.0f };
 constexpr Vec3 WORLD_UP{ 0.0f, 1.0f, 0.0f };
+
+constexpr Vec3 DEFAULT_NORMAL{ 0.0f, 0.0f, 0.0f };
+constexpr Vec4 DEFAULT_COLOUR{ 0.0f, 1.0f, 0.0f, 1.0f };
 
 constexpr float DEG_TO_RAD{0.01745329251994329576923690768489f};
 inline float radians(float degrees) { return degrees * DEG_TO_RAD; }

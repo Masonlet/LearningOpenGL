@@ -19,9 +19,9 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 #ifndef NDEBUG
   fprintf(stderr, "[SceneManager] Scene load start: %f\n", glfwGetTime());
 #endif
-  std::string scenepath = "assets/scenes/" + sceneIn + ".txt";
-  std::string src{};
 
+  const std::string scenepath = "assets/scenes/" + sceneIn + ".txt";
+  std::string src{};
   if (!loadFile(src, scenepath)) {
     fprintf(stderr, "[createSceneFromName ERROR] failed to load scene: %s\n", scenepath.c_str());
     return false;
@@ -29,26 +29,23 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 
   const unsigned char* p = reinterpret_cast<const unsigned char*>(src.c_str());
   while (*p) {
-    const unsigned char* lineStart = p;
     const unsigned char* lineEnd = skipToNextLine(p);
-    size_t lineLen = lineEnd - lineStart;
       
-    // Trim newline characters
-    while (lineLen > 0 && (lineStart[lineLen - 1] == '\n' || lineStart[lineLen - 1] == '\r'))
-      --lineLen;
+    while (lineEnd > p && (lineEnd[-1] == '\n' || lineEnd[-1] == '\r')) 
+      --lineEnd;
 
-    // Empty line
-    if (lineLen == 0) {
-      p = lineEnd;
+    if (lineEnd == p) {
+      p = skipToNextLine(p);
       continue;
     }   
 
-    if (!processSceneLine(lineStart, lineLen)) {
-      fprintf(stderr, "[SceneManager ERROR] Failed to process scene line: %.*s\n", (int)lineLen, lineStart);
+    if (!processSceneLine(p)) {
+      const int len = static_cast<int>(lineEnd - p);
+      fprintf(stderr, "[SceneManager ERROR] Failed to process scene line: %.*s\n", len, reinterpret_cast<const char*>(p));
       return false;
     }
 
-    p = reinterpret_cast<const unsigned char*>(lineEnd);
+    p = skipToNextLine(p);
   }
 
   scene.setSceneName(sceneIn);
@@ -64,23 +61,17 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 
     if (!cameraManager->addCamera(defaultCam)) 
       fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
-    else {
-#ifndef NDEBUG
-      fprintf(stderr, "[SceneManager DEBUG] No camera in scene, fallback camera added\n");
-#endif
-    }
   }
 #ifndef NDEBUG
   fprintf(stderr, "[SceneManager] Scene load finish: %f\n", glfwGetTime());
 #endif
   return true;
 }
-bool SceneManager::processSceneLine(const unsigned char* p, size_t lineLen) {
-  const unsigned char* linePtr = p;
-  if (*linePtr == '\0') return true;
+bool SceneManager::processSceneLine(const unsigned char* p) {
+  if (*p == '\0') return true;
 
   unsigned char name[64]{};
-  linePtr = parseToken(linePtr, name, sizeof(name));
+  const unsigned char* linePtr = parseToken(p, name, sizeof(name));
   const char* nameStr = reinterpret_cast<const char*>(name);
 
   if (!linePtr || strlen(nameStr) == 0) {
@@ -103,7 +94,7 @@ bool SceneManager::processSceneLine(const unsigned char* p, size_t lineLen) {
 }
 
 bool SceneManager::saveTxtScene() {
-  std::string scenePath = "../../../assets/scenes/" + scene.getSceneName() + ".txt";
+  const std::string scenePath = "../../../assets/scenes/" + scene.getSceneName() + ".txt";
   std::ofstream file(scenePath);
 
   if (!file.is_open()) {
@@ -111,29 +102,26 @@ bool SceneManager::saveTxtScene() {
     return false;
   }
 
-  file << std::fixed << std::setprecision(3);
-
-  file << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
+  file << std::fixed << std::setprecision(3)
+       << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
   const std::map<std::string, Camera>& cameras = cameraManager->getAllCameras();
   for (std::map<std::string, Camera>::const_iterator camIt = cameras.begin(); camIt != cameras.end(); ++camIt) {
     const std::string& name = camIt->first;
     const Camera& cam = camIt->second;
     const Vec3& pos = cam.getPos();
 
-    std::string camType = (cam.getType() == 0) ? "FreeCam" : 
-                          (cam.getType() == 1) ? "DungeonCam" :
-                          /*  .getType() == 2)*/ "ModernCam";
+    const std::string camType = (cam.getType() == 0) ? "FreeCam" : 
+                                (cam.getType() == 1) ? "DungeonCam" :
+                                /*  .getType() == 2)*/ "ModernCam";
     
     file << "camera, " << name << ", " << camType << ", "
-      << pos.x << " " << pos.y << " " << pos.z << ", "
-      << cam.getYaw() << " " << cam.getPitch() << ", "
-      << cam.getFov() << ", "
-      << cam.getNearPlane() << " " << cam.getFarPlane() << ", "
-      << cam.getMoveSpeed();
+         << pos.x << " " << pos.y << " " << pos.z << ", "
+         << cam.getYaw() << " " << cam.getPitch() << ", "
+         << cam.getFov() << ", "
+         << cam.getNearPlane() << " " << cam.getFarPlane() << ", "
+         << cam.getMoveSpeed();
 
-    if (cam.getType() != 0) 
-      file << ", " << cam.getMoveDistance();
-    
+    if (cam.getType() != 0) file << ", " << cam.getMoveDistance();
     file << '\n';
   }
 
@@ -144,10 +132,7 @@ bool SceneManager::saveTxtScene() {
     const std::string& name = entry.first;
     const ModelInstance& instance = entry.second;
 
-    if (name.rfind("triangle_instance", 0) == 0 ||
-      name.rfind("cube_instance_", 0) == 0 ||
-      name.rfind("square_instance_", 0) == 0 ||
-      name.rfind("maze_", 0) == 0) 
+    if (name.rfind("triangle_instance", 0) == 0 || name.rfind("cube_instance_", 0) == 0 || name.rfind("square_instance_", 0) == 0 || name.rfind("maze_", 0) == 0) 
       continue;
 
     std::map<std::string, const ModelDrawInfo*>::const_iterator mesh = meshes.find(instance.path);
@@ -157,10 +142,10 @@ bool SceneManager::saveTxtScene() {
     }
 
     file << "model, " << name << ", "
-      << instance.path << ", "
-      << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
-      << instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
-      << instance.scale.x << " " << instance.scale.y << " " << instance.scale.z << ", ";
+         << instance.path << ", "
+         << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
+         << instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
+         << instance.scale.x << " " << instance.scale.y << " " << instance.scale.z << ", ";
 
     switch (instance.colourMode) {
     case ColourMode::Solid: {
@@ -187,20 +172,19 @@ bool SceneManager::saveTxtScene() {
   file << "\ncomment, name, type, pos (xyz), diffuse (rgba), atten (xyzw), direction, param1 (spotlight inner, spotight outer), param2 (on/off)\n";
   for (int i = 0; i < LightManager::NUMBEROFLIGHTS; ++i) {
     const Light& light = lightManager->theLights[i];
-
     if (light.param2.x == 0.0f) continue;
-    //
-    std::string camType = (light.param1.x == 0) ? "Point" :
-                          (light.param1.x == 1) ? "Spot" :
-                          /*     param1.x == 2)*/ "Directional";
-    //
+    
+    const std::string camType = (light.param1.x == 0) ? "Point" :
+                                (light.param1.x == 1) ? "Spot" :
+                                /*     param1.x == 2)*/ "Directional";
+    
     file << "light, " << lightManager->getLightName(i) << ", " << camType << ", "
-      << light.position.x << " " << light.position.y << " " << light.position.z << ", "
-      << light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
-      << light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
-      << light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
-      << light.param1.y << " " << light.param1.z << " " << light.param1.w << ", "
-      << light.param2.x << " " << light.param2.y << " " << light.param2.z << " " << light.param2.w << "\n";
+         << light.position.x << " " << light.position.y << " " << light.position.z << ", "
+         << light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
+         << light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
+         << light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
+         << light.param1.y << " " << light.param1.z << " " << light.param1.w << ", "
+         << light.param2.x << " " << light.param2.y << " " << light.param2.z << " " << light.param2.w << "\n";
   }
 
   return true;
@@ -277,9 +261,7 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
   cam.setPos(cameraData.position);
   cam.setMoveSpeed(cameraData.speed);
 	cam.setType(cameraData.type);
-  if (cam.getType() != 0) {
-    cam.setMoveDistance(cameraData.moveDistance);
-  }
+  if (cam.getType() != 0) cam.setMoveDistance(cameraData.moveDistance);
 
   if (!cameraManager->addCamera(cam)) {
     fprintf(stderr, "[SceneManager ERROR] Could not add camera\n");

@@ -4,6 +4,8 @@
 #include "utils/primitives.hpp"
 #include "core/meshLoader.hpp"
 
+#include <cmath>
+
 static Vec3 calculateGridPosition(const int index, const int gridSize, const Vec2& spacing, bool zUp = false) {
 	int row = index / gridSize;
 	int col = index % gridSize;

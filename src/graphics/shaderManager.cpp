@@ -6,17 +6,12 @@
 #include <sstream>
 
 std::string ShaderManager::Shader::getType() {
-	switch (this->type)
-	{
+	switch (this->type) {
 	case Shader::VERTEX_SHADER:
 		return "VERTEX_SHADER";
-		break;
 	case Shader::FRAGMENT_SHADER:
 		return "FRAGMENT_SHADER";
-		break;
-	case Shader::UNKNOWN:
 	default:
-		return "UNKNOWN_SHADER_TYPE";
 		break;
 	}
 
@@ -24,43 +19,29 @@ std::string ShaderManager::Shader::getType() {
 }
 
 bool ShaderManager::useShaderProgram(unsigned int ID) {
-	//Add lookup to see if we really have that ID
-	glUseProgram(ID);
+	glUseProgram(ID); 
 	return true;
 }
 bool ShaderManager::useShaderProgram(std::string friendlyName) {
 	std::map<std::string, unsigned int>::iterator itShad = this->name_to_id.find(friendlyName);
+	if (itShad == this->name_to_id.end()) return false;
 
-	if (itShad == this->name_to_id.end()) {
-		//Possibly set glUseProgram(0)..?
-		return false;
-	}
 	glUseProgram(itShad->second);
-
 	return true;
 }
 
 int ShaderManager::getIDFromFriendlyName(std::string friendlyName) {
 	std::map<std::string, unsigned int>::iterator itShad = this->name_to_id.find(friendlyName);
-
-	if (itShad == this->name_to_id.end()) {
-		return 0;
-	}
+	if (itShad == this->name_to_id.end())	return 0;
 
 	return itShad->second;
 }
 
 ShaderManager::ShaderProgram* ShaderManager::getShaderProgramFromFriendlyName(std::string friendlyName) {
-	unsigned int shaderID = this->getIDFromFriendlyName(friendlyName);
+	std::map<unsigned int, ShaderProgram>::iterator itShad = this->id_to_shader.find(this->getIDFromFriendlyName(friendlyName));
+	if (itShad == this->id_to_shader.end())	return nullptr;
 
-	std::map<unsigned int, ShaderProgram>::iterator itShad = this->id_to_shader.find(shaderID);
-
-	if (itShad == this->id_to_shader.end()) {
-		return nullptr;
-	}
-
-	ShaderProgram* shader = &(itShad->second);
-	return shader;
+	return &(itShad->second);
 }
 
 const unsigned int MAXLINELENGTH = 65536; //16x1024
@@ -72,7 +53,6 @@ bool ShaderManager::loadSourceFromFile(Shader& shader) const {
 	std::string path = this->basePath + shader.fileName;
   
 	std::string src{};
-	//fprintf(stderr, "[DEBUG] Trying to load shader from: %s\n", path.c_str());
 	if (!loadFile(src, path)) {
 		fprintf(stderr, "[loadSourceFromFile ERROR] Failed to load file: %s\n", path.c_str());
 		return false;
@@ -82,10 +62,7 @@ bool ShaderManager::loadSourceFromFile(Shader& shader) const {
 	std::istringstream iss(src);
 	std::string line;
 
-	while (std::getline(iss, line)) {
-		shader.vecSource.push_back(line);
-	}
-
+	while (std::getline(iss, line)) shader.vecSource.push_back(line);
 	return true;
 }
 
@@ -99,23 +76,19 @@ bool ShaderManager::wasThereACompileError(unsigned int shaderID, std::string& er
 		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &maxLength);
 
 		char* pLogText = new char[maxLength];
-		// Fill with zeros, maybe...?
 		glGetShaderInfoLog(shaderID, maxLength, &maxLength, pLogText);
-		// Copy char array to string
 		errorText.append(pLogText);
-
-		// Extra code that Michael forgot wasn't there... 
 		this->lastError.append("\n");
 		this->lastError.append( errorText );
 
-		delete [] pLogText;	// Oops
-		return true;	// There WAS an error
+		delete [] pLogText;	
+		return true;	
 	}
 
-	return false; // There WASN'T an error
+	return false; 
 }
 bool ShaderManager::wasThereALinkError(unsigned int programID, std::string& errorText) {
-	errorText = "";	// No error
+	errorText = "";	
 
 	int wasError = 0;
 	glGetProgramiv(programID, GL_LINK_STATUS, &wasError);
@@ -124,20 +97,16 @@ bool ShaderManager::wasThereALinkError(unsigned int programID, std::string& erro
 		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
 
 		char* pLogText = new char[maxLength];
-		// Fill with zeros, maybe...?
 		glGetProgramInfoLog(programID, maxLength, &maxLength, pLogText);
-		// Copy char array to string
 		errorText.append(pLogText);
-
-		// Extra code that Michael forgot wasn't there... 
 		this->lastError.append("\n");
 		this->lastError.append( errorText );
 
 		delete [] pLogText;	
-		return true; // There WAS an error
+		return true;
 	}
 	
-	return false; // There WASN'T an error
+	return false;
 }
 
 std::string ShaderManager::getLastError() {
@@ -148,27 +117,20 @@ std::string ShaderManager::getLastError() {
 
 bool ShaderManager::compileShaderFromSource(ShaderManager::Shader& shader, std::string& error) {
 	error = "";
-
 	const unsigned int MAXLINESIZE = 8 * 1024;	// About 8K PER LINE, which seems excessive
 	unsigned int numberOfLines = static_cast<unsigned int>(shader.vecSource.size());
 
-	// This is an array of pointers to strings. aka the lines of source
 	char** arraySource = new char*[numberOfLines];
-	// Clear array to all zeros (i.e. '\0' or null terminator)
 	memset( arraySource, 0, numberOfLines );	
 
 	for (unsigned int indexLine = 0; indexLine != numberOfLines; indexLine++) {
 		unsigned int numCharacters = (unsigned int)shader.vecSource[indexLine].length();
-		// Create an array of chars for each line
 		arraySource[indexLine] = new char[numCharacters + 2]; // For the '\n' and '\0' at end
 		memset(arraySource[indexLine], 0, static_cast<size_t>(numCharacters + 2));
 
-		// Copy line of source into array
-		for (unsigned int indexChar = 0; indexChar != shader.vecSource[indexLine].length(); indexChar++) {
+		for (unsigned int indexChar = 0; indexChar != shader.vecSource[indexLine].length(); indexChar++) 
 			arraySource[indexLine][indexChar] = shader.vecSource[indexLine][indexChar];
-		}
 
-		// At a '\0' at end (just in case)
 		arraySource[indexLine][numCharacters + 0] = '\n';
 		arraySource[indexLine][numCharacters + 1] = '\0';
 	}
@@ -176,14 +138,10 @@ bool ShaderManager::compileShaderFromSource(ShaderManager::Shader& shader, std::
 	glShaderSource(shader.ID, numberOfLines, arraySource, NULL);
 	glCompileShader(shader.ID);
 
-	// Get rid of the temp source "c" style array
-	for (unsigned int indexLine = 0; indexLine != numberOfLines; indexLine++) {	// Delete this line
+	for (unsigned int indexLine = 0; indexLine != numberOfLines; indexLine++) 
 		delete[] arraySource[indexLine];
-	}
-	// And delete the original char** array
 	delete[] arraySource;
 
-	// Did it work? 
 	std::string errorText = "";
 	if (this->wasThereACompileError(shader.ID, errorText)) {
 		std::stringstream ssError;
@@ -199,42 +157,31 @@ bool ShaderManager::compileShaderFromSource(ShaderManager::Shader& shader, std::
 
 bool ShaderManager::createProgramFromFile(std::string friendlyName, Shader & vertexShader, Shader & fragShader) {
 	std::string errorText = "";
-
-	// Shader loading happening before vertex buffer array
 	vertexShader.ID = glCreateShader(GL_VERTEX_SHADER);
 	vertexShader.type = Shader::VERTEX_SHADER;
-	
-	// Load some text from a file...
-	if ( ! this->loadSourceFromFile( vertexShader ) )
-		return false;
-
-	errorText = "";
-	if ( ! this->compileShaderFromSource( vertexShader, errorText ) ){
+	if (!this->loadSourceFromFile(vertexShader)) return false;
+	if (!this->compileShaderFromSource(vertexShader, errorText)) {
 		this->lastError = errorText;
 		return false;
 	}
 
-
-    fragShader.ID = glCreateShader(GL_FRAGMENT_SHADER);
+	errorText = "";
+  fragShader.ID = glCreateShader(GL_FRAGMENT_SHADER);
 	fragShader.type = Shader::FRAGMENT_SHADER;
-	if ( ! this->loadSourceFromFile( fragShader ) )
-		return false;
-
-	if ( ! this->compileShaderFromSource( fragShader, errorText ) ){
+	if (!this->loadSourceFromFile(fragShader)) return false;
+	if (!this->compileShaderFromSource(fragShader, errorText)){
 		this->lastError = errorText;
 		return false;
 	}
 
 	ShaderProgram curProgram;
-    curProgram.ID = glCreateProgram();
+  curProgram.ID = glCreateProgram();
+  glAttachShader(curProgram.ID, vertexShader.ID);
+  glAttachShader(curProgram.ID, fragShader.ID);
+  glLinkProgram(curProgram.ID);
 
-    glAttachShader(curProgram.ID, vertexShader.ID);
-    glAttachShader(curProgram.ID, fragShader.ID);
-    glLinkProgram(curProgram.ID);
-
-	// Was there a link error? 
 	errorText = "";
-	if ( this->wasThereALinkError( curProgram.ID, errorText ) ){
+	if (this->wasThereALinkError(curProgram.ID, errorText)) {
 		std::stringstream ssError;
 		ssError << "Shader program link error: ";
 		ssError << errorText;
@@ -242,13 +189,8 @@ bool ShaderManager::createProgramFromFile(std::string friendlyName, Shader & ver
 		return false;
 	}
 
-	// At this point, shaders are compiled and linked into a program
 	curProgram.friendlyName = friendlyName;
-
-	// Add the shader to the map
 	this->id_to_shader[curProgram.ID] = curProgram;
-	// Save to other map, too
 	this->name_to_id[curProgram.friendlyName] = curProgram.ID;
-
 	return true;
 }

@@ -2,8 +2,8 @@
 #include "utils/parser.hpp"
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
-  PARSE_STRING_OR_FAIL(p, out.name, 64, "model name");
-  PARSE_STRING_OR_FAIL(p, out.path, 128, "parse path");
+  PARSE_STRING_OR_NULL(p, out.name, 64, "model name");
+  PARSE_STRING_OR_NULL(p, out.path, 128, "parse path");
   PARSE_OR_FAIL(parseVec3, out.position, "parse position");
   PARSE_OR_FAIL(parseVec3, out.rotation, "parse rotation");
   PARSE_OR_FAIL(parseVec3, out.scale, "parse scale");
@@ -12,7 +12,7 @@ const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
   return p;
 }
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
-  PARSE_STRING_OR_FAIL(p, out.name, 64, "light name");
+  PARSE_STRING_OR_NULL(p, out.name, 64, "light name");
   p = parseLightType(p, out.param1Type);
   PARSE_OR_FAIL(parseVec3, out.position, "light position");
   PARSE_OR_FAIL(parseVec4, out.diffuse, "light diffuse");
@@ -23,7 +23,7 @@ const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   return p;
 }
 const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
-	PARSE_STRING_OR_FAIL(p, out.name, 64, "camera name");
+	PARSE_STRING_OR_NULL(p, out.name, 64, "camera name");
   p = parseCameraType(p, out.type);
   PARSE_OR_FAIL(parseVec3, out.position, "camera position");
   PARSE_OR_FAIL(parseFloat, out.yaw, "camera yaw");
@@ -37,7 +37,7 @@ const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
 }
 
 const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) {
-  PARSE_STRING_OR_FAIL(p, out.name, 64, "triangle name");
+  PARSE_STRING_OR_NULL(p, out.name, 64, "triangle name");
 
   Vec3 temp;
   PARSE_OR_FAIL(parseVec3, temp, "triangle position");
@@ -62,30 +62,30 @@ const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out) {
 
 const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   out.layout.clear();
-  PARSE_STRING_OR_FAIL(p, out.mazeName, 64, "maze name");
+  PARSE_STRING_OR_NULL(p, out.mazeName, 64, "maze name");
   PARSE_OR_FAIL(parseFloat, out.spacing, "maze spacing");
   PARSE_OR_FAIL(parseVec3, out.pos, "maze position");
   PARSE_OR_FAIL(parseVec3, out.rot, "maze rotation");
   PARSE_OR_FAIL(parseUInt, out.wallHeight, "maze wall height");
   PARSE_OR_FAIL(parseBool, out.hasRoof, "maze ceiling flag");
-  PARSE_STRING_OR_FAIL(p, out.floorType1, 64, "floor mesh 1");
-  PARSE_STRING_OR_FAIL(p, out.floorType2, 64, "floor mesh 2");
-  PARSE_STRING_OR_FAIL(p, out.floorType3, 64, "floor mesh 3");
-  PARSE_STRING_OR_FAIL(p, out.floorType4, 64, "floor mesh 4");
-  PARSE_STRING_OR_FAIL(p, out.floorType5, 64, "floor mesh 5");
-  PARSE_STRING_OR_FAIL(p, out.floorType6, 64, "floor mesh 6");
-  PARSE_STRING_OR_FAIL(p, out.floorWallType, 64, "floor wall mesh");
-  PARSE_STRING_OR_FAIL(p, out.wallType1, 64, "wall mesh 1");
-  PARSE_STRING_OR_FAIL(p, out.wallType2, 64, "wall mesh 2");
-  PARSE_STRING_OR_FAIL(p, out.wallType3, 64, "wall mesh 3");
-  PARSE_STRING_OR_FAIL(p, out.wallType4, 64, "wall mesh 4");
-  PARSE_STRING_OR_FAIL(p, out.wallType5, 64, "wall mesh 5");
-  PARSE_STRING_OR_FAIL(p, out.wallType6, 64, "wall mesh 6");
-  PARSE_STRING_OR_FAIL(p, out.entranceType, 64, "entrance mesh");
-  PARSE_STRING_OR_FAIL(p, out.exitType, 64, "exit mesh");
-  PARSE_STRING_OR_FAIL(p, out.exteriorWallType, 64, "exterior wall mesh");
+  PARSE_STRING_OR_NULL(p, out.floorType1, 64, "floor mesh 1");
+  PARSE_STRING_OR_NULL(p, out.floorType2, 64, "floor mesh 2");
+  PARSE_STRING_OR_NULL(p, out.floorType3, 64, "floor mesh 3");
+  PARSE_STRING_OR_NULL(p, out.floorType4, 64, "floor mesh 4");
+  PARSE_STRING_OR_NULL(p, out.floorType5, 64, "floor mesh 5");
+  PARSE_STRING_OR_NULL(p, out.floorType6, 64, "floor mesh 6");
+  PARSE_STRING_OR_NULL(p, out.floorWallType, 64, "floor wall mesh");
+  PARSE_STRING_OR_NULL(p, out.wallType1, 64, "wall mesh 1");
+  PARSE_STRING_OR_NULL(p, out.wallType2, 64, "wall mesh 2");
+  PARSE_STRING_OR_NULL(p, out.wallType3, 64, "wall mesh 3");
+  PARSE_STRING_OR_NULL(p, out.wallType4, 64, "wall mesh 4");
+  PARSE_STRING_OR_NULL(p, out.wallType5, 64, "wall mesh 5");
+  PARSE_STRING_OR_NULL(p, out.wallType6, 64, "wall mesh 6");
+  PARSE_STRING_OR_NULL(p, out.entranceType, 64, "entrance mesh");
+  PARSE_STRING_OR_NULL(p, out.exitType, 64, "exit mesh");
+  PARSE_STRING_OR_NULL(p, out.exteriorWallType, 64, "exterior wall mesh");
   PARSE_OR_FAIL(parseFloat, out.wallRot, "maze wall rotation");
-  PARSE_STRING_OR_FAIL(p, out.layoutName, 64, "layout name");
+  PARSE_STRING_OR_NULL(p, out.layoutName, 64, "layout name");
   return p;
 }
 static bool parseMazeLayoutRow(const std::string& line, std::vector<bool>& outRow) {

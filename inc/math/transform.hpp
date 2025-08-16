@@ -4,9 +4,9 @@
 #include "math/vec4.hpp"
 
 struct Transform {
-	Vec4 position{0.0f, 0.0f, 0.0f, 0.0f};
-	Vec3 rotation{0.0f, 0.0f, 0.0f};
-	Vec3 scale{10.0f, 10.0f, 10.0f};
+	Vec4 position{0.0f};
+	Vec3 rotation{0.0f};
+	Vec3 scale{10.0f};
 
 	inline void move(const Vec4& pos) { position += pos; }
 

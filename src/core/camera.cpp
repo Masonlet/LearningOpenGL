@@ -1,8 +1,11 @@
 #include "core/camera.hpp"
 #include "math/constants.hpp"
 
+#include <cmath>
+
 Camera::Camera() :
-  moveSpeed{ MOVE_SPEED }, mouseSpeed{ CAMERA_SPEED }, 
+  type{ 0 },
+  moveSpeed{ MOVE_SPEED }, mouseSpeed{ CAMERA_SPEED }, moveDistance{ 0 },
   pos{ INITIAL_POS }, front{ INITIAL_TARGET }, up{ WORLD_UP }, 
   yaw{ DEFAULT_YAW }, pitch{ DEFAULT_PITCH }, 
   lastX{ 0 }, lastY{ 0 }, 
@@ -136,21 +139,17 @@ void Camera::processKeyboard(InputManager* input, const float deltaTime) {
 }
 
 void Camera::processMouse(InputManager* input) {
-  if (!input->IsCursorLocked())
-    return;
+  if (!input->IsCursorLocked()) return;
 
   Vec2 delta = input->GetMouseDelta();
-
   float xoffset = delta.x * mouseSpeed;
   float yoffset = delta.y * mouseSpeed;
 
   yaw += xoffset;
   pitch += yoffset;
 
-  if (pitch > 89.0f)
-    pitch = 89.0f;
-  if (pitch < -89.0f)
-    pitch = -89.0f;
+  if (pitch > 89.0f) pitch = 89.0f;
+  if (pitch < -89.0f) pitch = -89.0f;
 
   front.x = cos(radians(yaw)) * cos(radians(pitch));
   front.y = sin(radians(pitch));
@@ -158,9 +157,7 @@ void Camera::processMouse(InputManager* input) {
   front = front.normalized();
 
   Vec3 right = front.cross(WORLD_UP).normalized();
-  if (right.length() < 1e-6f)
-    right = { 1.0f, 0.0f, 0.0f };
-
+  if (right.length() < 1e-6f) right = { 1.0f, 0.0f, 0.0f };
   up = right.cross(front).normalized();
 }
 

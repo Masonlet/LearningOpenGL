@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/engine.hpp"
+#define GLFW_INCLUDE_NONE 
+#include <GLFW/glfw3.h>
 
 void error_callback(const int error, const char* description);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);

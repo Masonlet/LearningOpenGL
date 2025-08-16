@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math/vec3.hpp"
+struct Vec3;
 
 /*
 Vec4
@@ -16,8 +16,8 @@ struct Vec4 {
 	constexpr Vec4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 	constexpr Vec4(const Vec4& b) { x = b.x, y = b.y, z = b.z, w = b.w; };
 	constexpr Vec4(float f) : x(f), y(f), z(f), w(f) {}
-	constexpr Vec4(const Vec3& v, float wIn) : x(v.x), y(v.y), z(v.z), w(wIn) {}
-	constexpr Vec4(unsigned int x, const Vec3& v) : x(x), y(v.x), z(v.y), w(v.z) {}
+	Vec4(const Vec3& v, float wIn);
+	Vec4(unsigned int x, const Vec3& v);
 	constexpr Vec4(float xIn, float yIn, float zIn, float wIn) { x = xIn, y = yIn, z = zIn, w = wIn; }
 	
 	float length() const;

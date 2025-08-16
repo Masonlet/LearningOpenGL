@@ -1,6 +1,7 @@
 #include <glad/glad.h> 
 
 #include "core/callbacks.hpp"
+#include "core/engine.hpp"
 
 #include <stdio.h>
 
@@ -31,11 +32,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if(key == GLFW_KEY_L){
 			if (!engine->getSceneManager().saveTxtScene())
 				fprintf(stderr, "[KEY_CALLBACK] Failed to save scene\n");
-			else {
-#ifndef _DEBUG
+			else 
 				printf("[KEY_CALLBACK] Scene saved successfully!\n");
-#endif
-			}
     }
 
 		if (key == GLFW_KEY_N) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/camera.hpp"
+#include <map>
 
 class CameraManager {
 public:

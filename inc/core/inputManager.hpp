@@ -1,9 +1,7 @@
 #pragma once 
 
 #include <GLFW/glfw3.h>
-
 #include "math/vec2.hpp"
-#include <unordered_map>
 
 class InputManager {
 public:

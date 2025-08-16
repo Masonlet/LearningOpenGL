@@ -30,7 +30,7 @@ void Renderer::setProgram(unsigned int program) {
 	modelSpecularLocation = glGetUniformLocation(program, "vertSpecular");
 }
 
-void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) {
+void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const {
   glUniform3f(glGetUniformLocation(program, "eyeLocation"), eye.x, eye.y, eye.z);
   glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, view.ptr());
   glUniformMatrix4fv(modelProjectionLocation, 1, GL_FALSE, projection.ptr());
@@ -51,19 +51,14 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 	if (instance.colourMode == ColourMode::Solid) {
 		glUniform1f(useOverrideColourLocation, 1.0f);
 		glUniform4fv(colourOverrideLocation, 1, &instance.colour.x);
-	} else {
-		glUniform1f(useOverrideColourLocation, 0.0f);
-	}
+	} 
+	else glUniform1f(useOverrideColourLocation, 0.0f);
 
-	if (instance.colour.w < 1.0f)
-		glDepthMask(GL_FALSE);
-
+	if (instance.colour.w < 1.0f)	glDepthMask(GL_FALSE);
 	glBindVertexArray(info->VAO_ID);
 	glDrawElements(GL_TRIANGLES, info->numIndices, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
-
-	if (instance.colour.w < 1.0f)
-		glDepthMask(GL_TRUE);
+	if (instance.colour.w < 1.0f) glDepthMask(GL_TRUE);
 
 	return true;
 }

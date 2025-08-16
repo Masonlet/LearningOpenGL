@@ -26,7 +26,7 @@ private:
 
   std::optional<ParsedMaze> pendingMaze;
 
-  bool processSceneLine(const unsigned char* p, size_t lineLen);
+  bool processSceneLine(const unsigned char* p);
 
   bool handleSquareGridLine(const unsigned char* p);
   bool handleCubeGridLine(const unsigned char* p);

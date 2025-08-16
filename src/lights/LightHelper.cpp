@@ -17,26 +17,20 @@ float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accurac
 		LightHelper::DEFAULTINFINITEDISTANCE, LightHelper::DEFAULTMAXITERATIONS);
 }
 
-float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accuracy,
-	float infiniteDistance,
-	float constAttenuation, float linearAttenuation, float quadraticAttenuation,
-	unsigned int maxIterations /*= DEFAULTMAXITERATIONS = 50*/) {
+float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accuracy, float infiniteDistance,
+	float constAttenuation, float linearAttenuation, float quadraticAttenuation, unsigned int maxIterations) {
 	// See if the accuracy being set it too big for the targetLightLevel, unless targetLightLevel is actually zero (0.0f)
 	// If it's actually zero, then adjusting the accuracy to a tenth of zero would give zero, and we would max out the iterations
 	if (targetLightLevel != 0.0f) 
-		// Adjust the accuracy by a hundredth
-		if ((accuracy * 10.0f) >= targetLightLevel * 10.0f)	
-			accuracy = targetLightLevel / 10.0f;
+		if ((accuracy * 10.0f) >= targetLightLevel * 10.0f)	accuracy = targetLightLevel / 10.0f;
 
 	float targetLightLevelLow = targetLightLevel - accuracy;
 	float targetLightLevelHigh = targetLightLevel + accuracy;
 
 	// See if we're getting a value at infinite. i.e. at 'infinite distance', is the light level too high already
 	if (this->calcDiffuseFromAttenByDistance(LightHelper::DEFAULTINFINITEDISTANCE, constAttenuation, linearAttenuation, quadraticAttenuation, accuracy) > targetLightLevelHigh) 	
-		// Yes, so we can never get down to this light level
 		return LightHelper::DEFAULTINFINITEDISTANCE;
 
-	// There is a light level somewhere between a distance of 0.0 to DEFAULTINFINITEDISTANCE
 	float distanceGuessLow = 0.0f;
 	float distanceGuessHigh = LightHelper::DEFAULTINFINITEDISTANCE;
 
@@ -47,15 +41,10 @@ float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accurac
 
 		// Could be three possibilities: too low, too high, or in between
 		float curDiffuseAtGuessDistance = this->calcDiffuseFromAttenByDistance(curDistanceGuess, constAttenuation, linearAttenuation, quadraticAttenuation, DEFAULTZEROTHRESHOLD);
-		if (curDiffuseAtGuessDistance < targetLightLevelLow) // Light is too dark, so distance is to HIGH. Reduce and guess again.
-			distanceGuessHigh = curDistanceGuess;	// Lower the high limit for the guesses
-		
-		else if (curDiffuseAtGuessDistance > targetLightLevelHigh) // Light is too bright, so distance is to LOW. Increase and guess again
-			distanceGuessLow = curDistanceGuess;
+		if (curDiffuseAtGuessDistance < targetLightLevelLow) distanceGuessHigh = curDistanceGuess; // Light is too dark, so distance is to HIGH.
+		else if (curDiffuseAtGuessDistance > targetLightLevelHigh) distanceGuessLow = curDistanceGuess; // Light is too bright, so distance is to LOW.
+		else return curDistanceGuess;
 
-		else // Light level is within range, so return this distance
-			return curDistanceGuess;
-		
 		iterationCount++;
 	}
 
@@ -69,16 +58,14 @@ float LightHelper::calcDiffuseFromAttenByDistance(
 	float distance,
 	float constAttenuation, float linearAttenuation, float quadraticAttenuation,
 	float zeroThreshold /*= DEFAULTZEROTHRESHOLD*/) {
-	float diffuse = 1.0f;		// Assume full brightness
+	float diffuse = 1.0f;	// Assume full brightness
 	float denominator = constAttenuation + linearAttenuation * distance + quadraticAttenuation * distance * distance;
 
-	if (denominator <= zeroThreshold) 
-		diffuse = 1.0f;
+	if (denominator <= zeroThreshold) diffuse = 1.0f;
   else {
 		float atten = 1.0f / denominator;
 		diffuse *= atten;
-		if (diffuse > 1.0f)
-			diffuse = 1.0f;
+		if (diffuse > 1.0f) diffuse = 1.0f;
 	} 
 	return diffuse;
 }

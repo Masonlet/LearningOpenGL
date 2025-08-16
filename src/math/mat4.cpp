@@ -17,19 +17,18 @@ Mat4 Mat4::identity() {
 
 Mat4 Mat4::modelMatrix(const Transform& t) {
   return Mat4::translation(t.position) *
-  Mat4::rotateX(t.rotation.x) *
-  Mat4::rotateY(t.rotation.y) *
-  Mat4::rotateZ(t.rotation.z) * 
-  Mat4::scale(t.scale);
+         Mat4::rotateX(t.rotation.x) *
+         Mat4::rotateY(t.rotation.y) *
+         Mat4::rotateZ(t.rotation.z) * 
+         Mat4::scale(t.scale);
 }
 
 Mat4 Mat4::transpose() const {
 	Mat4 result;
-	for (int row = 0; row < 4; ++row) {
-		for (int col = 0; col < 4; ++col) {
+	for (int row = 0; row < 4; ++row) 
+		for (int col = 0; col < 4; ++col) 
 			result.data[col * 4 + row] = data[row * 4 + col];
-		}
-	}
+		
 	return result;
 }
 Mat4 Mat4::inverse() const {
@@ -150,15 +149,10 @@ Mat4 Mat4::inverse() const {
         m[8] * m[2] * m[5];
 
     float det = m[0] * inv.data[0] + m[1] * inv.data[4] + m[2] * inv.data[8] + m[3] * inv.data[12];
+    if (det == 0) return Mat4::identity();
+    else det = 1.0 / det;
 
-    if (det == 0)
-        return Mat4::identity();
-
-    det = 1.0 / det;
-
-    for (int i = 0; i < 16; ++i)
-        inv.data[i] *= det;
-
+    for (int i = 0; i < 16; ++i) inv.data[i] *= det;
     return inv;
 }
 
@@ -297,10 +291,12 @@ Mat4 Mat4::operator*(const Mat4& b) const {
 }
 Vec4 Mat4::operator*(const Vec4& v) const {
   Vec4 result;
+
   result.x = data[0] * v.x + data[4] * v.y + data[8] * v.z + data[12] * v.w;
   result.y = data[1] * v.x + data[5] * v.y + data[9] * v.z + data[13] * v.w;
   result.z = data[2] * v.x + data[6] * v.y + data[10] * v.z + data[14] * v.w;
   result.w = data[3] * v.x + data[7] * v.y + data[11] * v.z + data[15] * v.w;
+
   return result;
 }
 
@@ -312,6 +308,7 @@ bool Mat4::operator==(const Mat4& b) const {
   for (int i = 0; i < 16; ++i)
     if (data[i] != b.data[i])
       return false;
+
   return true;
 }
 

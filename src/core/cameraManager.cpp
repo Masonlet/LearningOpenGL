@@ -13,9 +13,7 @@ bool CameraManager::addCamera(const Camera& camera) {
 	}
 
 	cameras[name] = camera;
-
 	if (cameras.size() == 1) activeCameraName = name;
-
 	return true;
 }
 
@@ -31,9 +29,7 @@ void CameraManager::setActiveCamera(unsigned int index) {
 }
 Camera* CameraManager::getActiveCamera() {
 	std::map<std::string, Camera>::iterator it = cameras.find(activeCameraName);
-	if (it != cameras.end()) {
-		return &(it->second);
-	}
+	if (it != cameras.end()) return &(it->second);
 	return nullptr;
 }
 int CameraManager::getCameraCount() {
