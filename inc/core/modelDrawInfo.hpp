@@ -1,7 +1,6 @@
 #pragma once
 
 #include "math/Vec4.hpp"
-#include "math/mat4.hpp"
 #include "math/vertex.hpp"
 #include "core/colour.hpp"
 #include <string>
@@ -13,6 +12,17 @@ ModelDrawInfo
 * Its also storing the information we need to tell the GPU which model we want to draw.
 */
 struct ModelDrawInfo {
+	std::string meshPath;
+
+	unsigned int VAOID, VertexBufferID, IndexBufferID;
+	unsigned int VertexBuffer_Start_Index, IndexBuffer_Start_Index;
+	unsigned int numVertices, numIndices, numTriangles;
+
+	Vertex*       vertices;
+	unsigned int* indices;
+
+	bool hasNormals, hasColours;
+
 	ModelDrawInfo();
 	~ModelDrawInfo();
 
@@ -21,21 +31,4 @@ struct ModelDrawInfo {
 
 	ModelDrawInfo(ModelDrawInfo&& other) noexcept;
 	ModelDrawInfo& operator=(ModelDrawInfo&& other) noexcept;
-
-	std::string meshPath;
-
-	unsigned int VAO_ID;
-
-	unsigned int VertexBufferID, IndexBufferID;
-	unsigned int VertexBuffer_Start_Index, IndexBuffer_Start_Index;
-	unsigned int numVertices, numIndices, numTriangles;
-
-	Vertex* vertices;
-	unsigned int* indices;
-	Vec4 colour;
-
-	bool hasNormals, hasColours;
-
-	ColourMode colourMode;
-	Mat4 modelMatrix;
 };

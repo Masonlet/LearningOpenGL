@@ -25,8 +25,10 @@ private:
 	VAOManager* vaoManager;
 
 	unsigned int program;
+	bool modelIsVisible;
 	int modelLocation, modelViewLocation, modelProjectionLocation;
 	int modelInverseTransposeLocation;
-	int colourOverrideLocation, useOverrideColourLocation;
 	int modelSpecularLocation;
+	bool useVertexColour;
+	int colourOverrideLocation, useOverrideColourLocation;
 };

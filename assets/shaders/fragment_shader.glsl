@@ -17,13 +17,26 @@ struct Light {
 uniform Light theLights[NUMBEROFLIGHTS];
 uniform vec3 eyeLocation;
 uniform vec4 vertSpecular;
+uniform vec3 ambientRGB;
+
+uniform bool bUseVertexColour; 
+uniform bool bIsVisible;
+
+// Textures (Can have up to 32+ of these, not the "total number of textures", max texture PER pixelColour
+uniform sampler2D textSampler2D_00;
+uniform sampler2D textSampler2D_01;
+uniform sampler2D textSampler2D_02;
+uniform sampler2D textSampler2D_03;
+
+uniform vec4 texMixRatios;
 
 in vec4 vertColor;
 in vec4 vertNormal;
 in vec4 vertWorldPosition;
+in vec4 vertTextCoords;
 
 out vec4 pixelColour;
-		
+
 vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular) {
 	vec3 light = vec3(0.0);
 	vec3 n = normalize(vertexNormal);
@@ -99,6 +112,24 @@ vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 ve
 }
 
 void main() {
-	vec4 lightContrib = calculateLightContrib(vertColor, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
-	pixelColour = vec4(lightContrib.rgb, vertColor.a);
+	vec4 finalTextRGBA = vertColor;
+	if(!bUseVertexColour){
+		vec4 tex00RGBA = texture( textSampler2D_00, vertTextCoords.xy );
+		vec4 tex01RGBA = texture( textSampler2D_01, vertTextCoords.xy );
+		vec4 tex02RGBA = texture( textSampler2D_02, vertTextCoords.xy );
+		vec4 tex03RGBA = texture( textSampler2D_03, vertTextCoords.xy );
+
+		finalTextRGBA =   tex00RGBA * texMixRatios.x
+						+ tex01RGBA * texMixRatios.y
+						+ tex02RGBA * texMixRatios.z
+						+ tex03RGBA * texMixRatios.w;
+	}
+
+	if(!bIsVisible){
+		pixelColour = finalTextRGBA;
+		return;
+	}
+
+	vec4 lightContrib = calculateLightContrib(finalTextRGBA, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
+	pixelColour = vec4(lightContrib.rgb + ambientRGB, finalTextRGBA.a);
 };

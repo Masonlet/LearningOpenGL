@@ -11,10 +11,12 @@ uniform vec4 colourOverride;
 in vec4 vCol;
 in vec4 vPos;
 in vec4 vNorm;
+in vec2 vTextCoords;
 
 out vec4 vertColor;
 out vec4 vertNormal;
 out vec4 vertWorldPosition;
+out vec2 vertTextCoords;
 
 void main() {
     gl_Position = (mProj * mView * mModel) * vec4(vPos.xyz, 1.0f);
@@ -22,6 +24,7 @@ void main() {
 	vertWorldPosition = mModel * vec4(vPos.xyz, 1.0f);
 	vertNormal        = mModel_InverseTranpose * vec4(vNorm.xyz, 0.0f);
 	vertNormal.xyz    = normalize(vertNormal.xyz);
+	vertTextCoords = vTextCoords;
 
 	if (bUseOverrideColour) vertColor = colourOverride;
 	else                    vertColor = vCol;

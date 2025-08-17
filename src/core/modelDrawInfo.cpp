@@ -2,7 +2,7 @@
 #include "math/constants.hpp"
 
 ModelDrawInfo::ModelDrawInfo() {
-  this->VAO_ID = 0;
+  this->VAOID = 0;
 
   this->VertexBufferID = 0;
   this->VertexBuffer_Start_Index = 0;
@@ -16,13 +16,8 @@ ModelDrawInfo::ModelDrawInfo() {
   this->vertices = nullptr;
   this->indices = nullptr;
 
-  this->colour = DEFAULT_COLOUR;
-
   this->hasNormals = false;
   this->hasColours = false;
-
-  this->modelMatrix = Mat4::identity();
-  this->colourMode = ColourMode::Solid;
 }
 ModelDrawInfo::~ModelDrawInfo() {
   if (vertices) {
@@ -36,7 +31,7 @@ ModelDrawInfo::~ModelDrawInfo() {
 }
 
 ModelDrawInfo::ModelDrawInfo(ModelDrawInfo&& other) noexcept {
-  *this = std::move(other);
+  *this = static_cast<ModelDrawInfo&&>(other);
 }
 
 ModelDrawInfo& ModelDrawInfo::operator=(ModelDrawInfo&& other) noexcept {
@@ -44,22 +39,23 @@ ModelDrawInfo& ModelDrawInfo::operator=(ModelDrawInfo&& other) noexcept {
     delete[] vertices;
     delete[] indices;
 
-    meshPath = std::move(other.meshPath);
-    VAO_ID = other.VAO_ID;
+    meshPath = other.meshPath;
+
+    VAOID = other.VAOID;
     VertexBufferID = other.VertexBufferID;
     IndexBufferID = other.IndexBufferID;
     VertexBuffer_Start_Index = other.VertexBuffer_Start_Index;
     IndexBuffer_Start_Index = other.IndexBuffer_Start_Index;
+
     numVertices = other.numVertices;
     numIndices = other.numIndices;
     numTriangles = other.numTriangles;
+
     vertices = other.vertices;
     indices = other.indices;
-    colour = other.colour;
+
     hasNormals = other.hasNormals;
     hasColours = other.hasColours;
-    colourMode = other.colourMode;
-    modelMatrix = other.modelMatrix;
 
     other.vertices = nullptr;
     other.indices = nullptr;

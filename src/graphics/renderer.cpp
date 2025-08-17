@@ -19,15 +19,16 @@ void Renderer::setProgram(unsigned int program) {
 	this->program = program;
 	glUseProgram(program);
 
+	modelIsVisible = glGetUniformLocation(program, "bIsVisible");
 	modelLocation = glGetUniformLocation(program, "mModel");
 	modelViewLocation = glGetUniformLocation(program, "mView");
 	modelProjectionLocation = glGetUniformLocation(program, "mProj");
 	modelInverseTransposeLocation = glGetUniformLocation(program, "mModel_InverseTranpose");
+	modelSpecularLocation = glGetUniformLocation(program, "vertSpecular");
 
 	useOverrideColourLocation = glGetUniformLocation(program, "bUseOverrideColour");
 	colourOverrideLocation = glGetUniformLocation(program, "colourOverride");
-
-	modelSpecularLocation = glGetUniformLocation(program, "vertSpecular");
+	useVertexColour = glGetUniformLocation(program, "bUseVertexColour");
 }
 
 void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const {
@@ -37,9 +38,11 @@ void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat
 }
 
 bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const Mat4& projection) {
-	const ModelDrawInfo* info = nullptr;
-	if (!vaoManager->FindDrawInfoByModelName(instance.path, info)) {
-		fprintf(stderr, "[Renderer ERROR] Could not find model: %s\n", instance.path.c_str());
+	if (!instance.isVisible) return true;
+
+	const ModelDrawInfo* info;
+	if (!vaoManager->FindDrawInfoByModelName(instance.meshPath, info)) {
+		fprintf(stderr, "[Renderer ERROR] Could not find mesh: %s\n", instance.meshPath.c_str());
 		return false;
 	}
 
@@ -54,8 +57,14 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 	} 
 	else glUniform1f(useOverrideColourLocation, 0.0f);
 
+	if(instance.useTextures) glUniform1f(useVertexColour, (GLfloat)GL_TRUE);
+	else										 glUniform1f(useVertexColour, (GLfloat)GL_FALSE);
+
+	if (instance.isVisible)  glUniform1f(modelIsVisible,  (GLfloat)GL_TRUE);
+	else									   glUniform1f(modelIsVisible,  (GLfloat)GL_FALSE);
+
 	if (instance.colour.w < 1.0f)	glDepthMask(GL_FALSE);
-	glBindVertexArray(info->VAO_ID);
+	glBindVertexArray(info->VAOID);
 	glDrawElements(GL_TRIANGLES, info->numIndices, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 	if (instance.colour.w < 1.0f) glDepthMask(GL_TRUE);

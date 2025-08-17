@@ -54,11 +54,13 @@ bool loadFile(std::string& out, const std::string& path) {
 	return true;
 }
 
-bool loadBinaryFile(unsigned char*& out, const std::string& path) {
+bool loadBinaryFile(unsigned char*& dataOut, size_t& sizeOut, const std::string& path) {
 	// Open File
 	FILE* file = fopen(path.c_str(), "rb");
 	if (!file) {
 		fprintf(stderr, "[loadBinaryFile] Failed to open file: %s\n", path.c_str());
+		dataOut = nullptr;
+		sizeOut = 0;
 		return false;
 	}
 
@@ -66,6 +68,8 @@ bool loadBinaryFile(unsigned char*& out, const std::string& path) {
 	if (!getFileSize(file, fileSize)) {
 		fprintf(stderr, "[loadBinaryFile] Failed to get file size"); 
 		fclose(file); 
+		dataOut = nullptr;
+		sizeOut = 0;
 		return false;
 	}
 
@@ -75,12 +79,14 @@ bool loadBinaryFile(unsigned char*& out, const std::string& path) {
 		fprintf(stderr, "[loadBinaryFile] Failed to read binary data\n");
 		delete[] buffer;
 		fclose(file);
-		out = nullptr;
+		dataOut = nullptr;
+		sizeOut = 0;
 		return false;
 	}
 
 	fclose(file);
-	if (out) delete[] out;
-	out = buffer;
+	if (dataOut) delete[] dataOut;
+	dataOut = buffer;
+	sizeOut = fileSize;
 	return true;
 }

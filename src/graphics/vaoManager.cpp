@@ -45,7 +45,8 @@ bool VAOManager::FindDrawInfoByModelName(const std::string& fileName, const Mode
 
 bool VAOManager::LoadModelFromFile(const std::string& path, ModelDrawInfo& drawInfo) {
   unsigned char* src{ nullptr };
-  if (!loadBinaryFile(src, "assets/models/" + path)) {
+  size_t dummy;
+  if (!loadBinaryFile(src, dummy, "assets/models/" + path)) {
     fprintf(stderr, "[LoadModelFromFile ERROR] Failed to load file: %s\n", path.c_str());
     return false;
   }
@@ -102,8 +103,8 @@ bool VAOManager::LoadModelFromFile(const std::string& path, ModelDrawInfo& drawI
 
 bool VAOManager::UploadToGPU(ModelDrawInfo& drawInfo, unsigned int shaderProgramID) {
   //Create a VAO (Vertex Array Object), which will keep track of all the 'state' needed to draw from this buffer
-  glGenVertexArrays(1, &(drawInfo.VAO_ID)); //Ask OpenGL for a new buffer ID
-  glBindVertexArray(drawInfo.VAO_ID);       //Bind the buffer: aka "make this the 'current' VAO buffer
+  glGenVertexArrays(1, &(drawInfo.VAOID)); //Ask OpenGL for a new buffer ID
+  glBindVertexArray(drawInfo.VAOID);       //Bind the buffer: aka "make this the 'current' VAO buffer
 
   //Now ANY state that is related to vertex or index buffer and vertex attribute layout, is stored in the 'state' of the VAO
   glGenBuffers(1, &(drawInfo.VertexBufferID));
@@ -130,6 +131,12 @@ bool VAOManager::UploadToGPU(ModelDrawInfo& drawInfo, unsigned int shaderProgram
   if (vcol_location != -1) {
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col));
+  }
+
+  int vTextCoords_location = glGetAttribLocation(shaderProgramID, "vTextCoords");
+  if (vTextCoords_location != -1) {
+    glEnableVertexAttribArray(vTextCoords_location);
+    glVertexAttribPointer(vTextCoords_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, u));
   }
 
   // Now that all the parts are set up, set the VAO to zero
@@ -172,7 +179,7 @@ void VAOManager::Shutdown() {
   for (std::map<std::string, ModelDrawInfo>::iterator it = modelName_to_VAOID.begin(); it != modelName_to_VAOID.end(); ++it){
     ModelDrawInfo& drawInfo = it->second;
 
-    if (glIsVertexArray(drawInfo.VAO_ID))    glDeleteVertexArrays(1, &drawInfo.VAO_ID);
+    if (glIsVertexArray(drawInfo.VAOID))    glDeleteVertexArrays(1, &drawInfo.VAOID);
     if (glIsBuffer(drawInfo.VertexBufferID)) glDeleteBuffers(1, &drawInfo.VertexBufferID);
     if (glIsBuffer(drawInfo.IndexBufferID))  glDeleteBuffers(1, &drawInfo.IndexBufferID);
   }

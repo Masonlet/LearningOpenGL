@@ -5,6 +5,8 @@
 #endif
 
 #include "core/engine.hpp"
+#include "utils/bmpParser.hpp"
+#include "textures/bmp.hpp"
 
 int main() {
 #ifdef NDEBUG
@@ -20,6 +22,10 @@ int main() {
 	* I have not introduced enough features with primitives to feel worth refactoring the code to make it work
 	*/
 	if (!engine.setScene("SceneTest")) 
+		return -1;
+
+	BMP bmp;
+	if (!parseBMP("assets/textures/Lava_Texture.bmp", bmp))
 		return -1;
 
 	engine.run();
