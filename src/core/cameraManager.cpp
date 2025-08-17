@@ -30,7 +30,7 @@ void CameraManager::setActiveCamera(unsigned int index) {
 Camera* CameraManager::getActiveCamera() {
 	std::map<std::string, Camera>::iterator it = cameras.find(activeCameraName);
 	if (it != cameras.end()) return &(it->second);
-	return nullptr;
+	else                     return nullptr;
 }
 int CameraManager::getCameraCount() {
 	return cameras.size();

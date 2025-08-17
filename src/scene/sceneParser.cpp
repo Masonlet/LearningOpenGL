@@ -91,7 +91,7 @@ const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
 static bool parseMazeLayoutRow(const std::string& line, std::vector<bool>& outRow) {
   outRow.clear();
   for (char c : line) {
-    if (c == '.') outRow.push_back(true);
+    if (c == '.')      outRow.push_back(true);
     else if (c == 'X') outRow.push_back(false);
     else if (c != ' ') {
       fprintf(stderr, "[SceneLoader ERROR] Invalid character '%c' in maze layout line: \"%s\"\n", c, line.c_str());

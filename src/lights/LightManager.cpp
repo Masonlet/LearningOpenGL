@@ -4,28 +4,28 @@
 #include <GLFW/glfw3.h>
 
 Light::Light() {
-    this->position = Vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    this->diffuse = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    this->specular = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    this->atten = Vec4(0.0f, 0.01f, 0.01f, 1.0f);
+    this->position  = Vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    this->diffuse   = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    this->specular  = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    this->atten     = Vec4(0.0f, 0.01f, 0.01f, 1.0f);
     this->direction = Vec4(0.0f, 0.0f, 0.0f, 1.0f); // For spot lights
-    this->param1.x = 0.0f;	// Point light 
-    this->param1.y = 0.0f;	// Inner angle
-    this->param1.z = 0.0f;	// outer angle
-    this->param2.x = 0.0f;	// Off 
+    this->param1.x  = 0.0f;	// Point light 
+    this->param1.y  = 0.0f;	// Inner angle
+    this->param1.z  = 0.0f;	// outer angle
+    this->param2.x  = 0.0f;	// Off 
 }
 
 void LightManager::GetUniformLocations(int shaderProgram) {
   for (int i = 0; i < NUMBEROFLIGHTS; ++i) {
     std::string base = "theLights[" + std::to_string(i) + "].";
 
-    this->theLights[i].position_UL = glGetUniformLocation(shaderProgram, (base + "position").c_str());
-    this->theLights[i].diffuse_UL = glGetUniformLocation(shaderProgram, (base + "diffuse").c_str());
-    this->theLights[i].specular_UL = glGetUniformLocation(shaderProgram, (base + "specular").c_str());
-    this->theLights[i].atten_UL = glGetUniformLocation(shaderProgram, (base + "atten").c_str());
+    this->theLights[i].position_UL  = glGetUniformLocation(shaderProgram, (base + "position").c_str());
+    this->theLights[i].diffuse_UL   = glGetUniformLocation(shaderProgram, (base + "diffuse").c_str());
+    this->theLights[i].specular_UL  = glGetUniformLocation(shaderProgram, (base + "specular").c_str());
+    this->theLights[i].atten_UL     = glGetUniformLocation(shaderProgram, (base + "atten").c_str());
     this->theLights[i].direction_UL = glGetUniformLocation(shaderProgram, (base + "direction").c_str());
-    this->theLights[i].param1_UL = glGetUniformLocation(shaderProgram, (base + "param1").c_str());
-    this->theLights[i].param2_UL = glGetUniformLocation(shaderProgram, (base + "param2").c_str());
+    this->theLights[i].param1_UL    = glGetUniformLocation(shaderProgram, (base + "param1").c_str());
+    this->theLights[i].param2_UL    = glGetUniformLocation(shaderProgram, (base + "param2").c_str());
   }
 }
 

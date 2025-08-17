@@ -27,7 +27,6 @@ void InputManager::Update(GLFWwindow* window) {
 
   mouseDelta.x = static_cast<float>(xpos - lastMouseX);
   mouseDelta.y = static_cast<float>(lastMouseY - ypos);
-
   lastMouseX = xpos;
   lastMouseY = ypos;
 }

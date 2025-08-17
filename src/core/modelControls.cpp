@@ -4,16 +4,16 @@
 #include "core/modelControls.hpp"
 
 static void processObject(InputManager* input,  Vec4& pos, Vec3& rot, Vec3& scale, float deltaTime){
-  if (input->IsKeyDown(GLFW_KEY_UP))       pos.z += deltaTime;
-  if (input->IsKeyDown(GLFW_KEY_DOWN))     pos.z -= deltaTime;
-  if (input->IsKeyDown(GLFW_KEY_LEFT))     pos.x += deltaTime;
-  if (input->IsKeyDown(GLFW_KEY_RIGHT))    pos.x -= deltaTime;
-  if (input->IsKeyDown(GLFW_KEY_COMMA))    pos.y += deltaTime;
-  if (input->IsKeyDown(GLFW_KEY_PERIOD))   pos.y -= deltaTime;
+  if (input->IsKeyDown(GLFW_KEY_UP))     pos.z += deltaTime;
+  if (input->IsKeyDown(GLFW_KEY_DOWN))   pos.z -= deltaTime;
+  if (input->IsKeyDown(GLFW_KEY_LEFT))   pos.x += deltaTime;
+  if (input->IsKeyDown(GLFW_KEY_RIGHT))  pos.x -= deltaTime;
+  if (input->IsKeyDown(GLFW_KEY_COMMA))  pos.y += deltaTime;
+  if (input->IsKeyDown(GLFW_KEY_PERIOD)) pos.y -= deltaTime;
 
   const float scaleDelta = 0.02f;
-  if (input->IsKeyDown(GLFW_KEY_E))    scale = scale * (1.0f + scaleDelta);
-  if (input->IsKeyDown(GLFW_KEY_Q))  scale = scale * (1.0f - scaleDelta);
+  if (input->IsKeyDown(GLFW_KEY_E)) scale *= (1.0f + scaleDelta);
+  if (input->IsKeyDown(GLFW_KEY_Q)) scale *= (1.0f - scaleDelta);
 
   const float rotationSpeed = 45.0f * deltaTime;
   if (input->IsKeyDown(GLFW_KEY_R)) rot.x += rotationSpeed;

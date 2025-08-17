@@ -22,7 +22,8 @@ float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accurac
 	// See if the accuracy being set it too big for the targetLightLevel, unless targetLightLevel is actually zero (0.0f)
 	// If it's actually zero, then adjusting the accuracy to a tenth of zero would give zero, and we would max out the iterations
 	if (targetLightLevel != 0.0f) 
-		if ((accuracy * 10.0f) >= targetLightLevel * 10.0f)	accuracy = targetLightLevel / 10.0f;
+		if ((accuracy * 10.0f) >= targetLightLevel * 10.0f)	
+			accuracy = targetLightLevel / 10.0f;
 
 	float targetLightLevelLow = targetLightLevel - accuracy;
 	float targetLightLevelHigh = targetLightLevel + accuracy;
@@ -41,31 +42,28 @@ float LightHelper::calcApproxDistFromAtten(float targetLightLevel, float accurac
 
 		// Could be three possibilities: too low, too high, or in between
 		float curDiffuseAtGuessDistance = this->calcDiffuseFromAttenByDistance(curDistanceGuess, constAttenuation, linearAttenuation, quadraticAttenuation, DEFAULTZEROTHRESHOLD);
-		if (curDiffuseAtGuessDistance < targetLightLevelLow) distanceGuessHigh = curDistanceGuess; // Light is too dark, so distance is to HIGH.
+		if      (curDiffuseAtGuessDistance < targetLightLevelLow ) distanceGuessHigh = curDistanceGuess; // Light is too dark, so distance is to HIGH.
 		else if (curDiffuseAtGuessDistance > targetLightLevelHigh) distanceGuessLow = curDistanceGuess; // Light is too bright, so distance is to LOW.
-		else return curDistanceGuess;
+		else                                                       return curDistanceGuess;
 
 		iterationCount++;
 	}
 
 	// If we are here, then we ran out of iterations. Pick a distance between the low and high
-	float distance = (distanceGuessHigh - distanceGuessLow) / 2.0f;
-	return distance;
+	return (distanceGuessHigh - distanceGuessLow) / 2.0f;
 }
 
 const float LightHelper::DEFAULTZEROTHRESHOLD = 0.0001f;
 float LightHelper::calcDiffuseFromAttenByDistance(
 	float distance,
 	float constAttenuation, float linearAttenuation, float quadraticAttenuation,
-	float zeroThreshold /*= DEFAULTZEROTHRESHOLD*/) {
+	float zeroThreshold) {
 	float diffuse = 1.0f;	// Assume full brightness
 	float denominator = constAttenuation + linearAttenuation * distance + quadraticAttenuation * distance * distance;
 
-	if (denominator <= zeroThreshold) diffuse = 1.0f;
-  else {
-		float atten = 1.0f / denominator;
-		diffuse *= atten;
-		if (diffuse > 1.0f) diffuse = 1.0f;
+	if (denominator > zeroThreshold){
+		diffuse *= 1.0f / denominator;
+		if (diffuse > 1.0f) return 1.0f;
 	} 
 	return diffuse;
 }

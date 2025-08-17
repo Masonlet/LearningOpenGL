@@ -18,15 +18,15 @@ Vec3 Camera::GetRight() const {
   Vec3 right = front.cross(up);
 
   if (right.length() < 0.00001f) return { 1.0f, 0.0f, 0.0f };
-  else return right.normalized();
+  else                           return right.normalized();
 }
 
 Mat4 Camera::LookAt() const {
   Mat4 view{};
 
   const Vec3 forward = front.normalized();
-  const Vec3 right = GetRight();
-  const Vec3 camUp = right.cross(forward);
+  const Vec3 right   = GetRight();
+  const Vec3 camUp   = right.cross(forward);
 
   view.data[0] = right.x;
   view.data[1] = camUp.x;
@@ -52,17 +52,15 @@ Mat4 Camera::LookAt() const {
 }
 
 Mat4 Camera::Perspective(const float aspect) const {
-  const float tanHalfFov = tanf(radians(fov) / 2.0f);
-  const float zRange = farPlane - nearPlane;
-
   Mat4 projection{};
 
-  projection.data[0] = 1.0f / (aspect * tanHalfFov);
-  projection.data[5] = 1.0f / tanHalfFov;
-  projection.data[10] = -(farPlane + nearPlane) / zRange;
-  projection.data[11] = -1.0f;
-  projection.data[14] = -(2.0f * farPlane * nearPlane) / zRange;
-  projection.data[15] = 0.0f;
+  const float tanHalfFov = tanf(radians(fov) / 2.0f);
+  projection.data[0]  =   1.0f / (aspect * tanHalfFov);
+  projection.data[5]  =   1.0f / tanHalfFov;
+  projection.data[10] = -(farPlane + nearPlane) / (farPlane - nearPlane);
+  projection.data[11] =  -1.0f;
+  projection.data[14] = -(2.0f * farPlane * nearPlane) / (farPlane - nearPlane);
+  projection.data[15] =   0.0f;
 
   return projection;
 };
@@ -70,7 +68,7 @@ Mat4 Camera::Perspective(const float aspect) const {
 void Camera::setFov(const float delta) {
   fov += delta;
 
-  if (fov < 1.0f) fov = 1.0f;
+  if (fov < 1.0f)   fov = 1.0f;
   if (fov > 120.0f) fov = 120.0f;
 }
 
@@ -100,7 +98,7 @@ void Camera::updateDungeonCam(InputManager* input, float deltaTime) {
   yaw = fmod(yaw + 360.0f, 360.0f);
 
   front = Vec3{ cos(radians(yaw)), 0.0f, sin(radians(yaw)) }.normalized();
-  Vec3 right = front.cross(WORLD_UP).normalized();
+  Vec3 right = GetRight();
   up = right.cross(front).normalized();
 
   if (input->IsKeyPressed(GLFW_KEY_W)) pos += front * moveDistance;
@@ -156,8 +154,7 @@ void Camera::processMouse(InputManager* input) {
   front.z = sin(radians(yaw)) * cos(radians(pitch));
   front = front.normalized();
 
-  Vec3 right = front.cross(WORLD_UP).normalized();
-  if (right.length() < 1e-6f) right = { 1.0f, 0.0f, 0.0f };
+  Vec3 right = GetRight();
   up = right.cross(front).normalized();
 }
 

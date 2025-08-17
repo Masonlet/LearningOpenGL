@@ -5,22 +5,20 @@
 #include <cstdio>
 
 Mat4 Mat4::identity() {
-	Mat4 result{};
-
+	Mat4 result;
 	result.data[0] = 1.0f;
 	result.data[5] = 1.0f;
 	result.data[10] = 1.0f;
 	result.data[15] = 1.0f;
-
 	return result;
 }
 
 Mat4 Mat4::modelMatrix(const Transform& t) {
-  return Mat4::translation(t.position) *
-         Mat4::rotateX(t.rotation.x) *
-         Mat4::rotateY(t.rotation.y) *
-         Mat4::rotateZ(t.rotation.z) * 
-         Mat4::scale(t.scale);
+  return Mat4::translation(t.position) 
+         * Mat4::rotateX(t.rotation.x)
+         * Mat4::rotateY(t.rotation.y) 
+         * Mat4::rotateZ(t.rotation.z) 
+         * Mat4::scale(t.scale);
 }
 
 Mat4 Mat4::transpose() const {
@@ -32,10 +30,9 @@ Mat4 Mat4::transpose() const {
 	return result;
 }
 Mat4 Mat4::inverse() const {
-    Mat4 inv;
     const float* m = data;
 
-    //Im not going to pretend to understand this math, "MESA implementation of the GLU library"
+    Mat4 inv; //Im not going to pretend to understand this math, "MESA implementation of the GLU library"
     inv.data[0] = m[5] * m[10] * m[15] -
         m[5] * m[11] * m[14] -
         m[9] * m[6] * m[15] +
@@ -148,9 +145,13 @@ Mat4 Mat4::inverse() const {
         m[8] * m[1] * m[6] -
         m[8] * m[2] * m[5];
 
-    float det = m[0] * inv.data[0] + m[1] * inv.data[4] + m[2] * inv.data[8] + m[3] * inv.data[12];
+    float det = m[0] * inv.data[0] + m[1] 
+              * inv.data[4] + m[2] 
+              * inv.data[8] + m[3] 
+              * inv.data[12];
+
     if (det == 0) return Mat4::identity();
-    else det = 1.0 / det;
+    else          det = 1.0 / det;
 
     for (int i = 0; i < 16; ++i) inv.data[i] *= det;
     return inv;
@@ -158,74 +159,67 @@ Mat4 Mat4::inverse() const {
 
 Mat4 Mat4::translation(const Vec4& t) {
 	Mat4 result = Mat4::identity();
-
 	result.data[12] = t.x;
 	result.data[13] = t.y;
 	result.data[14] = t.z;
-
 	return result;
 }
 Mat4 Mat4::scale(const Vec3& t) {
 	Mat4 result = Mat4::identity();
-
-	result.data[0] = t.x;
-	result.data[5] = t.y;
+	result.data[0]  = t.x;
+	result.data[5]  = t.y;
 	result.data[10] = t.z;
-
 	return result;
 }
 
 Mat4 Mat4::rotateX(const float angle) {
-	Mat4 result = Mat4::identity();
 	const float rad = radians(angle);
 	float c = cosf(rad);
 	float s = sinf(rad);
 
-	result.data[5] = c;
-	result.data[6] = s;
-	result.data[9] = -s;
-	result.data[10] = c;
+  Mat4 result = Mat4::identity();
+	result.data[5]  =  c;
+	result.data[6]  =  s;
+	result.data[9]  = -s;
+	result.data[10] =  c;
 	return result;
 }
 Mat4 Mat4::rotateY(const float angle) {
-	Mat4 result = Mat4::identity();
 	const float rad = radians(angle);
 	float c = cosf(rad);
 	float s = sinf(rad);
 
-	result.data[0] = c;
-	result.data[2] = s;
-	result.data[8] = -s;
-	result.data[10] = c;
+  Mat4 result = Mat4::identity();
+	result.data[0]  =  c;
+	result.data[2]  =  s;
+	result.data[8]  = -s;
+	result.data[10] =  c;
 	return result;
 }
 Mat4 Mat4::rotateZ(const float angle) {
-	Mat4 result = Mat4::identity();
 	const float rad = radians(angle);
   float c = cosf(rad);
   float s = sinf(rad);
 
-  result.data[0] = c;
-  result.data[1] = s;
+  Mat4 result = Mat4::identity();
+  result.data[0] =  c;
+  result.data[1] =  s;
   result.data[4] = -s;
-  result.data[5] = c;
+  result.data[5] =  c;
   return result;
 }
 
 Transform Mat4::decompose() const {
   Transform t;
 
-  // Position
   t.position.x = data[12];
   t.position.y = data[13];
   t.position.z = data[14];
 
-  // Columns
   Vec3 col0 = {data[0], data[1], data[2] };
   Vec3 col1 = {data[4], data[5], data[6] };
   Vec3 col2 = {data[8], data[9], data[10] };
 
-  // Scale
   t.scale.x = col0.length();
   t.scale.y = col1.length();
   t.scale.z = col2.length();
@@ -264,26 +258,26 @@ Mat4 Mat4::operator*(const Mat4& b) const {
   Mat4 result{};
 
   // Column 0
-  result.data[0] = data[0] * b.data[0] + data[4] * b.data[1] + data[8] * b.data[2] + data[12] * b.data[3];
-  result.data[1] = data[1] * b.data[0] + data[5] * b.data[1] + data[9] * b.data[2] + data[13] * b.data[3];
+  result.data[0] = data[0] * b.data[0] + data[4] * b.data[1] + data[8]  * b.data[2] + data[12] * b.data[3];
+  result.data[1] = data[1] * b.data[0] + data[5] * b.data[1] + data[9]  * b.data[2] + data[13] * b.data[3];
   result.data[2] = data[2] * b.data[0] + data[6] * b.data[1] + data[10] * b.data[2] + data[14] * b.data[3];
   result.data[3] = data[3] * b.data[0] + data[7] * b.data[1] + data[11] * b.data[2] + data[15] * b.data[3];
 
   // Column 1
-  result.data[4] = data[0] * b.data[4] + data[4] * b.data[5] + data[8] * b.data[6] + data[12] * b.data[7];
-  result.data[5] = data[1] * b.data[4] + data[5] * b.data[5] + data[9] * b.data[6] + data[13] * b.data[7];
+  result.data[4] = data[0] * b.data[4] + data[4] * b.data[5] + data[8]  * b.data[6] + data[12] * b.data[7];
+  result.data[5] = data[1] * b.data[4] + data[5] * b.data[5] + data[9]  * b.data[6] + data[13] * b.data[7];
   result.data[6] = data[2] * b.data[4] + data[6] * b.data[5] + data[10] * b.data[6] + data[14] * b.data[7];
   result.data[7] = data[3] * b.data[4] + data[7] * b.data[5] + data[11] * b.data[6] + data[15] * b.data[7];
 
   //// Column 2
-  result.data[8] = data[0] * b.data[8] + data[4] * b.data[9] + data[8] * b.data[10] + data[12] * b.data[11];
-  result.data[9] = data[1] * b.data[8] + data[5] * b.data[9] + data[9] * b.data[10] + data[13] * b.data[11];
+  result.data[8]  = data[0] * b.data[8] + data[4] * b.data[9] + data[8]  * b.data[10] + data[12] * b.data[11];
+  result.data[9]  = data[1] * b.data[8] + data[5] * b.data[9] + data[9]  * b.data[10] + data[13] * b.data[11];
   result.data[10] = data[2] * b.data[8] + data[6] * b.data[9] + data[10] * b.data[10] + data[14] * b.data[11];
   result.data[11] = data[3] * b.data[8] + data[7] * b.data[9] + data[11] * b.data[10] + data[15] * b.data[11];
 
   //// Column 3
-  result.data[12] = data[0] * b.data[12] + data[4] * b.data[13] + data[8] * b.data[14] + data[12] * b.data[15];
-  result.data[13] = data[1] * b.data[12] + data[5] * b.data[13] + data[9] * b.data[14] + data[13] * b.data[15];
+  result.data[12] = data[0] * b.data[12] + data[4] * b.data[13] + data[8]  * b.data[14] + data[12] * b.data[15];
+  result.data[13] = data[1] * b.data[12] + data[5] * b.data[13] + data[9]  * b.data[14] + data[13] * b.data[15];
   result.data[14] = data[2] * b.data[12] + data[6] * b.data[13] + data[10] * b.data[14] + data[14] * b.data[15];
   result.data[15] = data[3] * b.data[12] + data[7] * b.data[13] + data[11] * b.data[14] + data[15] * b.data[15];
 
@@ -291,12 +285,10 @@ Mat4 Mat4::operator*(const Mat4& b) const {
 }
 Vec4 Mat4::operator*(const Vec4& v) const {
   Vec4 result;
-
   result.x = data[0] * v.x + data[4] * v.y + data[8] * v.z + data[12] * v.w;
   result.y = data[1] * v.x + data[5] * v.y + data[9] * v.z + data[13] * v.w;
   result.z = data[2] * v.x + data[6] * v.y + data[10] * v.z + data[14] * v.w;
   result.w = data[3] * v.x + data[7] * v.y + data[11] * v.z + data[15] * v.w;
-
   return result;
 }
 

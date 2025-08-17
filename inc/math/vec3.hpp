@@ -44,6 +44,10 @@ struct Vec3 {
 		x += b, y += b, z += b;
 		return *this;
 	}
+	inline Vec3& operator*=(const float b) {
+		x *= b, y *= b, z *= b;
+		return *this;
+	}
 	inline Vec3& operator-=(const float b) {
 		x -= b, y -= b, z -= b;
 		return *this;

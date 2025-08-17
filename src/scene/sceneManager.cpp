@@ -79,17 +79,17 @@ bool SceneManager::processSceneLine(const unsigned char* p) {
     return false;
   }
   if (*linePtr == ',') ++linePtr;
+  if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') return true;
 
   bool handled{ true };
-  if (strcmp(nameStr, "model") == 0) handled = handleModelLine(linePtr);
-  else if (strcmp(nameStr, "light") == 0) handled = handleLightLine(linePtr);
-  else if (strcmp(nameStr, "camera") == 0) handled = handleCameraLine(linePtr);
-  else if (strcmp(nameStr, "cubeGrid") == 0) handled = handleCubeGridLine(linePtr);
+  if      (strcmp(nameStr, "model") == 0)      handled = handleModelLine(linePtr);
+  else if (strcmp(nameStr, "light") == 0)      handled = handleLightLine(linePtr);
+  else if (strcmp(nameStr, "camera") == 0)     handled = handleCameraLine(linePtr);
+  else if (strcmp(nameStr, "cubeGrid") == 0)   handled = handleCubeGridLine(linePtr);
   else if (strcmp(nameStr, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
-  else if (strcmp(nameStr, "triangle") == 0) handled = handleTriangleLine(linePtr);
-  else if (strcmp(nameStr, "maze") == 0) handled = handleMazeLine(linePtr);
-  else if (strcmp(nameStr, "mazeData") == 0) handled = handleMazeData(linePtr);
-  else if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') return true;
+  else if (strcmp(nameStr, "triangle") == 0)   handled = handleTriangleLine(linePtr);
+  else if (strcmp(nameStr, "maze") == 0)       handled = handleMazeLine(linePtr);
+  else if (strcmp(nameStr, "mazeData") == 0)   handled = handleMazeData(linePtr);
   return handled;
 }
 
@@ -101,9 +101,9 @@ bool SceneManager::saveTxtScene() {
     fprintf(stderr, "[saveTxtScene ERROR] Failed to open scene file for saving: %s\n", scenePath.c_str());
     return false;
   }
+  file << std::fixed << std::setprecision(3);
 
-  file << std::fixed << std::setprecision(3)
-       << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
+  file << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
   const std::map<std::string, Camera>& cameras = cameraManager->getAllCameras();
   for (std::map<std::string, Camera>::const_iterator camIt = cameras.begin(); camIt != cameras.end(); ++camIt) {
     const std::string& name = camIt->first;
@@ -154,15 +154,15 @@ bool SceneManager::saveTxtScene() {
       int b = static_cast<int>(instance.colour.z * 255.0f);
       int a = static_cast<int>(instance.colour.w * 255.0f);
 
-      if (r == 255 && g == 0 && b == 0)       file << "Red";
-      else if (r == 0 && g == 255 && b == 0)  file << "Green";
-      else if (r == 0 && g == 0 && b == 255)  file << "Blue";
-      else file << r << " " << g << " " << b << " " << a;
+      if      (r == 255 && g == 0 && b == 0) file << "Red";
+      else if (r == 0 && g == 255 && b == 0) file << "Green";
+      else if (r == 0 && g == 0 && b == 255) file << "Blue";
+      else                                   file << r << " " << g << " " << b << " " << a;
       break;
     }
-    case ColourMode::Random: file << "Random"; break;
+    case ColourMode::Random:           file << "Random"; break;
     case ColourMode::VerticalGradient: file << "Rainbow"; break;
-    case ColourMode::PLYColour: file << "PLY"; break;
+    case ColourMode::PLYColour:        file << "PLY"; break;
     default: break;
     }
     
@@ -179,12 +179,12 @@ bool SceneManager::saveTxtScene() {
                                 /*     param1.x == 2)*/ "Directional";
     
     file << "light, " << lightManager->getLightName(i) << ", " << camType << ", "
-         << light.position.x << " " << light.position.y << " " << light.position.z << ", "
-         << light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
-         << light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
+         << light.position.x  << " " << light.position.y  << " " << light.position.z  << ", "
+         << light.diffuse.x   << " " << light.diffuse.y   << " " << light.diffuse.z   << " " << light.diffuse.w   << ", "
+         << light.atten.x     << " " << light.atten.y     << " " << light.atten.z     << " " << light.atten.w     << ", "
          << light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
-         << light.param1.y << " " << light.param1.z << " " << light.param1.w << ", "
-         << light.param2.x << " " << light.param2.y << " " << light.param2.z << " " << light.param2.w << "\n";
+         << light.param1.y    << " " << light.param1.z    << " " << light.param1.w    << ", "
+         << light.param2.x    << " " << light.param2.y    << " " << light.param2.z    << " " << light.param2.w    << "\n";
   }
 
   return true;
@@ -222,7 +222,6 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
   applyColourSettings(instance, model.colour, model.colourMode);
   instance.specular = model.specular;
   instance.scale = model.scale;
-
   return true;
 }
 bool SceneManager::handleLightLine(const unsigned char* p) {
@@ -244,7 +243,6 @@ bool SceneManager::handleLightLine(const unsigned char* p) {
   light->direction = lightData.direction;
   light->param1 = {lightData.param1Type, lightData.param1Direction};
   light->param2 = lightData.param2;
-
   return true;
 }
 bool SceneManager::handleCameraLine(const unsigned char* p) {
@@ -267,7 +265,6 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
     fprintf(stderr, "[SceneManager ERROR] Could not add camera\n");
     return false;
   }
-
   return true;
 }
 
@@ -328,9 +325,7 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
     sharedName = std::string(triangle.name) + "_solid_" + std::to_string(r) + "_" + std::to_string(g) + "_" + std::to_string(b);
     skipCache = true;
   }
-  else {
-    sharedName = "triangle_shared";
-  }
+  else sharedName = "triangle_shared";
 
   const ModelDrawInfo* info = nullptr;
   bool meshExists = !skipCache && renderer->getVAOManager()->FindDrawInfoByModelName(sharedName, info);
@@ -400,7 +395,6 @@ static bool addFloor(Scene& scene, const std::string& name, const std::string& m
   ModelInstance& instance = scene.getModelInstances()[name];
   instance.position = worldPos;
   instance.rotation = rotation;
-
   return true;
 }
 static bool addWall(Scene& scene, const ParsedMaze& maze, const Vec4& worldPos, const Vec4& wallOffset, const Vec3& baseRot, bool& hasEntrance,

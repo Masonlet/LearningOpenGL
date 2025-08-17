@@ -27,7 +27,6 @@ bool Scene::addInstance(const std::string& name, const std::string& path, const 
   }
 
   Transform t = transform.decompose();
-
   ModelInstance instance;
   instance.position = t.position;
   instance.rotation = t.rotation;

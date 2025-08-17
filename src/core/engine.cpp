@@ -77,9 +77,6 @@ void Engine::updateWireframe() {
 }
 
 void Engine::tick(const float currenttime) {
-  constexpr float max_delta = 0.1f;
-  constexpr float smoothing_factor = 0.9f;
-
   if (lastTime == 0.0f) {
     lastTime = currenttime;
     deltaTime = 0.0f;
@@ -87,6 +84,8 @@ void Engine::tick(const float currenttime) {
   }
 
   float rawdelta = currenttime - lastTime;
+  constexpr float max_delta = 0.1f;
+  constexpr float smoothing_factor = 0.9f;
 
   if (rawdelta > max_delta) {
 #ifndef NDEBUG
@@ -101,7 +100,7 @@ void Engine::tick(const float currenttime) {
   
 bool Engine::setScene(const std::string& sceneIn) {
   if (!sceneManager.loadTxtScene(sceneIn))  return false;
-  return true;
+  else                                      return true;
 }
 void Engine::run() {
   while (!windowManager.getWindow()->shouldClose()) {	
@@ -134,7 +133,7 @@ void Engine::renderFrame() {
     const ModelInstance& instance = it->second;
 
     if (instance.colour.w >= 1.0f) renderer.drawModel(instance, view, projection);
-    else transparentInstances.push_back(&instance);
+    else                           transparentInstances.push_back(&instance);
   }
 
   for (size_t i = 0; i < transparentInstances.size(); ++i) {
@@ -153,10 +152,9 @@ void Engine::renderFrame() {
     }
   }
 
-  for (const ModelInstance* instance : transparentInstances) {
+  for (const ModelInstance* instance : transparentInstances) 
 		renderer.drawModel(*instance, view, projection);
-  }
-
+  
   // End Frame
   glBindVertexArray(0);
 }
@@ -168,7 +166,6 @@ void Engine::incrementModel() {
 
 void Engine::decrementModel() {
   if (sceneManager.getScene().getModelInstances().empty()) return;
-  currentModel = (currentModel == 0) 
-    ? static_cast<unsigned int>(sceneManager.getScene().getModelInstances().size() - 1)
-    : currentModel - 1;
+  currentModel = (currentModel == 0) ? static_cast<unsigned int>(sceneManager.getScene().getModelInstances().size() - 1)
+                                     : currentModel - 1;
 }

@@ -33,15 +33,13 @@ bool ShaderManager::useShaderProgram(std::string friendlyName) {
 int ShaderManager::getIDFromFriendlyName(std::string friendlyName) {
 	std::map<std::string, unsigned int>::iterator itShad = this->name_to_id.find(friendlyName);
 	if (itShad == this->name_to_id.end())	return 0;
-
-	return itShad->second;
+	else																	return itShad->second;
 }
 
 ShaderManager::ShaderProgram* ShaderManager::getShaderProgramFromFriendlyName(std::string friendlyName) {
 	std::map<unsigned int, ShaderProgram>::iterator itShad = this->id_to_shader.find(this->getIDFromFriendlyName(friendlyName));
 	if (itShad == this->id_to_shader.end())	return nullptr;
-
-	return &(itShad->second);
+	else																		return &(itShad->second);
 }
 
 const unsigned int MAXLINELENGTH = 65536; //16x1024
@@ -84,7 +82,6 @@ bool ShaderManager::wasThereACompileError(unsigned int shaderID, std::string& er
 		delete [] pLogText;	
 		return true;	
 	}
-
 	return false; 
 }
 bool ShaderManager::wasThereALinkError(unsigned int programID, std::string& errorText) {
@@ -105,7 +102,6 @@ bool ShaderManager::wasThereALinkError(unsigned int programID, std::string& erro
 		delete [] pLogText;	
 		return true;
 	}
-	
 	return false;
 }
 
@@ -121,7 +117,7 @@ bool ShaderManager::compileShaderFromSource(ShaderManager::Shader& shader, std::
 	unsigned int numberOfLines = static_cast<unsigned int>(shader.vecSource.size());
 
 	char** arraySource = new char*[numberOfLines];
-	memset( arraySource, 0, numberOfLines );	
+	memset(arraySource, 0, numberOfLines);	
 
 	for (unsigned int indexLine = 0; indexLine != numberOfLines; indexLine++) {
 		unsigned int numCharacters = (unsigned int)shader.vecSource[indexLine].length();
@@ -151,7 +147,6 @@ bool ShaderManager::compileShaderFromSource(ShaderManager::Shader& shader, std::
 		error = ssError.str();
 		return false;
 	}
-
 	return true;
 }
 
