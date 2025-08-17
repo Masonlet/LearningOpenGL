@@ -20,9 +20,9 @@ void main() {
     gl_Position = (mProj * mView * mModel) * vec4(vPos.xyz, 1.0f);
 
 	vertWorldPosition = mModel * vec4(vPos.xyz, 1.0f);
-	vertNormal = mModel_InverseTranpose * vec4(vNorm.xyz, 1.0f);
-	vertNormal.xyz = normalize(vertNormal.xyz);
+	vertNormal        = mModel_InverseTranpose * vec4(vNorm.xyz, 0.0f);
+	vertNormal.xyz    = normalize(vertNormal.xyz);
 
 	if (bUseOverrideColour) vertColor = colourOverride;
-	else vertColor = vCol;
+	else                    vertColor = vCol;
 };

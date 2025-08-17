@@ -2,7 +2,6 @@
 
 const int SPOT_LIGHT_TYPE = 1;
 const int DIRECTIONAL_LIGHT_TYPE = 2;
-
 const int NUMBEROFLIGHTS = 50;
 
 struct Light {
@@ -25,100 +24,81 @@ in vec4 vertWorldPosition;
 
 out vec4 pixelColour;
 		
-vec4 calculateLightContrib( vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular ) {
-	vec3 norm = normalize(vertexNormal);
-	vec4 finalObjectColour = vec4( 0.0f, 0.0f, 0.0f, 1.0f );
+vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular) {
+	vec3 light = vec3(0.0);
+	vec3 n = normalize(vertexNormal);
+	vec3 v = normalize(eyeLocation - vertexWorldPos);
 	
-	for (int index = 0; index < NUMBEROFLIGHTS; index++) {	
-		if (theLights[index].param2.x == 0.0f) continue;
-		
-		int intLightType = int(theLights[index].param1.x);
-		
-		// We will do the directional light here... 
-		// (BEFORE the attenuation, since sunlight has no attenuation, really)
+	for (int i = 0; i < NUMBEROFLIGHTS; i++) {	
+		if (theLights[i].param2.x == 0.0) continue;
+	
+		int type = int(theLights[i].param1.x);
+		vec3 dir = normalize(theLights[i].direction.xyz);
+
+		// We will do the directional light here before the attenuation, since sunlight has no attenuation
 		// Simulate sunlight. There's ONLY direction, no position -Almost always, there's only 1 of these in a scene, Cheapest light to calculate. 
-		if (intLightType == DIRECTIONAL_LIGHT_TYPE)	{
-			float dotProduct = dot(-theLights[index].direction.xyz, normalize(norm.xyz));	
-			dotProduct = max(0.0f, dotProduct);
+		if (type == DIRECTIONAL_LIGHT_TYPE)	{
+			float NdotL = max(0.0, dot(n, -dir));	
+			if(NdotL > 0.0) { 
+				vec3 lightContrib = theLights[i].diffuse.rgb * NdotL;
+				light.rgb += ( vertexMaterialColour.rgb * lightContrib /*+ (materialSpecular.rgb * lightSpecularContrib.rgb);*/);
+			}
 
-			vec3 lightContrib = theLights[index].diffuse.rgb * dotProduct;
-
-			finalObjectColour.rgb += ( vertexMaterialColour.rgb * 
-			                           theLights[index].diffuse.rgb * 
-									   lightContrib /*+ 
-									   (materialSpecular.rgb * lightSpecularContrib.rgb);*/);
-
-			continue;		
+			continue;
 		}
-		
-		// Contribution for this light
-		vec3 vLightToVertex = theLights[index].position.xyz - vertexWorldPos.xyz;	
-		float distanceToLight = length(vLightToVertex);		
+			
+		// Contribution for this point/spot light
+		vec3 vLightToVertex = theLights[i].position.xyz - vertexWorldPos;	
 		vec3 lightVector = normalize(vLightToVertex);	
-		
-		float dotProduct = dot(lightVector, vertexNormal.xyz);	 
-		dotProduct = max(0.0f, dotProduct);	
+		float NdotL = max(0.0, dot(lightVector, n));	 
 
 		// Diffuse
-		vec3 lightDiffuseContrib = dotProduct * theLights[index].diffuse.rgb;
+		vec3 lightDiffuseContrib = NdotL * theLights[i].diffuse.rgb;
 		
-		// Specular 
-		vec3 lightSpecularContrib = vec3(0.0f);
-
-		// Get eye or view vector The location of the vertex in the world to your eye
-		vec3 eyeVector = normalize(eyeLocation.xyz - vertexWorldPos.xyz);
-
-		// To simplify, we are NOT using the light specular value, just the object’s.
-		vec3 reflectVector = reflect(-lightVector, normalize(norm.xyz));
-		float objectSpecularPower = vertexSpecular.w; 
-		lightSpecularContrib = pow(max(0.0f, dot(eyeVector, reflectVector)), objectSpecularPower ) * vertexSpecular.rgb; //* theLights[lightIndex].Specular.rgb
-					   
-		float attenuation = 1.0f / (theLights[index].atten.x + 
-									theLights[index].atten.y * distanceToLight + 
-									theLights[index].atten.z * distanceToLight*distanceToLight);  	
+		// Specular -- To simplify, we are NOT using the light specular value, just the object’s.
+		vec3 reflectVector = reflect(-lightVector, n);
+		float RdotV = max(0.0, dot(v, reflectVector));
+		vec3 lightSpecularContrib = vec3(pow(RdotV, vertexSpecular.w)); //* theLights[lightIndex].Specular.rgb
+						
+		// Attenuation
+		float dist = length(vLightToVertex);		
+		float att = 1.0 / (theLights[i].atten.x + 
+									theLights[i].atten.y * dist + 
+									theLights[i].atten.z * dist * dist);  	
 				  
 		// total light contribution is Diffuse + Specular
-		lightDiffuseContrib *= attenuation;
-		lightSpecularContrib *= attenuation;
+		lightDiffuseContrib *= att;
+		lightSpecularContrib *= att;
 		
-		if (intLightType == SPOT_LIGHT_TYPE) {	
-			vec3 vertexToLight = vertexWorldPos.xyz - theLights[index].position.xyz;
-			vertexToLight = normalize(vertexToLight);
-
-			float currentLightRayAngle = dot(vertexToLight.xyz, theLights[index].direction.xyz);
-			currentLightRayAngle = max(0.0f, currentLightRayAngle);
+		if (type == SPOT_LIGHT_TYPE) {	
+			vec3 vertexToLight = normalize(vertexWorldPos - theLights[i].position.xyz);
+			float spotCosAngle = max(0.0, dot(vertexToLight, dir));
 
 			// Is this inside the cone? 
-			float outerConeAngleCos = cos(radians(theLights[index].param1.z));
-			float innerConeAngleCos = cos(radians(theLights[index].param1.y));
+			float outerConeAngleCos = cos(radians(theLights[i].param1.z));
+			float innerConeAngleCos = cos(radians(theLights[i].param1.y));
 							
 			// Is it completely outside of the spot?
-			if (currentLightRayAngle < outerConeAngleCos) {
-				// Nope, it's in the dark
-				lightDiffuseContrib = vec3(0.0f, 0.0f, 0.0f);
-				lightSpecularContrib = vec3(0.0f, 0.0f, 0.0f);
+			if (spotCosAngle < outerConeAngleCos) { // Nope, it's in the dark
+				lightDiffuseContrib = vec3(0.0);
+				lightSpecularContrib = vec3(0.0);
 			}
-			else if (currentLightRayAngle < innerConeAngleCos) {
+			else if (spotCosAngle < innerConeAngleCos) {
 				// Angle is between the inner and outer cone (called the penumbra of the spot light)
 				// This blends the brightness from,	full brightness near the inner cone, to black near the outter cone
-				float penumbraRatio = (currentLightRayAngle - outerConeAngleCos) / (innerConeAngleCos - outerConeAngleCos);
+				float penumbraRatio = (spotCosAngle - outerConeAngleCos) / (innerConeAngleCos - outerConeAngleCos);
 									  
 				lightDiffuseContrib *= penumbraRatio;
 				lightSpecularContrib *= penumbraRatio;
 			}		
 		}
 				
-		finalObjectColour.rgb += (vertexMaterialColour.rgb * lightDiffuseContrib.rgb) + (vertexSpecular.rgb * lightSpecularContrib.rgb );
+		light.rgb += (vertexMaterialColour.rgb * lightDiffuseContrib.rgb) + (vertexSpecular.rgb * lightSpecularContrib.rgb);
 	}
-	finalObjectColour.a = vertexMaterialColour.a;
-	
-	return finalObjectColour;
+	return vec4(light, 1.0);
 }
 
 void main() {
-	pixelColour = vec4(vertColor);
-	
 	vec4 lightContrib = calculateLightContrib(vertColor, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
-	
-	pixelColour.rgb = lightContrib.rgb;
+	pixelColour = vec4(lightContrib.rgb, vertColor.a);
 };
