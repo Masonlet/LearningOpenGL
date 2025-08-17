@@ -19,8 +19,8 @@ uniform vec3 eyeLocation;
 uniform vec4 vertSpecular;
 uniform vec3 ambientRGB;
 
-uniform bool bUseVertexColour; 
-uniform bool bIsVisible;
+uniform bool bUseTextures; 
+uniform bool bLighted;
 
 // Textures (Can have up to 32+ of these, not the "total number of textures", max texture PER pixelColour
 uniform sampler2D textSampler2D_00;
@@ -113,7 +113,8 @@ vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 ve
 
 void main() {
 	vec4 finalTextRGBA = vertColor;
-	if(!bUseVertexColour){
+
+	if(bUseTextures){
 		vec4 tex00RGBA = texture( textSampler2D_00, vertTextCoords.xy );
 		vec4 tex01RGBA = texture( textSampler2D_01, vertTextCoords.xy );
 		vec4 tex02RGBA = texture( textSampler2D_02, vertTextCoords.xy );
@@ -125,7 +126,7 @@ void main() {
 						+ tex03RGBA * texMixRatios.w;
 	}
 
-	if(!bIsVisible){
+	if(!bLighted){
 		pixelColour = finalTextRGBA;
 		return;
 	}

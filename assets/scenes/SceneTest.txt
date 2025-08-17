@@ -1,7 +1,7 @@
 comment, on/off, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed
-camera, on, Cam1, FreeCam, -34.509 -0.482 -1.446, -18.500 -0.000, 75.000, 0.100 10000.000, 50.000
-camera, on, Cam2, FreeCam, 0.000 0.000 0.000, -18.500 -0.000, 75.000, 0.100 10000.000, 50.000
-camera, on, Cam3, FreeCam, 34.509 0.482 1.446, -18.500 -0.000, 75.000, 0.100 10000.000, 50.000
+camera, on, Cam1, FreeCam, -34.509 -0.482 -1.446, -18.500 -0.000, 60.000, 0.100 10000.000, 50.000
+camera, on, Cam2, FreeCam, 0.000 0.000 0.000, -18.500 -0.000, 60.000, 0.100 10000.000, 50.000
+camera, on, Cam3, FreeCam, 34.509 0.482 1.446, -18.500 -0.000, 60.000, 0.100 10000.000, 50.000
 
 comment, on/off, name, meshPath, pos(xyz), rot(xyz), scale(xyz), colour(Int, Named Coloured, Random, Rainbow, PLY), specular(rgb, power)
 model, on, cow, cow_xyz_n_rgba.ply, 0.000 0.000 0.000, 0.000 -0.000 0.000, 1.000 1.000 1.000, 255 255 0 255, 1.000 1.000 1.000 128.000

@@ -19,7 +19,7 @@ void Renderer::setProgram(unsigned int program) {
 	this->program = program;
 	glUseProgram(program);
 
-	modelIsVisible = glGetUniformLocation(program, "bIsVisible");
+	modelLighted = glGetUniformLocation(program, "bLighted");
 	modelLocation = glGetUniformLocation(program, "mModel");
 	modelViewLocation = glGetUniformLocation(program, "mView");
 	modelProjectionLocation = glGetUniformLocation(program, "mProj");
@@ -28,7 +28,7 @@ void Renderer::setProgram(unsigned int program) {
 
 	useOverrideColourLocation = glGetUniformLocation(program, "bUseOverrideColour");
 	colourOverrideLocation = glGetUniformLocation(program, "colourOverride");
-	useVertexColour = glGetUniformLocation(program, "bUseVertexColour");
+	modelUseTextures = glGetUniformLocation(program, "bUseTextures");
 }
 
 void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const {
@@ -57,11 +57,11 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 	} 
 	else glUniform1f(useOverrideColourLocation, 0.0f);
 
-	if(instance.useTextures) glUniform1f(useVertexColour, (GLfloat)GL_TRUE);
-	else										 glUniform1f(useVertexColour, (GLfloat)GL_FALSE);
+	if(instance.useTextures) glUniform1f(modelUseTextures, (GLfloat)GL_TRUE);
+	else										 glUniform1f(modelUseTextures, (GLfloat)GL_FALSE);
 
-	if (instance.isVisible)  glUniform1f(modelIsVisible,  (GLfloat)GL_TRUE);
-	else									   glUniform1f(modelIsVisible,  (GLfloat)GL_FALSE);
+	if (instance.isLighted) glUniform1f(modelLighted, (GLfloat)GL_TRUE);
+	else									  glUniform1f(modelLighted, (GLfloat)GL_FALSE);
 
 	if (instance.colour.w < 1.0f)	glDepthMask(GL_FALSE);
 	glBindVertexArray(info->VAOID);
