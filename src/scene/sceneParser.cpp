@@ -2,16 +2,18 @@
 #include "utils/parser.hpp"
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
+  PARSE_OR_FAIL(parseBool, out.isVisible, "model enabled");
   PARSE_STRING_OR_NULL(p, out.name, 64, "model name");
-  PARSE_STRING_OR_NULL(p, out.path, 128, "parse path");
-  PARSE_OR_FAIL(parseVec3, out.position, "parse position");
-  PARSE_OR_FAIL(parseVec3, out.rotation, "parse rotation");
-  PARSE_OR_FAIL(parseVec3, out.scale, "parse scale");
+  PARSE_STRING_OR_NULL(p, out.path, 128, "model path");
+  PARSE_OR_FAIL(parseVec3, out.position, "model position");
+  PARSE_OR_FAIL(parseVec3, out.rotation, "model rotation");
+  PARSE_OR_FAIL(parseVec3, out.scale, "model scale");
   p = parseColour(p, out.colour, out.colourMode);
-  PARSE_OR_FAIL(parseVec4, out.specular, "parse specular");
+  PARSE_OR_FAIL(parseVec4, out.specular, "model specular");
   return p;
 }
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
+  PARSE_OR_FAIL(parseBool, out.isEnabled, "light enabled");
   PARSE_STRING_OR_NULL(p, out.name, 64, "light name");
   p = parseLightType(p, out.param1Type);
   PARSE_OR_FAIL(parseVec3, out.position, "light position");
@@ -19,10 +21,10 @@ const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   PARSE_OR_FAIL(parseVec4, out.atten, "light attenuation");
   PARSE_OR_FAIL(parseVec4, out.direction, "light direction");
   PARSE_OR_FAIL(parseVec3, out.param1Direction, "light param1");
-  PARSE_OR_FAIL(parseVec4, out.param2, "light param2");
   return p;
 }
 const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
+  PARSE_OR_FAIL(parseBool, out.isEnabled, "camera enabled");
 	PARSE_STRING_OR_NULL(p, out.name, 64, "camera name");
   p = parseCameraType(p, out.type);
   PARSE_OR_FAIL(parseVec3, out.position, "camera position");

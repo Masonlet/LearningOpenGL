@@ -3,7 +3,7 @@
 
 #include "core/modelControls.hpp"
 
-static void processObject(InputManager* input,  Vec4& pos, Vec3& rot, Vec3& scale, float deltaTime){
+static void processObject(InputManager* input, Vec3& pos, Vec3& rot, Vec3& scale, float deltaTime){
   if (input->IsKeyDown(GLFW_KEY_UP))     pos.z += deltaTime;
   if (input->IsKeyDown(GLFW_KEY_DOWN))   pos.z -= deltaTime;
   if (input->IsKeyDown(GLFW_KEY_LEFT))   pos.x += deltaTime;
@@ -34,7 +34,7 @@ void handleModelInput(InputManager* input, float deltaTime, std::map<std::string
   processObject(input, instance.position, instance.rotation, instance.scale, deltaTime);
 
   instance.modelMatrix = Mat4::modelMatrix({
-    .position = instance.position,
+    .position = {instance.position, 0.0f},
     .rotation = instance.rotation,
     .scale = instance.scale
   });

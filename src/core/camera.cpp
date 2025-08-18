@@ -15,19 +15,17 @@ Camera::Camera() :
 }
 
 Vec3 Camera::GetRight() const {
-  Vec3 right = front.cross(up);
-
+  Vec3 right = front.cross(WORLD_UP);
   if (right.length() < 0.00001f) return { 1.0f, 0.0f, 0.0f };
   else                           return right.normalized();
 }
 
 Mat4 Camera::LookAt() const {
-  Mat4 view{};
-
   const Vec3 forward = front.normalized();
   const Vec3 right   = GetRight();
   const Vec3 camUp   = right.cross(forward);
 
+  Mat4 view{};
   view.data[0] = right.x;
   view.data[1] = camUp.x;
   view.data[2] = -forward.x;
@@ -47,27 +45,24 @@ Mat4 Camera::LookAt() const {
   view.data[13] = -camUp.dot(pos);
   view.data[14] = forward.dot(pos);
   view.data[15] = 1.0f;
-
   return view;
 }
 
 Mat4 Camera::Perspective(const float aspect) const {
-  Mat4 projection{};
-
   const float tanHalfFov = tanf(radians(fov) / 2.0f);
+
+  Mat4 projection{};
   projection.data[0]  =   1.0f / (aspect * tanHalfFov);
   projection.data[5]  =   1.0f / tanHalfFov;
   projection.data[10] = -(farPlane + nearPlane) / (farPlane - nearPlane);
   projection.data[11] =  -1.0f;
   projection.data[14] = -(2.0f * farPlane * nearPlane) / (farPlane - nearPlane);
   projection.data[15] =   0.0f;
-
   return projection;
 };
 
 void Camera::setFov(const float delta) {
   fov += delta;
-
   if (fov < 1.0f)   fov = 1.0f;
   if (fov > 120.0f) fov = 120.0f;
 }
@@ -91,20 +86,19 @@ void Camera::updateFreeCam(InputManager* input, float deltaTime) {
   processMouse(input);
 }
 void Camera::updateDungeonCam(InputManager* input, float deltaTime) {
+  pitch = 0.0f;
+
   if (input->IsKeyPressed(GLFW_KEY_A)) yaw -= 90.0f;
   if (input->IsKeyPressed(GLFW_KEY_D)) yaw += 90.0f;
-
   yaw = std::round(yaw / 90.0f) * 90.0f;
   yaw = fmod(yaw + 360.0f, 360.0f);
 
-  front = Vec3{ cos(radians(yaw)), 0.0f, sin(radians(yaw)) }.normalized();
-  Vec3 right = GetRight();
-  up = right.cross(front).normalized();
-
+  front = Vec3{cos(radians(yaw)), 0.0f, sin(radians(yaw))}.normalized();
   if (input->IsKeyPressed(GLFW_KEY_W)) pos += front * moveDistance;
   if (input->IsKeyPressed(GLFW_KEY_S)) pos -= front * moveDistance;
 
-  pitch = 0.0f;
+  Vec3 right = GetRight();
+  up = right.cross(front).normalized();
 }
 void Camera::updateModernCam(InputManager* input, float deltaTime) {
   processMouse(input);
@@ -131,8 +125,7 @@ void Camera::processKeyboard(InputManager* input, const float deltaTime) {
   if (input->IsKeyDown(GLFW_KEY_A)) moveLeft(deltaTime);
   if (input->IsKeyDown(GLFW_KEY_S)) moveBackward(deltaTime);
   if (input->IsKeyDown(GLFW_KEY_D)) moveRight(deltaTime);
-
-  if (input->IsKeyDown(GLFW_KEY_SPACE)) moveUp(deltaTime);
+  if (input->IsKeyDown(GLFW_KEY_SPACE))        moveUp(deltaTime);
   if (input->IsKeyDown(GLFW_KEY_LEFT_CONTROL)) moveDown(deltaTime);
 }
 
@@ -146,7 +139,7 @@ void Camera::processMouse(InputManager* input) {
   yaw += xoffset;
   pitch += yoffset;
 
-  if (pitch > 89.0f) pitch = 89.0f;
+  if (pitch > 89.0f)  pitch = 89.0f;
   if (pitch < -89.0f) pitch = -89.0f;
 
   front.x = cos(radians(yaw)) * cos(radians(pitch));

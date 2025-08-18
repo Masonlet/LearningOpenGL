@@ -26,13 +26,10 @@ bool Scene::addInstance(const std::string& name, const std::string& path, const 
     return false;
   }
 
-  Transform t = transform.decompose();
   ModelInstance instance;
-  instance.position = t.position;
-  instance.rotation = t.rotation;
-  instance.scale = t.scale;
+  instance.name        = name;
+  instance.meshPath    = path;
   instance.modelMatrix = transform;
-  instance.path = path;
 
   modelInstances[name] = instance;
   return true;

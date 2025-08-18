@@ -3,11 +3,11 @@
 #include "scene/sceneManager.hpp"
 #include "scene/sceneParser.hpp"
 
-#include "utils/files.hpp"
+#include "utils/fileManager.hpp"
 #include "utils/parser.hpp"
 
-#include "utils/grids.hpp"
-#include "utils/primitives.hpp"
+#include "models/grids.hpp"
+#include "models/primitives.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -135,14 +135,14 @@ bool SceneManager::saveTxtScene() {
     if (name.rfind("triangle_instance", 0) == 0 || name.rfind("cube_instance_", 0) == 0 || name.rfind("square_instance_", 0) == 0 || name.rfind("maze_", 0) == 0) 
       continue;
 
-    std::map<std::string, const ModelDrawInfo*>::const_iterator mesh = meshes.find(instance.path);
+    std::map<std::string, const ModelDrawInfo*>::const_iterator mesh = meshes.find(instance.meshPath);
     if (mesh == meshes.end()) {
       fprintf(stderr, "[saveTxtScene ERROR] Missing mesh for '%s'\n", name.c_str());
       continue;
     }
 
     file << "model, " << name << ", "
-         << instance.path << ", "
+         << instance.meshPath << ", "
          << instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
          << instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
          << instance.scale.x << " " << instance.scale.y << " " << instance.scale.z << ", ";
@@ -190,20 +190,11 @@ bool SceneManager::saveTxtScene() {
   return true;
 }
 
-static void applyColourSettings(ModelInstance& instance, const Vec4& colour, const ColourMode& mode) {
-  instance.colour = colour;
-  instance.colourMode = mode;
-}
-
 bool SceneManager::handleModelLine(const unsigned char* p) {
   ParsedModel model{};
   PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
 
   ModelDrawInfo tempInfo{};
-  tempInfo.meshPath = model.path;
-  tempInfo.colour = model.colour;
-  tempInfo.colourMode = model.colourMode;
-
   if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, tempInfo, renderer->getProgram())) {
     fprintf(stderr, "[SceneManager ERROR] Failed to load model: %s\n", model.path.c_str());
     return false;
@@ -219,9 +210,13 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
   scene.addInstance(model.name, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
 
   ModelInstance& instance = scene.getModelInstances()[model.name];
-  applyColourSettings(instance, model.colour, model.colourMode);
-  instance.specular = model.specular;
+  instance.position = model.position;
+  instance.rotation = model.rotation;
   instance.scale = model.scale;
+  instance.colour = model.colour;
+  instance.colourMode = model.colourMode;
+  instance.specular = model.specular;
+  instance.isVisible = model.isVisible;
   return true;
 }
 bool SceneManager::handleLightLine(const unsigned char* p) {
@@ -242,7 +237,7 @@ bool SceneManager::handleLightLine(const unsigned char* p) {
   light->atten = lightData.atten;
   light->direction = lightData.direction;
   light->param1 = {lightData.param1Type, lightData.param1Direction};
-  light->param2 = lightData.param2;
+  light->param2 = { static_cast<float>(lightData.isEnabled), 0.0f, 0.0f, 0.0f };
   return true;
 }
 bool SceneManager::handleCameraLine(const unsigned char* p) {
@@ -259,6 +254,9 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
   cam.setPos(cameraData.position);
   cam.setMoveSpeed(cameraData.speed);
 	cam.setType(cameraData.type);
+  cam.setFov(cameraData.fov);
+  cam.setNear(cameraData.nearPlane);
+  cam.setFar(cameraData.farPlane);
   if (cam.getType() != 0) cam.setMoveDistance(cameraData.moveDistance);
 
   if (!cameraManager->addCamera(cam)) {
@@ -283,7 +281,10 @@ bool SceneManager::handleSquareGridLine(const unsigned char* p) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("cube_instance_", 0) == 0) applyColourSettings(instance, grid.colour, grid.colourMode);
+    if (instanceName.rfind("cube_instance_", 0) == 0) {
+      instance.colour = grid.colour;
+      instance.colourMode = grid.colourMode;
+    }
   }
 
   return true;
@@ -303,7 +304,10 @@ bool SceneManager::handleCubeGridLine(const unsigned char* p) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("cube_instance_", 0) == 0) applyColourSettings(instance, grid.colour, grid.colourMode);
+    if (instanceName.rfind("cube_instance_", 0) == 0) {
+      instance.colour = grid.colour;
+      instance.colourMode = grid.colourMode;
+    }
   }
 
   return true;
@@ -393,7 +397,7 @@ static bool addFloor(Scene& scene, const std::string& name, const std::string& m
   }
 
   ModelInstance& instance = scene.getModelInstances()[name];
-  instance.position = worldPos;
+  instance.position = { worldPos.x, worldPos.y, worldPos.z };
   instance.rotation = rotation;
   return true;
 }
@@ -402,7 +406,8 @@ static bool addWall(Scene& scene, const ParsedMaze& maze, const Vec4& worldPos, 
   if (!condition) return false;
 
   std::string finalMesh = hasEntrance ? maze.exitType : maze.entranceType;
-  hasEntrance = true;
+  if(finalMesh == maze.exitType)
+    hasEntrance = true;
 
   const Vec4 pos = worldPos - wallOffset;
   const Vec3 rot = baseRot + maze.wallRot;
@@ -419,7 +424,7 @@ static bool addWall(Scene& scene, const ParsedMaze& maze, const Vec4& worldPos, 
     }
 
     ModelInstance& instance = scene.getModelInstances()[instanceName];
-    instance.position = stackedPos;
+    instance.position = { stackedPos.x, stackedPos.y, stackedPos.z };
     instance.rotation = rot;
   }
 
@@ -431,8 +436,6 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
     if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, drawInfo)) {
       ModelDrawInfo tempInfo;
       tempInfo.meshPath = modelPath;
-      tempInfo.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
-      tempInfo.colourMode = ColourMode::PLYColour;
 
       if (!renderer->getVAOManager()->LoadModelIntoVAO(modelPath, tempInfo, renderer->getProgram())) {
         fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());

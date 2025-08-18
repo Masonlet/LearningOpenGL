@@ -138,8 +138,8 @@ void Engine::renderFrame() {
 
   for (size_t i = 0; i < transparentInstances.size(); ++i) {
     for (size_t j = 0; j < transparentInstances.size() - i - 1; ++j) {
-      const Vec4& a = transparentInstances[j]->position;
-      const Vec4& b = transparentInstances[j + 1]->position;
+      const Vec3& a = transparentInstances[j]->position;
+      const Vec3& b = transparentInstances[j + 1]->position;
 
       float distA = (a.x - eye.x) * (a.x - eye.x) + (a.y - eye.y) * (a.y - eye.y) + (a.z - eye.z) * (a.z - eye.z);
       float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
@@ -153,7 +153,7 @@ void Engine::renderFrame() {
   }
 
   for (const ModelInstance* instance : transparentInstances) 
-		renderer.drawModel(*instance, view, projection);
+    renderer.drawModel(*instance, view, projection);
   
   // End Frame
   glBindVertexArray(0);

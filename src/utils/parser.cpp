@@ -86,22 +86,35 @@ const unsigned char* parseBool(const unsigned char* p, bool& out) {
   if (strncmp(reinterpret_cast<const char*>(p), "true", 4) == 0 && isDelim(p[4])) {
     out = true;
     p += 4;
+    return skipWhitespaceComma(p);
   }
-  else if (strncmp(reinterpret_cast<const char*>(p), "false", 5) == 0 && isDelim(p[5])) {
+  if (strncmp(reinterpret_cast<const char*>(p), "false", 5) == 0 && isDelim(p[5])) {
     out = false;
     p += 5;
+    return skipWhitespaceComma(p);
   }
-  else if (*p == '1' && isDelim(p[1])) {
+  if (strncmp(reinterpret_cast<const char*>(p), "on", 2) == 0 && isDelim(p[2])) {
+    out = true;
+    p += 2;
+    return skipWhitespaceComma(p);
+  }
+  if (strncmp(reinterpret_cast<const char*>(p), "off", 3) == 0 && isDelim(p[3])) {
+    out = false;
+    p += 3;
+    return skipWhitespaceComma(p);
+  }
+  if (*p == '1' && isDelim(p[1])) {
     out = true;
     ++p;
+    return skipWhitespaceComma(p);
   }
-  else if (*p == '0' && isDelim(p[1])) {
+  if (*p == '0' && isDelim(p[1])) {
     out = false;
     ++p;
+    return skipWhitespaceComma(p);
   }
-  else return nullptr;
- 
-  return skipWhitespaceComma(p);
+
+  return nullptr;
 }
 
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out) {

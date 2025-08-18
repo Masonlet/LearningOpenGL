@@ -12,6 +12,7 @@ Vertex
 */
 struct Vertex {
 	Vec4 pos; // float x, float y, float z
-	Vec4 col; // float r, float g, float b
+	Vec4 col; // float r, float g, float b, float a
 	Vec3 norm; //float nx, float ny, float nz
+	float u, v; 
 };

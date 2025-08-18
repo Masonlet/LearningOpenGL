@@ -7,13 +7,11 @@
 #include <string>
 
 struct ModelInstance {
-	Vec4 position;
-	Vec3 rotation;
-	Vec3 scale;
-	Vec4 colour, specular;
-
+	std::string name;
+	std::string meshPath;
+	Vec3 position{ 0.0f }, rotation{ 0.0f }, scale{ 1.0f };
 	Mat4 modelMatrix;
-
-	std::string path;
-	ColourMode colourMode = ColourMode::Solid;
+	Vec4 colour{ 1.0f }, specular{ 1.0f, 1.0f, 1.0f, 32.0f };
+	ColourMode colourMode{ ColourMode::Solid };
+	bool isVisible{ false }, isLighted{ true }, useTextures{ false };
 };
