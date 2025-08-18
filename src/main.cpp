@@ -9,7 +9,7 @@
 #include "textures/bmp.hpp"
 
 static void LoadTexturesIntoTextureManager(TextureManager* textureManager) {
-	textureManager->SetPath("assets/textures/");
+	textureManager->SetPath("assets/textures");
 
 	textureManager->Create2DBMPTexture("Lava_Texture.bmp", true);
 }
@@ -27,7 +27,7 @@ int main() {
 	if (!engine.setScene("SceneTest"))
 		return -1;
 
-	if (!engine.loadSceneModels())
+	if (!engine.loadSceneMeshes())
 		return -1;
 
 	LoadTexturesIntoTextureManager(engine.getTextureManager());

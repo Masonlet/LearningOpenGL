@@ -21,7 +21,7 @@ struct MeshData {
 	Vertex*       vertices;
 	unsigned int* indices;
 
-	bool hasNormals, hasColours;
+	bool hasNormals, hasColours, hasTexCoords;
 	float minY, maxY;
 
 	MeshData();

@@ -80,8 +80,9 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 	Vec3 randSeed = seedFromName(instance.name);
 	glUniform3f(modelSeedLocation, randSeed.x, randSeed.y, randSeed.z);
 
+	glUniform1i(modelUseTextures, instance.useTextures ? 1 : 0);
 	if (instance.useTextures) {
-		glUniform1f(modelUseTextures, (GLfloat)GL_TRUE);
+		glUniform1i(modelUseTextures, GL_TRUE);
 
 		if (GLint mixLoc = glGetUniformLocation(program, "texMixRatios"); mixLoc >= 0) {
 			glUniform4f(mixLoc,
@@ -96,14 +97,17 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 			if (name.empty()) continue;
 
 			int textureID = textureManager.getTextureIDFromName(name);
+			if(textureID == 0) {
+				fprintf(stderr, "[Renderer ERROR] Could not find texture: %s\n", name.c_str());
+				return false;
+			}
+
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, textureID);
 		}
 	}
-	else glUniform1f(modelUseTextures, (GLfloat)GL_FALSE);
 
-	if (instance.isLighted) glUniform1f(modelLighted, (GLfloat)GL_TRUE);
-	else									  glUniform1f(modelLighted, (GLfloat)GL_FALSE);
+	glUniform1i(modelLighted, instance.isLighted ? 1 : 0);
 
 	if (instance.colour.w < 1.0f)	glDepthMask(GL_FALSE);
 	glBindVertexArray(info->VAOID);

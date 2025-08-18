@@ -102,7 +102,7 @@ bool Engine::setScene(const std::string& sceneIn) {
   if (!sceneManager.loadTxtScene(sceneIn))  return false;
   else                                      return true;
 }
-bool Engine::loadSceneModels() {
+bool Engine::loadSceneMeshes() {
 #ifndef NDEBUG
   printf("[loadSceneModels] Load start time: %f\n", glfwGetTime());
 #endif

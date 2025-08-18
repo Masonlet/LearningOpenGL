@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math/vec2.hpp"
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
 
@@ -14,5 +15,5 @@ struct Vertex {
 	Vec4 pos{ 0.0f }; // float x, float y, float z
 	Vec4 col{ 1.0f }; // float r, float g, float b, float a
 	Vec3 norm{ 0.0f }; //float nx, float ny, float nz
-	float u{ 0.0f }, v{ 0.0f };
+	Vec2 texCoord{ 0.0f }; // float u, float v
 };

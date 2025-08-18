@@ -77,7 +77,7 @@ bool MeshManager::UploadMeshToGPU(MeshData& mesh, unsigned int shaderID) {
   int vTextCoords_location = glGetAttribLocation(shaderID, "vTextCoords");
   if (vTextCoords_location != -1) {
     glEnableVertexAttribArray(vTextCoords_location);
-    glVertexAttribPointer(vTextCoords_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, u));
+    glVertexAttribPointer(vTextCoords_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
   }
 
   // Now that all the parts are set up, set the VAO to zero

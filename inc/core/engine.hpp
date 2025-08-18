@@ -29,7 +29,7 @@ public:
 
 	bool initialize(const unsigned int width, const unsigned int height, const char* title);
 	bool setScene(const std::string& sceneIn = "Default");
-	bool loadSceneModels();
+	bool loadSceneMeshes();
 	void run();
 
 	void updateWireframe();

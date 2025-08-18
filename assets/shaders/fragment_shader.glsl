@@ -17,7 +17,6 @@ struct Light {
 uniform Light theLights[NUMBEROFLIGHTS];
 uniform vec3 eyeLocation;
 uniform vec4 vertSpecular;
-uniform vec3 ambientRGB;
 
 uniform bool bUseTextures; 
 uniform bool bLighted;
@@ -132,5 +131,5 @@ void main() {
 	}
 
 	vec4 lightContrib = calculateLightContrib(finalTextRGBA, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
-	pixelColour = vec4(lightContrib.rgb + ambientRGB, finalTextRGBA.a);
+	pixelColour = vec4(lightContrib.rgb, finalTextRGBA.a);
 };

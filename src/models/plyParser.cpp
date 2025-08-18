@@ -4,7 +4,7 @@
 #include <string>
 
 bool parsePlyMesh(const unsigned char* p, unsigned int size, MeshData& drawInfo) {
-	const unsigned char* cursor = parsePlyHeader(p, drawInfo.numVertices, drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours);
+	const unsigned char* cursor = parsePlyHeader(p, drawInfo.numVertices, drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours, drawInfo.hasTexCoords);
 	if (!cursor) {
 		fprintf(stderr, "[LoadModelFromFile ERROR] Failed to parse header or missing 'end_header'\n");
 		delete[] drawInfo.indices;
@@ -69,7 +69,7 @@ static const unsigned char* parsePlyElementLine(const unsigned char* p, unsigned
 	return p;
 }
 
-static const unsigned char* parsePlyPropertyLine(const unsigned char* p, bool& hasNx, bool& hasNy, bool& hasNz, bool& hasR, bool& hasG, bool& hasB) {
+static const unsigned char* parsePlyPropertyLine(const unsigned char* p, bool& hasNx, bool& hasNy, bool& hasNz, bool& hasR, bool& hasG, bool& hasB, bool& hasU, bool& hasV) {
 	const unsigned char* trimmed = skipWhitespace(p + 8);
 
 	char temp[32]{};
@@ -99,28 +99,29 @@ static const unsigned char* parsePlyPropertyLine(const unsigned char* p, bool& h
 	if (strcmp(propertyName, "nx") == 0 || strcmp(propertyName, "normal_x") == 0) hasNx = true;
 	else if (strcmp(propertyName, "ny") == 0 || strcmp(propertyName, "normal_y") == 0) hasNy = true;
 	else if (strcmp(propertyName, "nz") == 0 || strcmp(propertyName, "normal_z") == 0) hasNz = true;
+
 	else if (strcmp(propertyName, "red") == 0) hasR = true;
 	else if (strcmp(propertyName, "green") == 0) hasG = true;
 	else if (strcmp(propertyName, "blue") == 0) hasB = true;
+
+	else if (strcmp(propertyName, "u") == 0 || strcmp(propertyName, "texture_u") == 0) hasU = true;
+	else if (strcmp(propertyName, "v") == 0 || strcmp(propertyName, "texture_v") == 0) hasV = true;
+
 	return trimmed;
 }
 
-static bool checkPlyNormalsAndColors(bool hasNx, bool hasNy, bool hasNz, bool hasR, bool hasG, bool hasB, bool& hasNormals, bool& hasColors) {
-	hasNormals = hasNx && hasNy && hasNz;
-	hasColors = hasR && hasG && hasB;
-	return true;
-}
-
-const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut) {
+const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut, bool& hasTexCoordsOut) {
 	if (!p) return nullptr;
 
 	numVerticesOut = 0;
 	numTrianglesOut = 0;
 	hasNormalsOut = false;
 	hasColoursOut = false;
+	hasTexCoordsOut = false;
 
 	bool hasNx = false, hasNy = false, hasNz = false;
 	bool hasRed = false, hasGreen = false, hasBlue = false;
+	bool hasU = false, hasV = false;
 
 	while (*p) {
 		const char* lineStart = reinterpret_cast<const char*>(p);
@@ -134,14 +135,14 @@ const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVer
 				return nullptr;
 		}
 		else if (strncmp((const char*)trimmed, "property", 8) == 0) {
-			if (!parsePlyPropertyLine(trimmed, hasNx, hasNy, hasNz, hasRed, hasGreen, hasBlue))
+			if (!parsePlyPropertyLine(trimmed, hasNx, hasNy, hasNz, hasRed, hasGreen, hasBlue, hasU, hasV))
 				return nullptr;
 		}
 		else if (strncmp((const char*)trimmed, "end_header", 10) == 0) {
-			if (!checkPlyNormalsAndColors(hasNx, hasNy, hasNz, hasRed, hasGreen, hasBlue, hasNormalsOut, hasColoursOut))
-				return nullptr;
-			else
-				return skipToNextLine(trimmed);
+			hasNormalsOut = hasNx && hasNy && hasNz;
+			hasColoursOut = hasRed && hasGreen && hasBlue;
+			hasTexCoordsOut = hasU && hasV;
+			return skipToNextLine(trimmed);
 		}
 		else if (!(strncmp((const char*)trimmed, "ply", 3) == 0)
 			&& !(strncmp((const char*)trimmed, "format", 6) == 0)
@@ -206,7 +207,6 @@ const unsigned char* parseVertices(MeshData& drawInfo, const unsigned char* p) {
 			PARSE_OR_INVALID(parseFloat, v.norm.y, "Failed to parse normal Y");
 			PARSE_OR_INVALID(parseFloat, v.norm.z, "Failed to parse normal Z");
 		}
-		else v.norm = DEFAULT_NORMAL;
 
 		//Colour
 		if (drawInfo.hasColours) {
@@ -250,6 +250,12 @@ const unsigned char* parseVertices(MeshData& drawInfo, const unsigned char* p) {
 					}
 				}
 			}
+		}
+
+		//TexCoords
+		if (drawInfo.hasTexCoords) {
+			PARSE_OR_INVALID(parseFloat, v.texCoord.x, "Failed to parse texcoord U");
+			PARSE_OR_INVALID(parseFloat, v.texCoord.y, "Failed to parse texcoord V");
 		}
 
 		if (v.pos.y < minY) minY = v.pos.y;

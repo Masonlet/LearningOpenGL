@@ -18,6 +18,7 @@ MeshData::MeshData() {
 
   this->hasNormals = false;
   this->hasColours = false;
+  this->hasTexCoords = false;
 
   this->minY = 0.0f;
 	this->maxY = 0.0f;
@@ -59,6 +60,7 @@ MeshData& MeshData::operator=(MeshData&& other) noexcept {
 
     hasNormals = other.hasNormals;
     hasColours = other.hasColours;
+		hasTexCoords = other.hasTexCoords;
 
 		minY = other.minY;
 		maxY = other.maxY;
