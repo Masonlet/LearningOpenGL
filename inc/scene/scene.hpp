@@ -19,8 +19,6 @@ public:
   void addModelInfo(const std::string& name, const ModelDrawInfo* info);
   bool addInstance(const std::string& name, const std::string& path, const Mat4& transform);
 
-  void clearModels(VAOManager& vaoManager);
-
 private:
   std::string sceneName;
   std::map<std::string, const ModelDrawInfo*> modelInfos;

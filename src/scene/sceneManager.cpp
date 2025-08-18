@@ -3,11 +3,11 @@
 #include "scene/sceneManager.hpp"
 #include "scene/sceneParser.hpp"
 
-#include "utils/files.hpp"
+#include "utils/fileManager.hpp"
 #include "utils/parser.hpp"
 
-#include "utils/grids.hpp"
-#include "utils/primitives.hpp"
+#include "models/grids.hpp"
+#include "models/primitives.hpp"
 
 #include <fstream>
 #include <iomanip>

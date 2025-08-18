@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include "textures/bmp.hpp"
-#include "utils/bmpParser.hpp"
-
+#include "textures/bmpParser.hpp"
 
 bool BMPTexture::CreateBMPTexture(std::string name, std::string path, bool generateMIPMap) {
 	BMP temp;

@@ -5,7 +5,7 @@
 #endif
 
 #include "core/engine.hpp"
-#include "utils/bmpParser.hpp"
+#include "textures/bmpParser.hpp"
 #include "textures/bmp.hpp"
 
 int main() {

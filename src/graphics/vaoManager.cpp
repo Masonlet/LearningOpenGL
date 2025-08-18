@@ -2,8 +2,8 @@
 
 #include "graphics/vaoManager.hpp"
 #include "utils/parser.hpp"
-#include "utils/plyParser.hpp"
-#include "utils/files.hpp"
+#include "models/plyParser.hpp"
+#include "utils/fileManager.hpp"
 
 #include <sstream>
 
