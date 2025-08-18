@@ -18,6 +18,9 @@ ModelDrawInfo::ModelDrawInfo() {
 
   this->hasNormals = false;
   this->hasColours = false;
+
+  this->minY = 0.0f;
+	this->maxY = 0.0f;
 }
 ModelDrawInfo::~ModelDrawInfo() {
   if (vertices) {
@@ -56,6 +59,9 @@ ModelDrawInfo& ModelDrawInfo::operator=(ModelDrawInfo&& other) noexcept {
 
     hasNormals = other.hasNormals;
     hasColours = other.hasColours;
+
+		minY = other.minY;
+		maxY = other.maxY;
 
     other.vertices = nullptr;
     other.indices = nullptr;

@@ -190,11 +190,6 @@ bool SceneManager::saveTxtScene() {
   return true;
 }
 
-static void applyColourSettings(ModelInstance& instance, const Vec4& colour, const ColourMode& mode) {
-  instance.colour = colour;
-  instance.colourMode = mode;
-}
-
 bool SceneManager::handleModelLine(const unsigned char* p) {
   ParsedModel model{};
   PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
@@ -215,10 +210,11 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
   scene.addInstance(model.name, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
 
   ModelInstance& instance = scene.getModelInstances()[model.name];
-  applyColourSettings(instance, model.colour, model.colourMode);
   instance.position = model.position;
   instance.rotation = model.rotation;
   instance.scale = model.scale;
+  instance.colour = model.colour;
+  instance.colourMode = model.colourMode;
   instance.specular = model.specular;
   instance.isVisible = model.isVisible;
   return true;
@@ -285,7 +281,10 @@ bool SceneManager::handleSquareGridLine(const unsigned char* p) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("cube_instance_", 0) == 0) applyColourSettings(instance, grid.colour, grid.colourMode);
+    if (instanceName.rfind("cube_instance_", 0) == 0) {
+      instance.colour = grid.colour;
+      instance.colourMode = grid.colourMode;
+    }
   }
 
   return true;
@@ -305,7 +304,10 @@ bool SceneManager::handleCubeGridLine(const unsigned char* p) {
     const std::string& instanceName = it->first;
     ModelInstance& instance = it->second;
 
-    if (instanceName.rfind("cube_instance_", 0) == 0) applyColourSettings(instance, grid.colour, grid.colourMode);
+    if (instanceName.rfind("cube_instance_", 0) == 0) {
+      instance.colour = grid.colour;
+      instance.colourMode = grid.colourMode;
+    }
   }
 
   return true;

@@ -2,7 +2,6 @@
 
 #include "models/grids.hpp"
 #include "models/primitives.hpp"
-#include "core/meshLoader.hpp"
 
 #include <cmath>
 
@@ -82,6 +81,22 @@ bool createCubeGrid(SceneManager& loader, const std::string& baseName, int start
 	return true;
 }
 
+
+static bool createMeshFromPath(VAOManager& vaoManager, const std::string& name, const std::string& path, const Vec3& scale, bool hasNormals) {
+	ModelDrawInfo info;
+	info.meshPath = name;
+
+	if (!vaoManager.LoadModelFromFile(path, info))
+		return false;
+
+	for (unsigned int i = 0; i < info.numVertices; ++i) {
+		info.vertices[i].pos.x *= scale.x;
+		info.vertices[i].pos.y *= scale.y;
+		info.vertices[i].pos.z *= scale.z;
+	}
+
+	return vaoManager.LoadModelIntoVAO(name, info, 0);
+}
 bool createMeshGridFromPath(SceneManager& loader, const std::string& baseName, const std::string& path, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& scale, bool hasNormals) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	std::string sharedName = baseName + "_sharedMesh";

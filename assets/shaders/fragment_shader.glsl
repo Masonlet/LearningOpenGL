@@ -33,7 +33,7 @@ uniform vec4 texMixRatios;
 in vec4 vertColor;
 in vec4 vertNormal;
 in vec4 vertWorldPosition;
-in vec4 vertTextCoords;
+in vec2 vertTextCoords;
 
 out vec4 pixelColour;
 

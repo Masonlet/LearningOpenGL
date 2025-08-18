@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(LearningOpenGL)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_SUPPRESS_REGENERATION ON)
 
 file(GLOB_RECURSE SOURCES        ${CMAKE_SOURCE_DIR}/src/*.cpp ${CMAKE_SOURCE_DIR}/src/*.c)
 file(GLOB_RECURSE HEADERS        ${CMAKE_SOURCE_DIR}/inc/*.hpp ${CMAKE_SOURCE_DIR}/inc/*.h)
@@ -38,6 +39,17 @@ target_include_directories(glad PUBLIC ${CMAKE_SOURCE_DIR}/external/inc)
 find_package(OpenGL REQUIRED)
 target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_target_properties(glfw PROPERTIES FOLDER "External")
+set_target_properties(glad PROPERTIES FOLDER "External")
+if(TARGET update_mappings)
+  set_target_properties(update_mappings PROPERTIES FOLDER "External")
+endif()
+
+if(TARGET uninstall)
+  set_target_properties(uninstall PROPERTIES FOLDER "External")
+endif()
+
 # Output directories
 set_target_properties(LearningOpenGL PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -53,4 +65,5 @@ add_custom_command(TARGET LearningOpenGL POST_BUILD
 )
 
 # Default Project
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT LearningOpenGL)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT LearningOpenGL)
+

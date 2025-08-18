@@ -103,34 +103,6 @@ const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVer
 	return nullptr;
 }
 
-const static Vec3 calculateGradient(float y, float minY, float maxY) {
-	float range = maxY - minY;
-	float normalizedY = (range == 0.0f) ? 0.0f : (y - minY) / range;
-
-	Vec3 colors[5] = {
-			Vec3{1.0f, 0.0f, 0.0f},  // Red 
-			Vec3{1.0f, 0.5f, 0.0f},  // Orange
-			Vec3{1.0f, 1.0f, 0.0f},  // Yellow
-			Vec3{0.0f, 1.0f, 0.0f},  // Green
-			Vec3{0.0f, 0.0f, 1.0f}   // Blue 
-	};
-
-	const float bandSize = 1.0f / 4.0f; // 4 intervals for 5 colors
-	int bandIndex = static_cast<int>(normalizedY / bandSize);
-	if (bandIndex >= 4) bandIndex = 3;
-	if (bandIndex < 0) bandIndex = 0;
-
-	const float localT = (normalizedY - bandIndex * bandSize) / bandSize;
-
-	const Vec3 color1 = colors[bandIndex];
-	const Vec3 color2 = colors[bandIndex + 1];
-
-	return {
-			color1.x + (color2.x - color1.x) * localT,
-			color1.y + (color2.y - color1.y) * localT,
-			color1.z + (color2.z - color1.z) * localT
-	};
-}
 const unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigned char* p) {
 	if (!drawInfo.vertices || drawInfo.numVertices == 0) {
 		fprintf(stderr, "[parseVertices ERROR] vertices buffer not allocated!\n");
@@ -186,46 +158,45 @@ const unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigned char*
 		else v.norm = DEFAULT_NORMAL;
 
 		//Colour
-		linePtr = skipWhitespace(linePtr);
-		if (*linePtr != '\0') {
-			Vec3 colour = { 1.0f, 1.0f, 1.0f };
-			const unsigned char* original = linePtr;
-			const unsigned char* temp = linePtr;
+		if (drawInfo.hasColours) {
+			linePtr = skipWhitespace(linePtr);
+			if (*linePtr != '\0') {
+				Vec3 colour = { 1.0f, 1.0f, 1.0f };
+				const unsigned char* original = linePtr;
 
-			bool parsedFloat = true;
-			PARSE_OR_INVALID(parseFloat, colour.r, "Failed to parse colour R");
-			PARSE_OR_INVALID(parseFloat, colour.g, "Failed to parse colour G");
-			PARSE_OR_INVALID(parseFloat, colour.b, "Failed to parse colour B");
+				bool parsedFloat = true;
+				PARSE_OR_INVALID(parseFloat, colour.r, "Failed to parse colour R");
+				PARSE_OR_INVALID(parseFloat, colour.g, "Failed to parse colour G");
+				PARSE_OR_INVALID(parseFloat, colour.b, "Failed to parse colour B");
 
-			if (parsedFloat &&
-				colour.x >= 0.0f && colour.x <= 1.0f &&
-				colour.y >= 0.0f && colour.y <= 1.0f &&
-				colour.z >= 0.0f && colour.z <= 1.0f) {
-				v.col = Vec4{ colour.x, colour.y, colour.z, 1.0f };
-				drawInfo.hasColours = true;
-			}
-			else {
-				temp = original;
-				unsigned int ri = 0, gi = 0, bi = 0, ai = 255;
-				const unsigned char* q = temp;
-				valid = true;
-
-				if (!(q = parseUInt(q, ri))) valid = false;
-				if (!(q = parseUInt(q, gi))) valid = false;
-				if (!(q = parseUInt(q, bi))) valid = false;
-
-				const unsigned char* parsedAlpha = parseUInt(q, ai);
-				if (!parsedAlpha) ai = 255;
-				else q = parsedAlpha;
-
-				if (valid && ri <= 255 && gi <= 255 && bi <= 255) {
-					v.col = Vec4{
-							static_cast<float>(ri) / 255.0f,
-							static_cast<float>(gi) / 255.0f,
-							static_cast<float>(bi) / 255.0f,
-							static_cast<float>(ai) / 255.0f
-					};
+				if (parsedFloat &&
+					colour.x >= 0.0f && colour.x <= 1.0f &&
+					colour.y >= 0.0f && colour.y <= 1.0f &&
+					colour.z >= 0.0f && colour.z <= 1.0f) {
+					v.col = Vec4{ colour.x, colour.y, colour.z, 1.0f };
 					drawInfo.hasColours = true;
+				}
+				else {
+					unsigned int ri = 0, gi = 0, bi = 0, ai = 255;
+					const unsigned char* q = original;
+
+					valid = true;
+					if (!(q = parseUInt(q, ri))) valid = false;
+					if (!(q = parseUInt(q, gi))) valid = false;
+					if (!(q = parseUInt(q, bi))) valid = false;
+
+					const unsigned char* parsedAlpha = parseUInt(q, ai);
+					if (!parsedAlpha) ai = 255;
+					else q = parsedAlpha;
+
+					if (valid && ri <= 255 && gi <= 255 && bi <= 255) {
+						v.col = Vec4{
+								static_cast<float>(ri) / 255.0f,
+								static_cast<float>(gi) / 255.0f,
+								static_cast<float>(bi) / 255.0f,
+								static_cast<float>(ai) / 255.0f
+						};
+					}
 				}
 			}
 		}
@@ -237,6 +208,8 @@ const unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigned char*
 		p = reinterpret_cast<const unsigned char*>(lineEnd);
 	}
 
+	drawInfo.minY = minY;
+	drawInfo.maxY = maxY;
 	return p;
 }
 

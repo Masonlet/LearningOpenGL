@@ -22,6 +22,7 @@ struct ModelDrawInfo {
 	unsigned int* indices;
 
 	bool hasNormals, hasColours;
+	float minY, maxY;
 
 	ModelDrawInfo();
 	~ModelDrawInfo();

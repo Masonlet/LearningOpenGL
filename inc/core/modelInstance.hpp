@@ -13,5 +13,5 @@ struct ModelInstance {
 	Mat4 modelMatrix;
 	Vec4 colour{ 1.0f }, specular{ 1.0f, 1.0f, 1.0f, 32.0f };
 	ColourMode colourMode{ ColourMode::Solid };
-	bool overrideVertexModelColour, isVisible{ false }, isLighted{ true }, useTextures{ false };
+	bool isVisible{ false }, isLighted{ true }, useTextures{ false };
 };
