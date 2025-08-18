@@ -3,6 +3,57 @@
 #include "math/constants.hpp"
 #include <string>
 
+bool parsePlyMesh(const unsigned char* p, unsigned int size, MeshData& drawInfo) {
+	const unsigned char* cursor = parsePlyHeader(p, drawInfo.numVertices, drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours);
+	if (!cursor) {
+		fprintf(stderr, "[LoadModelFromFile ERROR] Failed to parse header or missing 'end_header'\n");
+		delete[] drawInfo.indices;
+		drawInfo.indices = nullptr;
+		delete[] drawInfo.vertices;
+		drawInfo.vertices = nullptr;
+		delete[] p;
+		return false;
+	}
+
+	if (drawInfo.numVertices == 0 || drawInfo.numTriangles == 0) {
+		fprintf(stderr, "[LoadModelFromFile ERROR] Header found but no vertices/triangles declared\n");
+		delete[] drawInfo.indices;
+		drawInfo.indices = nullptr;
+		delete[] drawInfo.vertices;
+		drawInfo.vertices = nullptr;
+		delete[] p;
+		return false;
+	}
+	drawInfo.numIndices = drawInfo.numTriangles * 3;
+
+	drawInfo.vertices = new Vertex[drawInfo.numVertices];
+	cursor = parseVertices(drawInfo, cursor);
+	if (!cursor) {
+		fprintf(stderr, "[LoadModelFromFile ERROR] Vertex data input failed\n");
+		delete[] drawInfo.indices;
+		drawInfo.indices = nullptr;
+		delete[] drawInfo.vertices;
+		drawInfo.vertices = nullptr;
+		delete[] p;
+		return false;
+	}
+
+	drawInfo.indices = new unsigned int[drawInfo.numIndices];
+	cursor = parseIndices(drawInfo, cursor);
+	if (!cursor) {
+		fprintf(stderr, "[LoadModelFromFile ERROR] Face data input failed\n");
+		delete[] drawInfo.indices;
+		drawInfo.indices = nullptr;
+		delete[] drawInfo.vertices;
+		drawInfo.vertices = nullptr;
+		delete[] p;
+		return false;
+	}
+
+	delete[] p;
+	return true;
+}
+
 static const unsigned char* parsePlyElementLine(const unsigned char* p, unsigned int& verticesOut, unsigned int& trianglesOut) {
 	const unsigned char* trimmed = skipWhitespace(p + 7);
 
@@ -103,7 +154,7 @@ const unsigned char* parsePlyHeader(const unsigned char* p, unsigned int& numVer
 	return nullptr;
 }
 
-const unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigned char* p) {
+const unsigned char* parseVertices(MeshData& drawInfo, const unsigned char* p) {
 	if (!drawInfo.vertices || drawInfo.numVertices == 0) {
 		fprintf(stderr, "[parseVertices ERROR] vertices buffer not allocated!\n");
 		return nullptr;
@@ -213,7 +264,7 @@ const unsigned char* parseVertices(ModelDrawInfo& drawInfo, const unsigned char*
 	return p;
 }
 
-const unsigned char* parseIndices(ModelDrawInfo& drawInfo, const unsigned char* p) {
+const unsigned char* parseIndices(MeshData& drawInfo, const unsigned char* p) {
 	if (!drawInfo.indices || drawInfo.numIndices == 0) {
 		fprintf(stderr, "[parseIndices ERROR] index buffer not allocated!\n");
 		return nullptr;

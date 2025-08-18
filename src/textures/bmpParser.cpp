@@ -1,6 +1,6 @@
 #include "textures/bmpParser.hpp"
 #include "textures/bmp.hpp"
-#include "utils/fileManager.hpp"
+#include "utils/fileParser.hpp"
 #include <cstdio>
 
 static bool readHeader(const unsigned char* buffer, int& height, int& width) {

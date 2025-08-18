@@ -8,6 +8,12 @@
 #include "textures/bmpParser.hpp"
 #include "textures/bmp.hpp"
 
+static void LoadTexturesIntoTextureManager(TextureManager* textureManager) {
+	textureManager->SetPath("assets/textures/");
+
+	textureManager->Create2DBMPTexture("Lava_Texture.bmp", true);
+}
+
 int main() {
 #ifdef NDEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -15,18 +21,21 @@ int main() {
 #endif
 	
 	Engine engine{};
-	engine.initialize(1920, 1200, "Test");
-
-	/* 
-	* Saving scene currently only works with models and lights
-	* I have not introduced enough features with primitives to feel worth refactoring the code to make it work
-	*/
-	if (!engine.setScene("SceneTest")) 
+	if (!engine.initialize(1920, 1200, "Test"))
 		return -1;
 
-	BMP bmp;
-	if (!parseBMP("assets/textures/Lava_Texture.bmp", bmp))
+	if (!engine.setScene("SceneTest"))
 		return -1;
+
+	if (!engine.loadSceneModels())
+		return -1;
+
+	LoadTexturesIntoTextureManager(engine.getTextureManager());
+	std::map<std::string, ModelData>& objects = engine.getModelData();
+	ModelData* lavaModel = &objects["cow3"];
+	lavaModel->textureNames[0] = "Lava_Texture.bmp";
+	lavaModel->textureMixRatio[0] = 1.0f;
+	lavaModel->useTextures = true;
 
 	engine.run();
 	return 0;

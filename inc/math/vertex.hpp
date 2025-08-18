@@ -11,8 +11,8 @@ Vertex
 * this vertex structure will also need to change (usually) 
 */
 struct Vertex {
-	Vec4 pos; // float x, float y, float z
-	Vec4 col; // float r, float g, float b, float a
-	Vec3 norm; //float nx, float ny, float nz
-	float u, v; 
+	Vec4 pos{ 0.0f }; // float x, float y, float z
+	Vec4 col{ 1.0f }; // float r, float g, float b, float a
+	Vec3 norm{ 0.0f }; //float nx, float ny, float nz
+	float u{ 0.0f }, v{ 0.0f };
 };

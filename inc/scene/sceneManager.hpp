@@ -10,19 +10,19 @@
 
 class SceneManager {
 public:
-  SceneManager(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager);
+  SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager);
 
   Scene& getScene() { return scene; }
-  Renderer* getRenderer() const { return renderer; }
 
-  bool loadTxtScene(const std::string& sceneName);
+  bool loadTxtScene(const std::string& name);
   bool saveTxtScene();
 
 private:
   Scene scene;
-  Renderer* renderer;
-  LightManager* lightManager;
-  CameraManager* cameraManager;
+  Renderer& renderer;
+  LightManager& lightManager;
+  CameraManager& cameraManager;
+	MeshManager& meshManager;
 
   std::optional<ParsedMaze> pendingMaze;
 

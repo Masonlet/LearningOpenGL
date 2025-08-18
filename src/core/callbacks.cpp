@@ -28,12 +28,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 
-    if(key == GLFW_KEY_L){
-			if (!engine->getSceneManager().saveTxtScene())
-				fprintf(stderr, "[KEY_CALLBACK] Failed to save scene\n");
-			else 
-				printf("[KEY_CALLBACK] Scene saved successfully!\n");
-    }
+    //if(key == GLFW_KEY_L){
+		//	if (!engine->getSceneManager().saveTxtScene())
+		//		fprintf(stderr, "[KEY_CALLBACK] Failed to save scene\n");
+		//	else 
+		//		printf("[KEY_CALLBACK] Scene saved successfully!\n");
+    //}
 
 		if (key == GLFW_KEY_N) {
 			if (mods & GLFW_MOD_SHIFT) engine->incrementModel();

@@ -2,25 +2,27 @@
 
 #include "graphics/renderer.hpp"
 
-Renderer::Renderer() : shaderManager(nullptr), vaoManager(nullptr), program(0),
-modelLocation(-1), modelViewLocation(-1), modelProjectionLocation(-1),
-modelInverseTransposeLocation(-1), modelSpecularLocation(-1),
-modelLighted(false), modelUseTextures(false),
-modelColourModeLocation(-1), modelColourOverrideLocation(-1),
-modelHasVertColourLocation(-1), modelMinYMaxYLocation(-1),
-modelSeedLocation(-1) {
+Renderer::Renderer(ShaderManager& shaderManagerIn, MeshManager& meshManagerIn, TextureManager& textureManagerIn)
+	: shaderManager(shaderManagerIn), meshManager(meshManagerIn), textureManager(textureManagerIn),
+	  program(0),
+	  modelLocation(-1), modelViewLocation(-1), modelProjectionLocation(-1),
+		modelInverseTransposeLocation(-1), modelSpecularLocation(-1),
+		modelLighted(false), modelUseTextures(false),
+		modelColourModeLocation(-1), modelColourOverrideLocation(-1),
+		modelHasVertColourLocation(-1), modelMinYMaxYLocation(-1),
+		modelSeedLocation(-1) {
 }
 
 Renderer::~Renderer() {}
 
-void Renderer::initialize(ShaderManager* shaderManager, VAOManager* vaoManager) {
-	this->shaderManager = shaderManager;
-	this->vaoManager = vaoManager;
-}
-
 void Renderer::setProgram(unsigned int program) {
 	this->program = program;
 	glUseProgram(program);
+
+	glUniform1i(glGetUniformLocation(program, "textSampler2D_00"), 0);
+	glUniform1i(glGetUniformLocation(program, "textSampler2D_01"), 1);
+	glUniform1i(glGetUniformLocation(program, "textSampler2D_02"), 2);
+	glUniform1i(glGetUniformLocation(program, "textSampler2D_03"), 3);
 
 	modelLighted = glGetUniformLocation(program, "bLighted");
 	modelLocation = glGetUniformLocation(program, "mModel");
@@ -56,15 +58,15 @@ static Vec3 seedFromName(const std::string& s) {
 	b = fmod(b / 255.0f, 1.0f);
 	return { r, g, b };
 }
-bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const Mat4& projection) {
+bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4& projection) {
 	if (!instance.isVisible) return true;
 
-	const ModelDrawInfo* info;
-	if (!vaoManager->FindDrawInfoByModelName(instance.meshPath, info)) {
+	const MeshData* info{};
+	if (!meshManager.findMesh(instance.meshPath, info)) {
 		fprintf(stderr, "[Renderer ERROR] Could not find mesh: %s\n", instance.meshPath.c_str());
 		return false;
 	}
-
+	 
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.data);
 	Mat4 modelIT = instance.modelMatrix.inverse().transpose();
 	glUniformMatrix4fv(modelInverseTransposeLocation, 1, GL_FALSE, modelIT.data);
@@ -78,10 +80,30 @@ bool Renderer::drawModel(const ModelInstance& instance, const Mat4& view, const 
 	Vec3 randSeed = seedFromName(instance.name);
 	glUniform3f(modelSeedLocation, randSeed.x, randSeed.y, randSeed.z);
 
-	if (instance.useTextures) glUniform1f(modelUseTextures, (GLfloat)GL_TRUE);
-	else										  glUniform1f(modelUseTextures, (GLfloat)GL_FALSE);
-	if (instance.isLighted)   glUniform1f(modelLighted, (GLfloat)GL_TRUE);
-	else									    glUniform1f(modelLighted, (GLfloat)GL_FALSE);
+	if (instance.useTextures) {
+		glUniform1f(modelUseTextures, (GLfloat)GL_TRUE);
+
+		if (GLint mixLoc = glGetUniformLocation(program, "texMixRatios"); mixLoc >= 0) {
+			glUniform4f(mixLoc,
+				instance.textureMixRatio[0],
+				instance.textureMixRatio[1],
+				instance.textureMixRatio[2],
+				instance.textureMixRatio[3]);
+		}
+
+		for (size_t i = 0; i < 4; ++i) {
+			const std::string& name = instance.textureNames[i];
+			if (name.empty()) continue;
+
+			int textureID = textureManager.getTextureIDFromName(name);
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, textureID);
+		}
+	}
+	else glUniform1f(modelUseTextures, (GLfloat)GL_FALSE);
+
+	if (instance.isLighted) glUniform1f(modelLighted, (GLfloat)GL_TRUE);
+	else									  glUniform1f(modelLighted, (GLfloat)GL_FALSE);
 
 	if (instance.colour.w < 1.0f)	glDepthMask(GL_FALSE);
 	glBindVertexArray(info->VAOID);

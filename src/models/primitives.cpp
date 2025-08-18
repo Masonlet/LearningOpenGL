@@ -1,8 +1,8 @@
 #include "models/primitives.hpp"
 
-bool createTriangle(VAOManager* vaoManager, const std::string& name, unsigned int shaderID, const Vec2& size, const Vec4& vertexColour) {
-	ModelDrawInfo info;
-	info.meshPath = name;
+bool createTriangle(MeshManager* meshManager, const std::string& name, unsigned int shaderID, const Vec2& size, const Vec4& vertexColour) {
+	MeshData info;
+	info.path = name;
 	info.numVertices = 3;
 	info.numIndices = 3;
 	info.numTriangles = 1;
@@ -21,12 +21,12 @@ bool createTriangle(VAOManager* vaoManager, const std::string& name, unsigned in
 	info.indices[1] = 1;
 	info.indices[2] = 2;
 
-	return vaoManager->LoadPrimitiveIntoVAO(info, shaderID);
+	return meshManager->loadMeshPrimitive(info, shaderID);
 }
 
-bool createSquare(VAOManager* vaoManager, const std::string& name, unsigned int shaderID, const Vec2& size) {
-	ModelDrawInfo info;
-	info.meshPath = name;
+bool createSquare(MeshManager* meshManager, const std::string& name, unsigned int shaderID, const Vec2& size) {
+	MeshData info;
+	info.path = name;
 	info.numVertices = 6;
 	info.numIndices = 6;
 	info.numTriangles = 2;
@@ -52,13 +52,13 @@ bool createSquare(VAOManager* vaoManager, const std::string& name, unsigned int 
 		info.indices[i] = i;
 	}
 
-	return vaoManager->LoadPrimitiveIntoVAO(info, shaderID);
+	return meshManager->loadMeshPrimitive(info, shaderID);
 }
 
-bool fillCubeMeshData(ModelDrawInfo& info, const std::string& name, const Vec3& size) {
+void fillCubeMeshData(MeshData& info, const std::string& name, const Vec3& size) {
 	constexpr int vertexCount = 36;
 
-	info.meshPath = name;
+	info.path = name;
 	info.numVertices = vertexCount;
 	info.numIndices = vertexCount;
 	info.numTriangles = 12;
@@ -94,17 +94,16 @@ bool fillCubeMeshData(ModelDrawInfo& info, const std::string& name, const Vec3& 
 		}
 	}
 
-	return true;
+	return;
 }
 
-bool createCube(VAOManager* vaoManager, const std::string& name, const Vec3& size) {
-	ModelDrawInfo info;
-	info.meshPath = name;
+bool createCube(MeshManager* meshManager, const std::string& name, const Vec3& size) {
+	MeshData info;
+	info.path = name;
 
-	if (!fillCubeMeshData(info, name, size)) 
-		return false;
+	fillCubeMeshData(info, name, size);
 
-	if (!vaoManager->LoadPrimitiveIntoVAO(info, 0)) {
+	if (!meshManager->loadMeshPrimitive(info, 0)) {
 		fprintf(stderr, "createCube: LoadPrimitiveIntoVAO failed for %s\n", name.c_str());
 		return false;
 	}

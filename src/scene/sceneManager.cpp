@@ -3,7 +3,7 @@
 #include "scene/sceneManager.hpp"
 #include "scene/sceneParser.hpp"
 
-#include "utils/fileManager.hpp"
+#include "utils/fileParser.hpp"
 #include "utils/parser.hpp"
 
 #include "models/grids.hpp"
@@ -12,8 +12,8 @@
 #include <fstream>
 #include <iomanip>
 
-SceneManager::SceneManager(Renderer* renderer, LightManager* lightManager, CameraManager* cameraManager) 
-  : renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), scene() {}
+SceneManager::SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager)
+  : meshManager(meshManager), renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), scene() {}
 
 bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 #ifndef NDEBUG
@@ -50,7 +50,7 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 
   scene.setSceneName(sceneIn);
 
-  if (cameraManager->getCameraCount() == 0) {
+  if (cameraManager.getCameraCount() == 0) {
     Camera defaultCam;
     defaultCam.setPos({ 0.0f, 5.0f, 10.0f });
     defaultCam.setYaw(-90.0f);
@@ -59,7 +59,7 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
     defaultCam.setFar(10000.0f);
     defaultCam.setType(0);
 
-    if (!cameraManager->addCamera(defaultCam)) 
+    if (!cameraManager.addCamera(defaultCam)) 
       fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
   }
 #ifndef NDEBUG
@@ -104,7 +104,7 @@ bool SceneManager::saveTxtScene() {
   file << std::fixed << std::setprecision(3);
 
   file << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
-  const std::map<std::string, Camera>& cameras = cameraManager->getAllCameras();
+  const std::map<std::string, Camera>& cameras = cameraManager.getAllCameras();
   for (std::map<std::string, Camera>::const_iterator camIt = cameras.begin(); camIt != cameras.end(); ++camIt) {
     const std::string& name = camIt->first;
     const Camera& cam = camIt->second;
@@ -126,20 +126,13 @@ bool SceneManager::saveTxtScene() {
   }
 
   file << "\ncomment, name, meshPath, pos(xyz), rot(xyz), scale(xyz), colour(Int, Named Coloured, Random, Rainbow, PLY), specular(rgb, power)\n";
-  const std::map<std::string, const ModelDrawInfo*>& meshes = scene.getModelInfos();
-  const std::map<std::string, ModelInstance>& instances = scene.getModelInstances();
-  for (const std::pair<const std::string, ModelInstance>& entry : instances) {
+  const std::map<std::string, ModelData>& modelData = scene.getModelData();
+  for (const std::pair<const std::string, ModelData>& entry : modelData) {
     const std::string& name = entry.first;
-    const ModelInstance& instance = entry.second;
+    const ModelData& instance = entry.second;
 
     if (name.rfind("triangle_instance", 0) == 0 || name.rfind("cube_instance_", 0) == 0 || name.rfind("square_instance_", 0) == 0 || name.rfind("maze_", 0) == 0) 
       continue;
-
-    std::map<std::string, const ModelDrawInfo*>::const_iterator mesh = meshes.find(instance.meshPath);
-    if (mesh == meshes.end()) {
-      fprintf(stderr, "[saveTxtScene ERROR] Missing mesh for '%s'\n", name.c_str());
-      continue;
-    }
 
     file << "model, " << name << ", "
          << instance.meshPath << ", "
@@ -171,14 +164,14 @@ bool SceneManager::saveTxtScene() {
 
   file << "\ncomment, name, type, pos (xyz), diffuse (rgba), atten (xyzw), direction, param1 (spotlight inner, spotight outer), param2 (on/off)\n";
   for (int i = 0; i < LightManager::NUMBEROFLIGHTS; ++i) {
-    const Light& light = lightManager->theLights[i];
+    const Light& light = lightManager.theLights[i];
     if (light.param2.x == 0.0f) continue;
     
     const std::string camType = (light.param1.x == 0) ? "Point" :
                                 (light.param1.x == 1) ? "Spot" :
                                 /*     param1.x == 2)*/ "Directional";
     
-    file << "light, " << lightManager->getLightName(i) << ", " << camType << ", "
+    file << "light, " << lightManager.getLightName(i) << ", " << camType << ", "
          << light.position.x  << " " << light.position.y  << " " << light.position.z  << ", "
          << light.diffuse.x   << " " << light.diffuse.y   << " " << light.diffuse.z   << " " << light.diffuse.w   << ", "
          << light.atten.x     << " " << light.atten.y     << " " << light.atten.z     << " " << light.atten.w     << ", "
@@ -194,29 +187,18 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
   ParsedModel model{};
   PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
 
-  ModelDrawInfo tempInfo{};
-  if (!renderer->getVAOManager()->LoadModelIntoVAO(model.path, tempInfo, renderer->getProgram())) {
-    fprintf(stderr, "[SceneManager ERROR] Failed to load model: %s\n", model.path.c_str());
-    return false;
-  }
-
-  const ModelDrawInfo* drawInfo = nullptr;
-  if (!renderer->getVAOManager()->FindDrawInfoByModelName(model.path, drawInfo)) {
-    fprintf(stderr, "[SceneManager ERROR] Draw info not found after loading\n");
-    return false;
-  }
-
-  scene.addModelInfo(model.path, drawInfo);
-  scene.addInstance(model.name, model.path, Mat4::modelMatrix({ {model.position, 0.0 }, model.rotation, model.scale }));
-
-  ModelInstance& instance = scene.getModelInstances()[model.name];
-  instance.position = model.position;
-  instance.rotation = model.rotation;
-  instance.scale = model.scale;
-  instance.colour = model.colour;
-  instance.colourMode = model.colourMode;
-  instance.specular = model.specular;
-  instance.isVisible = model.isVisible;
+  ModelData data;
+  data.name = model.name;
+  data.meshPath = model.path;
+  data.position = model.position;
+  data.rotation = model.rotation;
+  data.scale = model.scale;
+  data.modelMatrix = Mat4::modelMatrix({ {data.position, 0.0 }, data.rotation, data.scale });
+  data.colour = model.colour;
+  data.colourMode = model.colourMode;
+  data.specular = model.specular;
+  data.isVisible = model.isVisible;
+  scene.addInstance(data);
   return true;
 }
 bool SceneManager::handleLightLine(const unsigned char* p) {
@@ -226,7 +208,7 @@ bool SceneManager::handleLightLine(const unsigned char* p) {
     return false;
   }
 
-  Light* light = lightManager->getLightByName(lightData.name);
+  Light* light = lightManager.getLightByName(lightData.name);
   if (!light) {
     fprintf(stderr, "[SceneManager ERROR] Unable to store light: %s\n", lightData.name.c_str());
     return false;
@@ -259,7 +241,7 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
   cam.setFar(cameraData.farPlane);
   if (cam.getType() != 0) cam.setMoveDistance(cameraData.moveDistance);
 
-  if (!cameraManager->addCamera(cam)) {
+  if (!cameraManager.addCamera(cam)) {
     fprintf(stderr, "[SceneManager ERROR] Could not add camera\n");
     return false;
   }
@@ -270,16 +252,16 @@ bool SceneManager::handleSquareGridLine(const unsigned char* p) {
   ParsedGrid grid;
   PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
-  if (!createSquareGrid(*this, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
+  if (!createSquareGrid(&meshManager, renderer.getProgram(), "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
     fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
     return false;
   }
 
-  std::map<std::string, ModelInstance>& inst = scene.getModelInstances();
-  std::map<std::string, ModelInstance>::iterator it = inst.begin();
-  for (it; it != inst.end(); ++it) {
+  std::map<std::string, ModelData>& modelData = scene.getModelData();
+  std::map<std::string, ModelData>::iterator it = modelData.begin();
+  for (it; it != modelData.end(); ++it) {
     const std::string& instanceName = it->first;
-    ModelInstance& instance = it->second;
+    ModelData& instance = it->second;
 
     if (instanceName.rfind("cube_instance_", 0) == 0) {
       instance.colour = grid.colour;
@@ -293,16 +275,16 @@ bool SceneManager::handleCubeGridLine(const unsigned char* p) {
   ParsedGrid grid;
   PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
-  if (!createCubeGrid(*this, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
+  if (!createCubeGrid(&meshManager, renderer.getProgram(), "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
     fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
     return false;
   }
 
-  std::map<std::string, ModelInstance>& inst = scene.getModelInstances();
-  std::map<std::string, ModelInstance>::iterator it = inst.begin();
-  for (it; it != inst.end(); ++it) {
+  std::map<std::string, ModelData>& modelData = scene.getModelData();
+  std::map<std::string, ModelData>::iterator it = modelData.begin();
+  for (it; it != modelData.end(); ++it) {
     const std::string& instanceName = it->first;
-    ModelInstance& instance = it->second;
+    ModelData& instance = it->second;
 
     if (instanceName.rfind("cube_instance_", 0) == 0) {
       instance.colour = grid.colour;
@@ -321,7 +303,6 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
 
   std::string sharedName;
   bool skipCache = false;
-
   if (triangle.colourMode == ColourMode::Solid) {
     int r = static_cast<int>(triangle.colour.x * 255.0f);
     int g = static_cast<int>(triangle.colour.y * 255.0f);
@@ -331,33 +312,42 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
   }
   else sharedName = "triangle_shared";
 
-  const ModelDrawInfo* info = nullptr;
-  bool meshExists = !skipCache && renderer->getVAOManager()->FindDrawInfoByModelName(sharedName, info);
+  const MeshData* info{};
+  bool meshExists = !skipCache && meshManager.findMesh(sharedName, info);
 
   if (!meshExists) {
     Vec4 bakedVertexColour = { triangle.colour.x, triangle.colour.y, triangle.colour.z, 1.0f };
-    if (!createTriangle(renderer->getVAOManager(), sharedName, renderer->getProgram(), { triangle.transform.scale.x, triangle.transform.scale.y }, bakedVertexColour)) {
+    if (!createTriangle(&meshManager, sharedName, renderer.getProgram(), { triangle.transform.scale.x, triangle.transform.scale.y }, bakedVertexColour)) {
       fprintf(stderr, "[SceneManager ERROR] Failed to create triangle mesh: %s\n", sharedName.c_str());
       return false;
     }
 
-    if (!renderer->getVAOManager()->FindDrawInfoByModelName(sharedName, info)) {
+    if (!meshManager.findMesh(sharedName, info)) {
       fprintf(stderr, "[SceneManager ERROR] Mesh still not found after creation: %s\n", sharedName.c_str());
       return false;
     }
-
-    scene.addModelInfo(sharedName, info);
   }
 
   std::string instanceName = std::string(triangle.name) + "_instance";
-  Mat4 transform = Mat4::translation(triangle.transform.position);
-  if (!scene.addInstance(instanceName, sharedName, transform)) {
+  ModelData data;
+  data.name = instanceName;
+  data.meshPath = sharedName;
+  data.position = { triangle.transform.position.x, triangle.transform.position.y, triangle.transform.position.z };
+  data.rotation = triangle.transform.rotation;
+  data.scale = triangle.transform.scale;
+  data.modelMatrix = Mat4::modelMatrix({ {data.position, 0.0}, data.rotation, data.scale });
+  data.colour = triangle.colour;
+  data.colourMode = triangle.colourMode;
+  data.specular = Vec4{ 1.0f, 1.0f, 1.0f, 32.0f };
+  data.isVisible = true;
+  data.isLighted = true;
+  data.useTextures = false;
+
+  if (!scene.addInstance(data)) {
     fprintf(stderr, "[SceneManager ERROR] Failed to add triangle instance\n");
     return false;
   }
 
-  scene.getModelInstances()[instanceName].colour = triangle.colour;
-  scene.getModelInstances()[instanceName].colourMode = triangle.colourMode;
   return true;
 }
 
@@ -389,16 +379,25 @@ bool SceneManager::handleMazeData(const unsigned char* p) {
 }
 
 static bool addFloor(Scene& scene, const std::string& name, const std::string& mesh, const Vec4& worldPos, const Vec3& rotation) {
-  Transform t{ worldPos, rotation, {1,1,1} };
+  ModelData d;
+  d.name = name;
+  d.meshPath = mesh;
+  d.position = Vec3{ worldPos.x, worldPos.y, worldPos.z };
+  d.rotation = rotation;
+  d.scale = Vec3{ 1.0f, 1.0f, 1.0f };
+  d.modelMatrix = Mat4::modelMatrix({ {d.position, 0.0}, d.rotation, d.scale });
 
-  if (!scene.addInstance(name, mesh, Mat4::modelMatrix(t))) {
+  d.colour = Vec4{ 1,1,1,1 };
+  d.colourMode = ColourMode::Solid;
+  d.specular = Vec4{ 1,1,1,32 };
+  d.isVisible = true;
+  d.isLighted = true;
+  d.useTextures = false;
+  
+  if (!scene.addInstance(d)) {
     fprintf(stderr, "[SceneLoader ERROR] Failed to add floor instance: %s\n", name.c_str());
     return false;
   }
-
-  ModelInstance& instance = scene.getModelInstances()[name];
-  instance.position = { worldPos.x, worldPos.y, worldPos.z };
-  instance.rotation = rotation;
   return true;
 }
 static bool addWall(Scene& scene, const ParsedMaze& maze, const Vec4& worldPos, const Vec4& wallOffset, const Vec3& baseRot, bool& hasEntrance,
@@ -416,39 +415,53 @@ static bool addWall(Scene& scene, const ParsedMaze& maze, const Vec4& worldPos, 
     Vec4 stackedPos = pos;
     stackedPos.y += static_cast<float>(level) * maze.spacing;
 
-    std::string instanceName = wallName + "_" + std::to_string(level);
-    const Transform transform{ stackedPos, rot, {1.0f, 1.0f, 1.0f} };
-    if (!scene.addInstance(instanceName, name, Mat4::modelMatrix(transform))) {
-      fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", wallName.c_str());
+    const std::string instanceName = wallName + "_" + std::to_string(level);
+    ModelData d;
+    d.name = instanceName;
+    d.meshPath = finalMesh;
+    d.position = Vec3{ stackedPos.x, stackedPos.y, stackedPos.z };
+    d.rotation = rot;
+    d.scale = Vec3{ 1.0f, 1.0f, 1.0f };
+    d.modelMatrix = Mat4::modelMatrix({ {d.position, 0.0}, d.rotation, d.scale });
+
+    d.colour = Vec4{ 1,1,1,1 };
+    d.colourMode = ColourMode::Solid;
+    d.specular = Vec4{ 1,1,1,32 };
+    d.isVisible = true;
+    d.isLighted = true;
+    d.useTextures = false;
+    if (!scene.addInstance(d)) {
+      fprintf(stderr, "[SceneLoader ERROR] Failed to add maze instance: %s\n", instanceName.c_str());
       return false;
     }
-
-    ModelInstance& instance = scene.getModelInstances()[instanceName];
-    instance.position = { stackedPos.x, stackedPos.y, stackedPos.z };
-    instance.rotation = rot;
   }
 
   return true;
 }
 bool SceneManager::buildMaze(const ParsedMaze& maze) {
-  for (const std::string& modelPath : { maze.floorType1, maze.floorType2, maze.floorType3, maze.floorType4, maze.floorType5, maze.floorType6, maze.floorWallType, maze.wallType1, maze.wallType2, maze.wallType3, maze.wallType4, maze.wallType5, maze.wallType6, maze.entranceType, maze.exitType, maze.exteriorWallType }) {
-    const ModelDrawInfo* drawInfo = nullptr;
-    if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, drawInfo)) {
-      ModelDrawInfo tempInfo;
-      tempInfo.meshPath = modelPath;
+    const std::string meshList[] = {
+    maze.floorType1, maze.floorType2, maze.floorType3,
+    maze.floorType4, maze.floorType5, maze.floorType6,
+    maze.floorWallType,
+    maze.wallType1, maze.wallType2, maze.wallType3,
+    maze.wallType4, maze.wallType5, maze.wallType6,
+    maze.entranceType, maze.exitType, maze.exteriorWallType
+  };
 
-      if (!renderer->getVAOManager()->LoadModelIntoVAO(modelPath, tempInfo, renderer->getProgram())) {
+  unsigned int prog = renderer.getProgram();
+  for (int i = 0; i < static_cast<int>(sizeof(meshList) / sizeof(meshList[0])); ++i) {
+    const std::string& modelPath = meshList[i];
+    if (modelPath.empty()) continue;
+
+    const MeshData* drawInfo{};
+    if (meshManager.findMesh(modelPath, drawInfo)) {
+      MeshData tempInfo;
+      if (!meshManager.loadMeshFile(modelPath, tempInfo, prog) ||
+        !meshManager.findMesh(modelPath, drawInfo)) {
         fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());
         return false;
       }
-
-      if (!renderer->getVAOManager()->FindDrawInfoByModelName(modelPath, drawInfo)) {
-        fprintf(stderr, "[SceneLoader ERROR] Draw info still missing after loading: %s\n", modelPath.c_str());
-        return false;
-      }
     }
-
-    scene.addModelInfo(modelPath, drawInfo);
   }
 
   bool hasEntrance{ false };

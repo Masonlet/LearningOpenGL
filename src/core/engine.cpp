@@ -10,11 +10,12 @@ Engine::Engine() :
   currentProgram{ 0 }, currentModel{ 0 },
   deltaTime{ 0.0f }, lastTime{ 0.0f },
   wireframe{ false },
-  sceneManager(&renderer, &lightManager, &cameraManager){
+  sceneManager(meshManager, renderer, lightManager, cameraManager),
+  renderer(shaderManager, meshManager, textureManager){
 }
 Engine::~Engine() {
   inputManager = {};
-  vaoManager.Shutdown();
+  meshManager.Shutdown();
   windowManager.destroyWindow();
 }
 
@@ -58,7 +59,6 @@ void Engine::setupShaders() {
   }
   glUseProgram(currentProgram);
 
-  renderer.initialize(&shaderManager, &vaoManager);
   renderer.setProgram(currentProgram);
 
   constexpr float bgR = 0.2f;
@@ -102,12 +102,44 @@ bool Engine::setScene(const std::string& sceneIn) {
   if (!sceneManager.loadTxtScene(sceneIn))  return false;
   else                                      return true;
 }
+bool Engine::loadSceneModels() {
+#ifndef NDEBUG
+  printf("[loadSceneModels] Load start time: %f\n", glfwGetTime());
+#endif
+  const unsigned int shaderProgramID = renderer.getProgram();
+  if (shaderProgramID == 0) {
+    fprintf(stderr, "[Engine ERROR] No active shader program set before loading meshes.\n");
+    return false;
+  }
+
+	std::map<std::string, ModelData>& modelData = sceneManager.getScene().getModelData();
+	std::map<std::string, ModelData>::iterator it = modelData.begin();
+  for(; it != modelData.end(); ++it) {
+    ModelData& data = it->second;
+
+    const MeshData* info{};
+    if (!meshManager.findMesh(data.meshPath, info)) {
+      MeshData tempData;
+      if (!meshManager.loadMeshFile(data.meshPath, tempData, shaderProgramID) ||
+        !meshManager.findMesh(data.meshPath, info)) {
+        fprintf(stderr, "[Engine ERROR] Failed to load mesh: %s\n", data.meshPath.c_str());
+        return false;
+      }
+    }
+	}
+
+#ifndef NDEBUG
+  printf("[loadSceneModels] Load finish time: %f\n", glfwGetTime());
+#endif
+  return true;
+}
+
 void Engine::run() {
   while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
     inputManager.Update(windowManager.getWindow()->getGLFWwindow());
     cameraManager.getActiveCamera()->processInputs(&inputManager, getDeltaTime());
-    handleModelInput(&inputManager, getDeltaTime(), sceneManager.getScene().getModelInstances(), currentModel);
+    handleModelInput(&inputManager, getDeltaTime(), sceneManager.getScene().getModelData(), currentModel);
     renderFrame();
 
     windowManager.getWindow()->swapBuffers();
@@ -127,10 +159,10 @@ void Engine::renderFrame() {
   lightManager.UpdateShaderUniforms(currentProgram);
 
   // Draw Frame
-  std::vector<const ModelInstance*> transparentInstances;
-  const std::map<std::string, ModelInstance>& instances = sceneManager.getScene().getModelInstances();
-  for (std::map<std::string, ModelInstance>::const_iterator it = instances.begin(); it != instances.end(); ++it) {
-    const ModelInstance& instance = it->second;
+  std::vector<const ModelData*> transparentInstances;
+  const std::map<std::string, ModelData>& instances = sceneManager.getScene().getModelData();
+  for (std::map<std::string, ModelData>::const_iterator it = instances.begin(); it != instances.end(); ++it) {
+    const ModelData& instance = it->second;
 
     if (instance.colour.w >= 1.0f) renderer.drawModel(instance, view, projection);
     else                           transparentInstances.push_back(&instance);
@@ -145,14 +177,14 @@ void Engine::renderFrame() {
       float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
 
       if (distA < distB) {
-        const ModelInstance* temp = transparentInstances[j];
+        const ModelData* temp = transparentInstances[j];
         transparentInstances[j] = transparentInstances[j + 1];
         transparentInstances[j + 1] = temp;
       }
     }
   }
 
-  for (const ModelInstance* instance : transparentInstances) 
+  for (const ModelData* instance : transparentInstances) 
     renderer.drawModel(*instance, view, projection);
   
   // End Frame
@@ -160,12 +192,12 @@ void Engine::renderFrame() {
 }
 
 void Engine::incrementModel() {
-  if (sceneManager.getScene().getModelInstances().empty()) return;
-  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneManager.getScene().getModelInstances().size());
+  if (sceneManager.getScene().getModelData().empty()) return;
+  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneManager.getScene().getModelData().size());
 }
 
 void Engine::decrementModel() {
-  if (sceneManager.getScene().getModelInstances().empty()) return;
-  currentModel = (currentModel == 0) ? static_cast<unsigned int>(sceneManager.getScene().getModelInstances().size() - 1)
+  if (sceneManager.getScene().getModelData().empty()) return;
+  currentModel = (currentModel == 0) ? static_cast<unsigned int>(sceneManager.getScene().getModelData().size() - 1)
                                      : currentModel - 1;
 }
