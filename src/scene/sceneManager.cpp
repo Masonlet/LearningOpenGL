@@ -12,8 +12,8 @@
 #include <fstream>
 #include <iomanip>
 
-SceneManager::SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager)
-	: meshManager(meshManager), renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), scene() {
+SceneManager::SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager, TextureManager& textureManager)
+	: meshManager(meshManager), renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), textureManager(textureManager), scene() {
 }
 
 bool SceneManager::loadTxtScene(const std::string& sceneIn) {
@@ -78,10 +78,11 @@ bool SceneManager::processSceneLine(const unsigned char* p) {
 	if (!linePtr || strlen(nameStr) == 0)                     return true;
 	if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') return true;
 
-	bool handled{ true };
-	if (strcmp(nameStr, "model") == 0)      handled = handleModelLine(linePtr);
+	bool handled{ false };
+	if (strcmp(nameStr, "model") == 0)           handled = handleModelLine(linePtr);
 	else if (strcmp(nameStr, "light") == 0)      handled = handleLightLine(linePtr);
 	else if (strcmp(nameStr, "camera") == 0)     handled = handleCameraLine(linePtr);
+	else if (strcmp(nameStr, "texture") == 0)    handled = handleTextureLine(linePtr);
 	else if (strcmp(nameStr, "cubeGrid") == 0)   handled = handleCubeGridLine(linePtr);
 	else if (strcmp(nameStr, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
 	else if (strcmp(nameStr, "triangle") == 0)   handled = handleTriangleLine(linePtr);
@@ -241,6 +242,41 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
 	if (!cameraManager.addCamera(cam)) {
 		fprintf(stderr, "[SceneManager ERROR] Could not add camera\n");
 		return false;
+	}
+	return true;
+}
+
+bool SceneManager::handleTextureLine(const unsigned char* p) {
+	ParsedTexture t{};
+	if (!(p = parseTexture(p, t))) {
+		fprintf(stderr, "[SceneManager ERROR] Failed to parse texture line\n");
+		return false;
+	}
+
+	std::map<std::string, ModelData>& models = scene.getModelData();
+	auto it = models.find(t.modelName);
+	if (it == models.end()) {
+		fprintf(stderr, "[SceneManager ERROR] Texture refers to unknown model: %s\n", t.modelName.c_str());
+		return false;
+	}
+
+	if (t.textureNum >= ModelData::NUM_TEXTURES) {
+		fprintf(stderr, "[SceneManager ERROR] Texture slot %u out of range for %s\n", t.textureNum, t.modelName.c_str());
+		return false;
+	}
+
+	ModelData& m = it->second;
+	m.useTextures = true;
+	m.textureNames[t.textureNum] = t.textureFile;
+	m.textureMixRatio[t.textureNum] = t.mix;
+	m.textureTiling = t.tiling; // optional: per-model, not per-slot
+
+	// Only load if not already present
+	if (textureManager.getTextureIDFromName(t.textureFile) == 0) {
+		if (!textureManager.Create2DBMPTexture(t.textureFile.c_str(), /*mipmap*/true)) {
+			fprintf(stderr, "[SceneManager ERROR] Could not create 2D texture: %s\n", t.textureFile.c_str());
+			return false;
+		}
 	}
 	return true;
 }

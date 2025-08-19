@@ -92,6 +92,12 @@ const unsigned char* parseBool(const unsigned char* p, bool& out) {
   return q;
 }
 
+const unsigned char* parseVec2(const unsigned char* p, Vec2& out) {
+  p = skipWhitespace(p, true);
+  if (!(p = parseFloat(p, out.x))) return nullptr;
+  if (!(p = parseFloat(p, out.y))) return nullptr;
+  return p;
+}
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out) {
 	p = skipWhitespace(p, true);
   if (!(p = parseFloat(p, out.x))) return nullptr;

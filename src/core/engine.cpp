@@ -10,7 +10,7 @@ Engine::Engine() :
   currentProgram{ 0 }, currentModel{ 0 },
   deltaTime{ 0.0f }, lastTime{ 0.0f },
   wireframe{ false },
-  sceneManager(meshManager, renderer, lightManager, cameraManager),
+  sceneManager(meshManager, renderer, lightManager, cameraManager, textureManager),
   renderer(shaderManager, meshManager, textureManager){
 }
 Engine::~Engine() {
@@ -35,6 +35,7 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 #endif
 
   setupShaders();
+  textureManager.SetPath("assets/textures");
 
   lightManager.GetUniformLocations(currentProgram);
   return true;

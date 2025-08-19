@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math/vec2.hpp"
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
 #include "core/colour.hpp"
@@ -71,6 +72,8 @@ const unsigned char* parseFloat     (const unsigned char* p, float& out);
 const unsigned char* parseUInt(const unsigned char* p, unsigned int& out);
 const unsigned int   parseBinaryUINT(const unsigned char* buffer);
 const unsigned char* parseBool(const unsigned char* p, bool& out);
+
+const unsigned char* parseVec2(const unsigned char* p, Vec2& out);
 const unsigned char* parseVec3(const unsigned char* p, Vec3& out);
 const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
 

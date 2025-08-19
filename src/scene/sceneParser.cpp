@@ -37,6 +37,14 @@ const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
   if (out.type != 0) PARSE_OR_FAIL(parseFloat, out.moveDistance, "camera move distance");
   return p;
 }
+const unsigned char* parseTexture(const unsigned char* p, ParsedTexture& out) {
+  PARSE_STRING_OR_NULL(p, out.modelName, 64, "texture model name");
+  PARSE_STRING_OR_NULL(p, out.textureFile, 128, "texture file");
+  PARSE_OR_FAIL(parseUInt, out.textureNum, "texture num");
+  PARSE_OR_FAIL(parseFloat, out.mix, "texture mix");
+  PARSE_OR_FAIL(parseVec2, out.tiling, "texture tiling");
+  return p;
+}
 
 const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) {
   PARSE_STRING_OR_NULL(p, out.name, 64, "triangle name");

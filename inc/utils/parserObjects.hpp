@@ -57,3 +57,11 @@ struct ParsedMaze {
 	std::string wallType1, wallType2, wallType3, wallType4, wallType5, wallType6;
 	std::string entranceType, exitType, exteriorWallType;
 };
+
+struct ParsedTexture {
+	std::string modelName;
+  std::string textureFile;
+	unsigned int textureNum;
+	float mix{ 1.0f };
+	Vec2 tiling{ 1.0f, 1.0f };
+};

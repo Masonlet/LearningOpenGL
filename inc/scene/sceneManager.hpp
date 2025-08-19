@@ -10,7 +10,7 @@
 
 class SceneManager {
 public:
-  SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager);
+  SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager, TextureManager& textureManager);
 
   Scene& getScene() { return scene; }
 
@@ -23,6 +23,7 @@ private:
   LightManager& lightManager;
   CameraManager& cameraManager;
 	MeshManager& meshManager;
+  TextureManager& textureManager;
 
   std::optional<ParsedMaze> pendingMaze;
 
@@ -39,4 +40,6 @@ private:
   bool handleMazeLine(const unsigned char* p);
   bool handleMazeData(const unsigned char* p);
   bool buildMaze(const ParsedMaze& maze);
+
+  bool handleTextureLine(const unsigned char* p);
 };
