@@ -12,7 +12,7 @@ constexpr Vec3 DEFAULT_SCALE{ 1.0f, 1.0f, 1.0f };
 constexpr float MOVE_SPEED{ 25.0f };
 constexpr float CAMERA_SPEED{ 0.1f };
 
-constexpr float DEFAULT_FOV{ 75.0f };
+constexpr float DEFAULT_FOV{ 60.0f };
 constexpr float NEAR_PLANE{ 0.1f };
 constexpr float FAR_PLANE{ 10000.0f };
 

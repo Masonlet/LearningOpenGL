@@ -15,7 +15,7 @@ const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
 const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
   PARSE_OR_FAIL(parseBool, out.isEnabled, "light enabled");
   PARSE_STRING_OR_NULL(p, out.name, 64, "light name");
-  p = parseLightType(p, out.param1Type);
+	PARSE_OR_FAIL(parseLightType, out.param1Type, "light type");
   PARSE_OR_FAIL(parseVec3, out.position, "light position");
   PARSE_OR_FAIL(parseVec4, out.diffuse, "light diffuse");
   PARSE_OR_FAIL(parseVec4, out.atten, "light attenuation");
@@ -26,9 +26,9 @@ const unsigned char* parseLight(const unsigned char* p, ParsedLight& out) {
 const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
   PARSE_OR_FAIL(parseBool, out.isEnabled, "camera enabled");
 	PARSE_STRING_OR_NULL(p, out.name, 64, "camera name");
-  p = parseCameraType(p, out.type);
+	PARSE_OR_FAIL(parseCameraType, out.type, "camera type");
   PARSE_OR_FAIL(parseVec3, out.position, "camera position");
-  PARSE_OR_FAIL(parseFloat, out.yaw, "camera yaw");
+  PARSE_OR_FAIL(parseFloat, out.yaw, "camera yaw"); 
   PARSE_OR_FAIL(parseFloat, out.pitch, "camera pitch");
   PARSE_OR_FAIL(parseFloat, out.fov, "camera fov");
   PARSE_OR_FAIL(parseFloat, out.nearPlane, "camera near plane");
@@ -47,9 +47,7 @@ const unsigned char* parseTriangle(const unsigned char* p, ParsedTriangle& out) 
 
   PARSE_OR_FAIL(parseVec3, out.transform.rotation, "triangle rotation");
   PARSE_OR_FAIL(parseVec3, out.transform.scale, "triangle size");
-
   p = parseColour(p, out.colour, out.colourMode);
-
   return p;
 }
 const unsigned char* parseGrid(const unsigned char* p, ParsedGrid& out) {
@@ -90,40 +88,46 @@ const unsigned char* parseMaze(const unsigned char* p, ParsedMaze& out) {
   PARSE_STRING_OR_NULL(p, out.layoutName, 64, "layout name");
   return p;
 }
-static bool parseMazeLayoutRow(const std::string& line, std::vector<bool>& outRow) {
+static bool parseMazeLayoutRow(const char* line, const char* lineEnd, std::vector<bool>& outRow) {
   outRow.clear();
-  for (char c : line) {
+  for (const char* s = line; s < lineEnd; ++s) {
+    const char c = *s;
     if (c == '.')      outRow.push_back(true);
-    else if (c == 'X') outRow.push_back(false);
-    else if (c != ' ') {
-      fprintf(stderr, "[SceneLoader ERROR] Invalid character '%c' in maze layout line: \"%s\"\n", c, line.c_str());
+    else if (c == 'X')      outRow.push_back(false);
+    else if (c == ' ' || c == '\t') { }
+    else {
+      fprintf(stderr, "[SceneLoader ERROR] Invalid character '%c' in maze layout line: \"%.*s\"\n", c, static_cast<int>(lineEnd - line), line);
       return false;
     }
   }
   return !outRow.empty();
 }
 bool parseMazeData(const unsigned char* p, ParsedMaze& maze) {
+	p = skipWhitespace(p, true);
   PARSE_STRING_OR_FALSE(p, maze.layoutName, 64, "layout name");
+  maze.layout.clear();
 
   while (*p) {
-    const char* lineStart = reinterpret_cast<const char*>(p);
-    const char* lineEnd = reinterpret_cast<const char*>(skipToNextLine(p));
-    size_t lineLen = lineEnd - lineStart;
+    const unsigned char* lineEnd = skipToNextLine(p);
 
-    while (lineLen > 0 && (lineStart[lineLen - 1] == '\n' || lineStart[lineLen - 1] == '\r'))
-      --lineLen;
+    while (lineEnd > p && (lineEnd[-1] == '\n' || lineEnd[-1] == '\r'))
+      --lineEnd;
 
-    if (lineLen == 0) {
-      p = reinterpret_cast<const unsigned char*>(lineEnd);
+    if (lineEnd == p) {
+      p = skipToNextLine(p);
       continue;
     }
 
-    std::string line(lineStart, lineLen);
-    if (line == maze.layoutName)
-      break;
+		if (*p == '\0') break; 
+
+    unsigned char token[64]{};
+    const unsigned char* linePtr = parseToken(p, token, sizeof(token));
+    const char* nameStr = reinterpret_cast<const char*>(token);
+
+    if (strcmp(nameStr, maze.layoutName.c_str()) == 0) break;
 
     std::vector<bool> row;
-    if (parseMazeLayoutRow(line, row))
+    if (parseMazeLayoutRow(reinterpret_cast<const char*>(p), reinterpret_cast<const char*>(lineEnd), row))
       maze.layout.push_back(std::move(row));
 
     p = reinterpret_cast<const unsigned char*>(lineEnd);

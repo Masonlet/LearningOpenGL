@@ -62,8 +62,7 @@
 
 const unsigned char* skipToNextLine(const unsigned char* p);
 const unsigned char* skipToNextWord(const unsigned char* p);
-const unsigned char* skipWhitespace(const unsigned char* p);
-const unsigned char* skipWhitespaceComma(const unsigned char* p);
+const unsigned char* skipWhitespace(const unsigned char* p, bool comma = false);
 
 const unsigned char* trimEOL(const unsigned char* p, const unsigned char* e);
 

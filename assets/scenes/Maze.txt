@@ -1,8 +1,8 @@
-camera, FreeCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200
-camera, DungeonCam, -250.0 350.0 -5800.0, -90.0 0.0, 75.0, 0.1 25000, 200, 500
-camera, ModernCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200, 500
+camera, on, Cam1, FreeCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200
+camera, on, Cam2, DungeonCam, -250.0 350.0 -5800.0, -90.0 0.0, 75.0, 0.1 25000, 200, 500
+camera, on, Cam3, ModernCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200, 500
 
-light, sunlight, Directional, 0.0 0.0 0.0, 0.55 0.52 0.48 1.0, 0.0 0.01 0.005 0.0, -0.5 -1.0 -0.5 0.0, 0.0 0.0 0.0, 1.0 0.0 0.0 0.0
+light, on, sunlight, Directional, 0.0 0.0 0.0, 0.55 0.52 0.48 1.0, 0.0 0.01 0.005 0.0, -0.5 -1.0 -0.5 0.0, 0.0 0.0 0.0
  
 comment, DO NOT ROTATE MAZES
 comment, maze name, maze spacing, maze start pos, maze start rotation, wall num, has roof, floor mesh 1, floor mesh 2, floor mesh 3, floor mesh 4, floor mesh 5, floor wall mesh 6, wall mesh 1, wall mesh 2, wall mesh 3, wall mesh 4, wall mesh 5, wall mesh 6, entrance mesh, exit mesh, exterior wall mesh, wall rotation, maze data name

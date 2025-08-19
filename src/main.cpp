@@ -8,12 +8,6 @@
 #include "textures/bmpParser.hpp"
 #include "textures/bmp.hpp"
 
-static void LoadTexturesIntoTextureManager(TextureManager* textureManager) {
-	textureManager->SetPath("assets/textures");
-
-	textureManager->Create2DBMPTexture("Lava_Texture.bmp", true);
-}
-
 int main() {
 #ifdef NDEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -24,18 +18,19 @@ int main() {
 	if (!engine.initialize(1920, 1200, "Test"))
 		return -1;
 
-	if (!engine.setScene("SceneTest"))
+	if (!engine.setScene("Maze"))
 		return -1;
 
 	if (!engine.loadSceneMeshes())
 		return -1;
 
-	LoadTexturesIntoTextureManager(engine.getTextureManager());
-	std::map<std::string, ModelData>& objects = engine.getModelData();
-	ModelData* lavaModel = &objects["cow3"];
-	lavaModel->textureNames[0] = "Lava_Texture.bmp";
-	lavaModel->textureMixRatio[0] = 1.0f;
-	lavaModel->useTextures = true;
+	//engine.getTextureManager()->SetPath("assets/textures");
+	//engine.getTextureManager()->Create2DBMPTexture("Lava_Texture.bmp", true);
+	//std::map<std::string, ModelData>& objects = engine.getModelData();
+	//ModelData* lavaModel = &objects["cow3"];
+	//lavaModel->textureNames[0] = "Lava_Texture.bmp";
+	//lavaModel->textureMixRatio[0] = 1.0f;
+	//lavaModel->useTextures = true;
 
 	engine.run();
 	return 0;
