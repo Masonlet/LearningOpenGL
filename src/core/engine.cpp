@@ -35,7 +35,6 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 #endif
 
   setupShaders();
-  textureManager.SetPath("assets/textures");
 
   lightManager.GetUniformLocations(currentProgram);
   return true;
@@ -46,7 +45,6 @@ void Engine::setupShaders() {
   printf("[setupShaders] Shader setup start time: %f\n", glfwGetTime());
 #endif
 
-  shaderManager.setBasePath("assets/shaders/");
   ShaderManager::Shader vert_shader{ "vertex_shader.glsl" };
   ShaderManager::Shader frag_shader{ "fragment_shader.glsl" };
 

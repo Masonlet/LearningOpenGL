@@ -40,8 +40,6 @@ public:
 	bool useShaderProgram(std::string friendlyName);
 	bool createProgramFromFile(std::string friendlyName, Shader& vertexShader, Shader& fragShader);
 
-	void setBasePath(const std::string& path);
-
 	int getIDFromFriendlyName(std::string friendlyName);
 	ShaderProgram* getShaderProgramFromFriendlyName(std::string friendlyName);
 
@@ -49,8 +47,6 @@ public:
 
 private:
 	bool loadSourceFromFile(Shader& shader) const;
-	std::string basePath;
-
 	bool compileShaderFromSource(ShaderManager::Shader& shader, std::string& error);
 	bool wasThereACompileError(unsigned int shaderID, std::string& error);
 	bool wasThereALinkError(unsigned int progID, std::string& error);

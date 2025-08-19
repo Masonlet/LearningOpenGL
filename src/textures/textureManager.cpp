@@ -16,7 +16,7 @@ unsigned int TextureManager::getTextureIDFromName(const std::string& textureFile
 }
 
 bool TextureManager::Create2DBMPTexture(const char* textureFileName, bool generateMIPMap) {
-	std::string pathName = path + '/' + textureFileName;
+	std::string pathName = std::string(ASSET_DIR) + "/textures/" + textureFileName;
 
 	BMPTexture* tempTexture = new BMPTexture();
 	if (!tempTexture->CreateBMPTexture(textureFileName, pathName, generateMIPMap)) {
@@ -32,12 +32,13 @@ bool TextureManager::CreateCubeBMPTexture(std::string cubeMapName,
 	std::string posYfileName, std::string negYfileName,
 	std::string posZfileName, std::string negZfileName,
 	bool bIsSeamless, bool generateMIPMap) {
-	std::string posXfileNamePath = this->path + "/" + posXfileName;
-	std::string negXfileNamePath = this->path + "/" + negXfileName;
-	std::string posYfileNamePath = this->path + "/" + posYfileName;
-	std::string negYfileNamePath = this->path + "/" + negYfileName;
-	std::string posZfileNamePath = this->path + "/" + posZfileName;
-	std::string negZfileNamePath = this->path + "/" + negZfileName;
+	const std::string dir = std::string(ASSET_DIR) + "/textures/";
+	std::string posXfileNamePath = dir + posXfileName;
+	std::string negXfileNamePath = dir + negXfileName;
+	std::string posYfileNamePath = dir + posYfileName;
+	std::string negYfileNamePath = dir + negYfileName;
+	std::string posZfileNamePath = dir + posZfileName;
+	std::string negZfileNamePath = dir + negZfileName;
 
 	BMPTexture* tempTexture = new BMPTexture();
 	if (!tempTexture->CreateCubeBMPTexture(cubeMapName,

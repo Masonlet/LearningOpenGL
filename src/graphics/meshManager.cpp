@@ -12,7 +12,7 @@ bool MeshManager::loadMeshFile(const std::string& path, MeshData& mesh, unsigned
 
   unsigned char* src{ nullptr };
   size_t size;
-  if (!loadBinaryFile(src, size, "assets/models/" + path))
+  if (!loadBinaryFile(src, size, std::string(ASSET_DIR) + "/models/" + path))
     return false;
 
   if (!parsePlyMesh(src, size, mesh))

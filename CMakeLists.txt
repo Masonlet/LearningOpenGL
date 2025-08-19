@@ -3,22 +3,22 @@ project(LearningOpenGL)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_SUPPRESS_REGENERATION ON)
+set(ASSET_SRC "${CMAKE_SOURCE_DIR}/assets")
 
-file(GLOB_RECURSE SOURCES        ${CMAKE_SOURCE_DIR}/src/*.cpp ${CMAKE_SOURCE_DIR}/src/*.c)
-file(GLOB_RECURSE HEADERS        ${CMAKE_SOURCE_DIR}/inc/*.hpp ${CMAKE_SOURCE_DIR}/inc/*.h)
-file(GLOB_RECURSE ASSET_SHADERS  "${CMAKE_SOURCE_DIR}/assets/shaders/*")
-file(GLOB_RECURSE ASSET_MODELS   "${CMAKE_SOURCE_DIR}/assets/models/*")
-file(GLOB_RECURSE ASSET_SCENES   "${CMAKE_SOURCE_DIR}/assets/scenes/*")
-file(GLOB_RECURSE ASSET_TEXTURES "${CMAKE_SOURCE_DIR}/assets/textures/*")
+file(GLOB_RECURSE SOURCES        CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/*.cpp ${CMAKE_SOURCE_DIR}/src/*.c)
+file(GLOB_RECURSE HEADERS        CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/inc/*.hpp ${CMAKE_SOURCE_DIR}/inc/*.h)
+file(GLOB_RECURSE ASSET_SHADERS  CONFIGURE_DEPENDS "${ASSET_SRC}/shaders/*")
+file(GLOB_RECURSE ASSET_MODELS   CONFIGURE_DEPENDS "${ASSET_SRC}/models/*")
+file(GLOB_RECURSE ASSET_SCENES   CONFIGURE_DEPENDS "${ASSET_SRC}/scenes/*")
+file(GLOB_RECURSE ASSET_TEXTURES CONFIGURE_DEPENDS "${ASSET_SRC}/textures/*")
 
-add_executable(LearningOpenGL 
-  ${SOURCES} ${HEADERS}
-  ${ASSET_SHADERS} ${ASSET_MODELS} ${ASSET_SCENES} ${ASSET_TEXTURES}
-)
+add_executable(LearningOpenGL ${SOURCES} ${HEADERS})
 
 # Visual Studio organization
 source_group(TREE ${CMAKE_SOURCE_DIR}/src PREFIX "Source Files" FILES ${SOURCES})
 source_group(TREE ${CMAKE_SOURCE_DIR}/inc PREFIX "Header Files" FILES ${HEADERS})
+add_custom_target(Assets SOURCES ${ASSET_SHADERS} ${ASSET_MODELS} ${ASSET_SCENES} ${ASSET_TEXTURES})
+set_target_properties(Assets PROPERTIES FOLDER "Assets")
 source_group("Assets\\Shaders"  FILES ${ASSET_SHADERS})
 source_group("Assets\\Models"   FILES ${ASSET_MODELS})
 source_group("Assets\\Scenes"   FILES ${ASSET_SCENES})
@@ -45,7 +45,6 @@ set_target_properties(glad PROPERTIES FOLDER "External")
 if(TARGET update_mappings)
   set_target_properties(update_mappings PROPERTIES FOLDER "External")
 endif()
-
 if(TARGET uninstall)
   set_target_properties(uninstall PROPERTIES FOLDER "External")
 endif()
@@ -58,12 +57,8 @@ set_target_properties(LearningOpenGL PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:LearningOpenGL>"
 )
 
-add_custom_command(TARGET LearningOpenGL POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_SOURCE_DIR}/assets"
-    "$<TARGET_FILE_DIR:LearningOpenGL>/assets"
-)
-
 # Default Project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT LearningOpenGL)
 
+file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/assets" ASSET_PATH)
+target_compile_definitions(LearningOpenGL PRIVATE ASSET_DIR="${ASSET_PATH}")

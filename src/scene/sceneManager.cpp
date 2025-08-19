@@ -21,7 +21,7 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 	fprintf(stderr, "[SceneManager] Scene load start: %f\n", glfwGetTime());
 #endif
 
-	const std::string scenepath = "assets/scenes/" + sceneIn + ".txt";
+	const std::string scenepath = std::string(ASSET_DIR) + "/scenes/" + sceneIn + ".txt";
 	std::string src{};
 	if (!loadFile(src, scenepath)) {
 		fprintf(stderr, "[createSceneFromName ERROR] failed to load scene: %s\n", scenepath.c_str());

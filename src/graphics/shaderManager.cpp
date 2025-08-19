@@ -43,12 +43,8 @@ ShaderManager::ShaderProgram* ShaderManager::getShaderProgramFromFriendlyName(st
 }
 
 const unsigned int MAXLINELENGTH = 65536; //16x1024
-void ShaderManager::setBasePath(const std::string& path) {
-	this->basePath = path;
-}
-
 bool ShaderManager::loadSourceFromFile(Shader& shader) const {
-	std::string path = this->basePath + shader.fileName;
+	std::string path = std::string(ASSET_DIR) + "/shaders/" + shader.fileName;
   
 	std::string src{};
 	if (!loadFile(src, path)) {
