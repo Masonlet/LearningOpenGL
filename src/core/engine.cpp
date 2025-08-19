@@ -160,10 +160,12 @@ void Engine::renderFrame() {
   lightManager.UpdateShaderUniforms(currentProgram);
 
   // Draw Frame
+  ModelData* skyBox = nullptr;
   std::vector<const ModelData*> transparentInstances;
-  const std::map<std::string, ModelData>& instances = sceneManager.getScene().getModelData();
-  for (std::map<std::string, ModelData>::const_iterator it = instances.begin(); it != instances.end(); ++it) {
-    const ModelData& instance = it->second;
+  std::map<std::string, ModelData>& instances = sceneManager.getScene().getModelData();
+  for (std::map<std::string, ModelData>::iterator it = instances.begin(); it != instances.end(); ++it) {
+    ModelData& instance = it->second;
+    if (instance.name == "skybox") skyBox = &instance;
 
     if (instance.colour.w >= 1.0f) renderer.drawModel(instance, view, projection);
     else                           transparentInstances.push_back(&instance);
@@ -187,7 +189,32 @@ void Engine::renderFrame() {
 
   for (const ModelData* instance : transparentInstances) 
     renderer.drawModel(*instance, view, projection);
-  
+
+  glUniform1i(renderer.getIsSkyboxLocation(), GL_TRUE);
+  if (skyBox) {
+    skyBox->isVisible = true;
+
+    skyBox->position = cameraManager.getActiveCamera()->getPos();
+    skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->position, 0.0f }, skyBox->rotation, skyBox->scale });
+    
+    int skyboxTextureID = textureManager.getTextureIDFromName(skyBox->name);
+
+    glActiveTexture(GL_TEXTURE20);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
+    
+    const int skyboxTextureLocation = renderer.getSkyboxTextureLocation();
+    glUniform1i(skyboxTextureLocation, 20);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);     
+    glDepthMask(GL_FALSE);
+    renderer.drawModel(*skyBox, view, projection);
+    skyBox->isVisible = false;
+    glDepthMask(GL_TRUE);
+    glCullFace(GL_BACK);
+  }
+  glUniform1i(renderer.getIsSkyboxLocation(), GL_FALSE);
+
   // End Frame
   glBindVertexArray(0);
 }

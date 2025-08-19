@@ -7,10 +7,10 @@ Renderer::Renderer(ShaderManager& shaderManagerIn, MeshManager& meshManagerIn, T
 	  program(0),
 	  modelLocation(-1), modelViewLocation(-1), modelProjectionLocation(-1),
 		modelInverseTransposeLocation(-1), modelSpecularLocation(-1),
-		modelLighted(false), modelUseTextures(false),
+		modelLightedLocation(false), modelUseTexturesLocation(false),
 		modelColourModeLocation(-1), modelColourOverrideLocation(-1),
 		modelHasVertColourLocation(-1), modelMinYMaxYLocation(-1),
-		modelSeedLocation(-1) {
+		modelSeedLocation(-1), modelIsSkyboxLocation(-1), modelSkyboxTextureLocation(-1) {
 }
 
 Renderer::~Renderer() {}
@@ -24,18 +24,20 @@ void Renderer::setProgram(unsigned int program) {
 	glUniform1i(glGetUniformLocation(program, "textSampler2D_02"), 2);
 	glUniform1i(glGetUniformLocation(program, "textSampler2D_03"), 3);
 
-	modelLighted = glGetUniformLocation(program, "bLighted");
+	modelLightedLocation = glGetUniformLocation(program, "bLighted");
 	modelLocation = glGetUniformLocation(program, "mModel");
 	modelViewLocation = glGetUniformLocation(program, "mView");
 	modelProjectionLocation = glGetUniformLocation(program, "mProj");
 	modelInverseTransposeLocation = glGetUniformLocation(program, "mModel_InverseTranpose");
 	modelSpecularLocation = glGetUniformLocation(program, "vertSpecular");
-	modelUseTextures = glGetUniformLocation(program, "bUseTextures");
+	modelUseTexturesLocation = glGetUniformLocation(program, "bUseTextures");
 	modelColourModeLocation = glGetUniformLocation(program, "colourMode");
 	modelColourOverrideLocation = glGetUniformLocation(program, "colourOverride");
 	modelHasVertColourLocation = glGetUniformLocation(program, "hasVertexColour");
 	modelMinYMaxYLocation = glGetUniformLocation(program, "yMin_yMax");
 	modelSeedLocation = glGetUniformLocation(program, "seed");
+	modelIsSkyboxLocation = glGetUniformLocation(program, "bIsSkybox");
+	modelSkyboxTextureLocation = glGetUniformLocation(program, "skyboxCubeTexture");
 }
 
 void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const {
@@ -80,9 +82,9 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 	Vec3 randSeed = seedFromName(instance.name);
 	glUniform3f(modelSeedLocation, randSeed.x, randSeed.y, randSeed.z);
 
-	glUniform1i(modelUseTextures, instance.useTextures ? 1 : 0);
+	glUniform1i(modelUseTexturesLocation, instance.useTextures ? 1 : 0);
 	if (instance.useTextures) {
-		glUniform1i(modelUseTextures, GL_TRUE);
+		glUniform1i(modelUseTexturesLocation, GL_TRUE);
 
 		if (GLint mixLoc = glGetUniformLocation(program, "texMixRatios"); mixLoc >= 0) {
 			glUniform4f(mixLoc,
@@ -107,7 +109,7 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 		}
 	}
 
-	glUniform1i(modelLighted, instance.isLighted ? 1 : 0);
+	glUniform1i(modelLightedLocation, instance.isLighted ? 1 : 0);
 
 	if (instance.colour.w < 1.0f)	glDepthMask(GL_FALSE);
 	glBindVertexArray(info->VAOID);

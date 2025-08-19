@@ -29,12 +29,46 @@ uniform sampler2D textSampler2D_03;
 
 uniform vec4 texMixRatios;
 
+uniform bool bIsSkybox;
+uniform samplerCube skyboxCubeTexture;
+
 in vec4 vertColor;
 in vec4 vertNormal;
 in vec4 vertWorldPosition;
 in vec2 vertTextCoords;
 
 out vec4 pixelColour;
+
+vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular); // Forward Declaration
+
+void main() {
+	vec4 finalTextRGBA = vertColor;
+
+	if(bIsSkybox){
+		pixelColour = vec4(texture(skyboxCubeTexture, vertNormal.xyz).rgb, 1.0);
+		return;
+	}
+	
+	if(bUseTextures){
+		vec4 tex00RGBA = texture( textSampler2D_00, vertTextCoords.xy );
+		vec4 tex01RGBA = texture( textSampler2D_01, vertTextCoords.xy );
+		vec4 tex02RGBA = texture( textSampler2D_02, vertTextCoords.xy );
+		vec4 tex03RGBA = texture( textSampler2D_03, vertTextCoords.xy );
+
+		finalTextRGBA =   tex00RGBA * texMixRatios.x
+						+ tex01RGBA * texMixRatios.y
+						+ tex02RGBA * texMixRatios.z
+						+ tex03RGBA * texMixRatios.w;
+	}
+
+	if(!bLighted){
+		pixelColour = finalTextRGBA;
+		return;
+	}
+
+	vec4 lightContrib = calculateLightContrib(finalTextRGBA, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
+	pixelColour = vec4(lightContrib.rgb, finalTextRGBA.a);
+};
 
 vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular) {
 	vec3 light = vec3(0.0);
@@ -109,27 +143,3 @@ vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 ve
 	}
 	return vec4(light, 1.0);
 }
-
-void main() {
-	vec4 finalTextRGBA = vertColor;
-
-	if(bUseTextures){
-		vec4 tex00RGBA = texture( textSampler2D_00, vertTextCoords.xy );
-		vec4 tex01RGBA = texture( textSampler2D_01, vertTextCoords.xy );
-		vec4 tex02RGBA = texture( textSampler2D_02, vertTextCoords.xy );
-		vec4 tex03RGBA = texture( textSampler2D_03, vertTextCoords.xy );
-
-		finalTextRGBA =   tex00RGBA * texMixRatios.x
-						+ tex01RGBA * texMixRatios.y
-						+ tex02RGBA * texMixRatios.z
-						+ tex03RGBA * texMixRatios.w;
-	}
-
-	if(!bLighted){
-		pixelColour = finalTextRGBA;
-		return;
-	}
-
-	vec4 lightContrib = calculateLightContrib(finalTextRGBA, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
-	pixelColour = vec4(lightContrib.rgb, finalTextRGBA.a);
-};

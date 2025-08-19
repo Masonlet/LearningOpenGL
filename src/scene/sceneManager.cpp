@@ -79,15 +79,16 @@ bool SceneManager::processSceneLine(const unsigned char* p) {
 	if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') return true;
 
 	bool handled{ false };
-	if (strcmp(nameStr, "model") == 0)           handled = handleModelLine(linePtr);
-	else if (strcmp(nameStr, "light") == 0)      handled = handleLightLine(linePtr);
-	else if (strcmp(nameStr, "camera") == 0)     handled = handleCameraLine(linePtr);
-	else if (strcmp(nameStr, "texture") == 0)    handled = handleTextureLine(linePtr);
-	else if (strcmp(nameStr, "cubeGrid") == 0)   handled = handleCubeGridLine(linePtr);
-	else if (strcmp(nameStr, "squareGrid") == 0) handled = handleSquareGridLine(linePtr);
-	else if (strcmp(nameStr, "triangle") == 0)   handled = handleTriangleLine(linePtr);
-	else if (strcmp(nameStr, "maze") == 0)       handled = handleMazeLine(linePtr);
-	else if (strcmp(nameStr, "mazeData") == 0)   handled = handleMazeData(linePtr);
+	if (strcmp(nameStr, "model") == 0)            handled = handleModelLine(linePtr);
+	else if (strcmp(nameStr, "light") == 0)       handled = handleLightLine(linePtr);
+	else if (strcmp(nameStr, "camera") == 0)      handled = handleCameraLine(linePtr);
+	else if (strcmp(nameStr, "texture") == 0)     handled = handleTextureLine(linePtr);
+	else if (strcmp(nameStr, "textureCube") == 0) handled = handleTextureCubeLine(linePtr);
+	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = handleCubeGridLine(linePtr);
+	else if (strcmp(nameStr, "squareGrid") == 0)  handled = handleSquareGridLine(linePtr);
+	else if (strcmp(nameStr, "triangle") == 0)    handled = handleTriangleLine(linePtr);
+	else if (strcmp(nameStr, "maze") == 0)        handled = handleMazeLine(linePtr);
+	else if (strcmp(nameStr, "mazeData") == 0)    handled = handleMazeData(linePtr);
 	return handled;
 }
 
@@ -196,6 +197,7 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
 	data.colourMode = model.colourMode;
 	data.specular = model.specular;
 	data.isVisible = model.isVisible;
+	data.isLighted = model.isLighted;
 	scene.addInstance(data);
 	return true;
 }
@@ -269,12 +271,33 @@ bool SceneManager::handleTextureLine(const unsigned char* p) {
 	m.useTextures = true;
 	m.textureNames[t.textureNum] = t.textureFile;
 	m.textureMixRatio[t.textureNum] = t.mix;
-	m.textureTiling = t.tiling; // optional: per-model, not per-slot
+	m.textureTiling = t.tiling;
 
-	// Only load if not already present
 	if (textureManager.getTextureIDFromName(t.textureFile) == 0) {
-		if (!textureManager.Create2DBMPTexture(t.textureFile.c_str(), /*mipmap*/true)) {
+		if (!textureManager.Create2DBMPTexture(t.textureFile.c_str(), true)) {
 			fprintf(stderr, "[SceneManager ERROR] Could not create 2D texture: %s\n", t.textureFile.c_str());
+			return false;
+		}
+	}
+	return true;
+}
+bool SceneManager::handleTextureCubeLine(const unsigned char* p) {
+	ParsedTextureCube t{};
+	if (!(p = parseTextureCube(p, t))) {
+		fprintf(stderr, "[SceneManager ERROR] Failed to parse texture line\n");
+		return false;
+	}
+
+	std::map<std::string, ModelData>& models = scene.getModelData();
+	auto it = models.find(t.modelName);
+	if (it == models.end()) {
+		fprintf(stderr, "[SceneManager ERROR] Texture refers to unknown model: %s\n", t.modelName.c_str());
+		return false;
+	}
+
+	if (textureManager.getTextureIDFromName(t.modelName) == 0) {
+		if (!textureManager.CreateCubeBMPTexture(t.modelName, t.textureFile1, t.textureFile2, t.textureFile3, t.textureFile4, t.textureFile5, t.textureFile6, true, true)) {
+			fprintf(stderr, "[SceneManager ERROR] Could not create cube texture: %s\n", t.modelName.c_str());
 			return false;
 		}
 	}
@@ -530,21 +553,21 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
 
 			const bool northEdgeCondition = (row == 0);
 			const bool southEdgeCondition = (row + 1 >= maze.layout.size());
-			const bool eastEdgeCondition  = (col == 0);
-			const bool westEdgeCondition  = (col + 1 >= maze.layout[row].size());
+			const bool eastEdgeCondition = (col == 0);
+			const bool westEdgeCondition = (col + 1 >= maze.layout[row].size());
 
 			if (maze.layout[row][col]) {
 				const bool northCondition = (northEdgeCondition || !maze.layout[row - 1][col]);
 				const bool southCondition = (southEdgeCondition || !maze.layout[row + 1][col]);
-				const bool eastCondition  = (eastEdgeCondition  || !maze.layout[row][col - 1]);
-				const bool westCondition  = (westEdgeCondition  || !maze.layout[row][col + 1]);
+				const bool eastCondition = (eastEdgeCondition || !maze.layout[row][col - 1]);
+				const bool westCondition = (westEdgeCondition || !maze.layout[row][col + 1]);
 
 				std::string finalMesh = wallMesh;
 				bool wallExists{ false };
 				if (northCondition)	wallExists |= addWall(scene, maze, worldPos, northPos, northRot, wallMesh, finalMesh, maze.mazeName + "_wall_" + iteration + "_N", hasEntrance, hasExit, northEdgeCondition);
 				if (southCondition) wallExists |= addWall(scene, maze, worldPos, southPos, southRot, wallMesh, finalMesh, maze.mazeName + "_wall_" + iteration + "_S", hasEntrance, hasExit, southEdgeCondition);
-				if (eastCondition)  wallExists |= addWall(scene, maze, worldPos, eastPos,  eastRot,  wallMesh, finalMesh, maze.mazeName + "_wall_" + iteration + "_E", hasEntrance, hasExit, eastEdgeCondition);
-				if (westCondition)  wallExists |= addWall(scene, maze, worldPos, westPos,  westRot,  wallMesh, finalMesh, maze.mazeName + "_wall_" + iteration + "_W", hasEntrance, hasExit, westEdgeCondition);
+				if (eastCondition)  wallExists |= addWall(scene, maze, worldPos, eastPos, eastRot, wallMesh, finalMesh, maze.mazeName + "_wall_" + iteration + "_E", hasEntrance, hasExit, eastEdgeCondition);
+				if (westCondition)  wallExists |= addWall(scene, maze, worldPos, westPos, westRot, wallMesh, finalMesh, maze.mazeName + "_wall_" + iteration + "_W", hasEntrance, hasExit, westEdgeCondition);
 
 				const std::string floorVariants[] = { maze.floorType1, maze.floorType2, maze.floorType3, maze.floorType4, maze.floorType5, maze.floorType6 };
 				const std::string floorMesh = wallExists ? maze.floorWallType : floorVariants[rand() % 6];

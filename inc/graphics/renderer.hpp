@@ -14,6 +14,8 @@ public:
 	void setProgram(unsigned int program);
 
 	unsigned int getProgram() const { return program; }
+	int getIsSkyboxLocation() const { return modelIsSkyboxLocation; }
+	int getSkyboxTextureLocation() const { return modelSkyboxTextureLocation; }
 
 	void updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const;
 
@@ -26,10 +28,11 @@ private:
 
 	unsigned int program;
 
-	bool modelLighted, modelUseTextures;
+	int modelLightedLocation, modelUseTexturesLocation, modelIsSkyboxLocation;
 	int modelColourModeLocation, modelColourOverrideLocation;
 	int modelHasVertColourLocation, modelMinYMaxYLocation, modelSeedLocation;
 	int modelLocation, modelViewLocation, modelProjectionLocation;
 	int modelInverseTransposeLocation;
 	int modelSpecularLocation;
+	int modelSkyboxTextureLocation;
 };

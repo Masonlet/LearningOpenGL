@@ -42,4 +42,5 @@ private:
   bool buildMaze(const ParsedMaze& maze);
 
   bool handleTextureLine(const unsigned char* p);
+  bool handleTextureCubeLine(const unsigned char* p);
 };

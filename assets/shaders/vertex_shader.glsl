@@ -8,8 +8,8 @@ uniform mat4 mModel_InverseTranpose;
 uniform int colourMode;
 uniform vec4 colourOverride;
 uniform int hasVertexColour;
-uniform vec2 yMin_yMax;
 
+uniform vec2 yMin_yMax;
 uniform vec3 seed;
 
 in vec4 vCol;

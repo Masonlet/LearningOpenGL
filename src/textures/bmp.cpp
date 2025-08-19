@@ -80,9 +80,6 @@ bool BMPTexture::CreateCubeBMPTexture(std::string cubeMapName,
  
   if (generateMIPMap) glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-  for (int i = 0; i < 6; ++i) 
-    delete[] faces[i].data;
-
   this->textureNum = (int)tex;
   this->textureName = cubeMapName;
   this->texturePath = ""; 

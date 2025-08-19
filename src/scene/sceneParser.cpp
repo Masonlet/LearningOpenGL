@@ -3,6 +3,7 @@
 
 const unsigned char* parseModel(const unsigned char* p, ParsedModel& out) {
   PARSE_OR_FAIL(parseBool, out.isVisible, "model enabled");
+  PARSE_OR_FAIL(parseBool, out.isLighted, "model lighting");
   PARSE_STRING_OR_NULL(p, out.name, 64, "model name");
   PARSE_STRING_OR_NULL(p, out.path, 128, "model path");
   PARSE_OR_FAIL(parseVec3, out.position, "model position");
@@ -40,6 +41,19 @@ const unsigned char* parseCamera(const unsigned char* p, ParsedCamera& out) {
 const unsigned char* parseTexture(const unsigned char* p, ParsedTexture& out) {
   PARSE_STRING_OR_NULL(p, out.modelName, 64, "texture model name");
   PARSE_STRING_OR_NULL(p, out.textureFile, 128, "texture file");
+  PARSE_OR_FAIL(parseUInt, out.textureNum, "texture num");
+  PARSE_OR_FAIL(parseFloat, out.mix, "texture mix");
+  PARSE_OR_FAIL(parseVec2, out.tiling, "texture tiling");
+  return p;
+}
+const unsigned char* parseTextureCube(const unsigned char* p, ParsedTextureCube& out) {
+  PARSE_STRING_OR_NULL(p, out.modelName, 64, "texture model name");
+  PARSE_STRING_OR_NULL(p, out.textureFile1, 128, "texture file");
+  PARSE_STRING_OR_NULL(p, out.textureFile2, 128, "texture file");
+  PARSE_STRING_OR_NULL(p, out.textureFile3, 128, "texture file");
+  PARSE_STRING_OR_NULL(p, out.textureFile4, 128, "texture file");
+  PARSE_STRING_OR_NULL(p, out.textureFile5, 128, "texture file");
+  PARSE_STRING_OR_NULL(p, out.textureFile6, 128, "texture file");
   PARSE_OR_FAIL(parseUInt, out.textureNum, "texture num");
   PARSE_OR_FAIL(parseFloat, out.mix, "texture mix");
   PARSE_OR_FAIL(parseVec2, out.tiling, "texture tiling");

@@ -10,7 +10,7 @@
 
 struct ParsedModel {
 	std::string name, path;
-	bool isVisible;
+	bool isVisible{true}, isLighted{false};
 	Vec3 position{0.0f}, rotation{0.0f}, scale{1.0f};
 	Vec4 colour{1.0f}, specular{1.0f, 1.0f, 1.0f, 32.0f};
 	ColourMode colourMode{ColourMode::Solid};
@@ -65,3 +65,11 @@ struct ParsedTexture {
 	float mix{ 1.0f };
 	Vec2 tiling{ 1.0f, 1.0f };
 };
+struct ParsedTextureCube {
+	std::string modelName;
+	std::string textureFile1, textureFile2, textureFile3, textureFile4, textureFile5, textureFile6;
+	unsigned int textureNum;
+	float mix{ 1.0f };
+	Vec2 tiling{ 1.0f, 1.0f };
+};
+
