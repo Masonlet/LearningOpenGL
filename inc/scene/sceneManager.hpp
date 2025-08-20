@@ -10,7 +10,7 @@
 
 class SceneManager {
 public:
-  SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager, TextureManager& textureManager);
+  SceneManager(MeshManager& meshManager, unsigned int& program, LightManager& lightManager, CameraManager& cameraManager, TextureManager& textureManager);
 
   Scene& getScene() { return scene; }
 
@@ -19,7 +19,7 @@ public:
 
 private:
   Scene scene;
-  Renderer& renderer;
+  unsigned int& program;
   LightManager& lightManager;
   CameraManager& cameraManager;
 	MeshManager& meshManager;

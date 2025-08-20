@@ -12,8 +12,8 @@
 #include <fstream>
 #include <iomanip>
 
-SceneManager::SceneManager(MeshManager& meshManager, Renderer& renderer, LightManager& lightManager, CameraManager& cameraManager, TextureManager& textureManager)
-	: meshManager(meshManager), renderer(renderer), lightManager(lightManager), cameraManager(cameraManager), textureManager(textureManager), scene() {
+SceneManager::SceneManager(MeshManager& meshManager, unsigned int& program, LightManager& lightManager, CameraManager& cameraManager, TextureManager& textureManager)
+	: meshManager(meshManager), program(program), lightManager(lightManager), cameraManager(cameraManager), textureManager(textureManager), scene() {
 }
 
 bool SceneManager::loadTxtScene(const std::string& sceneIn) {
@@ -296,7 +296,7 @@ bool SceneManager::handleSquareGridLine(const unsigned char*& p) {
 	ParsedGrid grid;
 	PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
-	if (!createSquareGrid(&meshManager, renderer.getProgram(), "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
+	if (!createSquareGrid(&meshManager, program, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
 		fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
 		return false;
 	}
@@ -319,7 +319,7 @@ bool SceneManager::handleCubeGridLine(const unsigned char*& p) {
 	ParsedGrid grid;
 	PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
-	if (!createCubeGrid(&meshManager, renderer.getProgram(), "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
+	if (!createCubeGrid(&meshManager, program, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
 		fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
 		return false;
 	}
@@ -358,7 +358,7 @@ bool SceneManager::handleTriangleLine(const unsigned char*& p) {
 
 	if (!meshExists) {
 		Vec4 bakedVertexColour = { triangle.colour.x, triangle.colour.y, triangle.colour.z, 1.0f };
-		if (!createTriangle(&meshManager, sharedName, renderer.getProgram(), { triangle.transform.scale.x, triangle.transform.scale.y }, bakedVertexColour)) {
+		if (!createTriangle(&meshManager, sharedName, program, { triangle.transform.scale.x, triangle.transform.scale.y }, bakedVertexColour)) {
 			fprintf(stderr, "[SceneManager ERROR] Failed to create triangle mesh: %s\n", sharedName.c_str());
 			return false;
 		}
@@ -487,30 +487,6 @@ static bool addWall(Scene& scene, const ParsedMaze& maze,
 	return true;
 }
 bool SceneManager::buildMaze(const ParsedMaze& maze) {
-	const std::string meshList[] = {
-	maze.floorType1, maze.floorType2, maze.floorType3,
-	maze.floorType4, maze.floorType5, maze.floorType6,
-	maze.floorWallType, maze.exteriorWallType,
-	maze.wallType1, maze.wallType2, maze.wallType3,
-	maze.wallType4, maze.wallType5, maze.wallType6,
-	maze.entranceType, maze.exitType
-	};
-
-	for (const std::string& modelPath : meshList) {
-		if (modelPath.empty()) continue;
-
-		const MeshData* existingInfo = nullptr;
-		if (!meshManager.findMesh(modelPath, existingInfo)) {
-			MeshData tempInfo;
-			tempInfo.path = modelPath;
-			if (!meshManager.loadMeshFile(modelPath, tempInfo, renderer.getProgram()) ||
-				!meshManager.findMesh(modelPath, existingInfo)) {
-				fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());
-				return false;
-			}
-		}
-	}
-
 	bool hasEntrance{ false }, hasExit{ false };
 	const Mat4 mazeMatrix = Mat4::modelMatrix({ {maze.pos, 0.0}, maze.rot, {1.0f, 1.0f, 1.0f} });
 	for (size_t row = 0; row < maze.layout.size(); ++row) {

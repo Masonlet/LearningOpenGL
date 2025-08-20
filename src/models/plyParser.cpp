@@ -3,36 +3,46 @@
 #include "math/constants.hpp"
 #include <string>
 
-static bool deleteMesh(const unsigned char*& p, MeshData& drawInfo, const std::string& errorMsg) {
-	fprintf(stderr, "[LoadModelFromFile ERROR] Failed to parse %s\n", errorMsg.c_str());
-	if(drawInfo.indices) delete[] drawInfo.indices;
-	drawInfo.indices = nullptr;
-	if(drawInfo.vertices) delete[] drawInfo.vertices;
-	drawInfo.vertices = nullptr;
-	return false;
-}
 bool parsePlyMesh(const unsigned char*& p, unsigned int size, MeshData& drawInfo) {
 	if (!p) {
 		fprintf(stderr, "[parsePlyHeader ERROR] Input pointer is null\n");
 		return false;
 	}
-	
-	if (!parsePlyHeader(p, drawInfo.numVertices, drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours, drawInfo.hasTexCoords)) 
-		return deleteMesh(p, drawInfo, "header or missing 'end_header'");
-	
-	if (drawInfo.numVertices == 0 || drawInfo.numTriangles == 0) 	
-		return deleteMesh(p, drawInfo, "header, no vertices/triangles declared");
-	
-	drawInfo.numIndices = drawInfo.numTriangles * 3;
-	drawInfo.vertices = new Vertex[drawInfo.numVertices];
-	if (!parseVertices(p, drawInfo)) 
-		return deleteMesh(p, drawInfo, "vertex data");
 
-	drawInfo.indices = new unsigned int[drawInfo.numIndices];
-	if (!parseIndices(p, drawInfo)) 
-		return deleteMesh(p, drawInfo, "face data");
+	const char* errorMsg;
+	while (true) {
+		if (!parsePlyHeader(p, drawInfo.numVertices, drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours, drawInfo.hasTexCoords)) {
+			errorMsg = "header or missing 'end_header'";
+			break;
+		}
 
-	return true;
+		if (drawInfo.numVertices == 0 || drawInfo.numTriangles == 0) {
+			errorMsg = "header, no vertices/triangles declared";
+			break;
+		}
+
+		drawInfo.vertices = new Vertex[drawInfo.numVertices];
+		if (!parseVertices(p, drawInfo)) {
+			errorMsg = "vertex data";
+			break;
+		}
+
+		drawInfo.numIndices = drawInfo.numTriangles * 3;
+		drawInfo.indices = new unsigned int[drawInfo.numIndices];
+		if (!parseIndices(p, drawInfo)) {
+			errorMsg = "face data";
+			break;
+		}
+
+		return true;
+	}
+ 
+	fprintf(stderr, "[LoadModelFromFile ERROR] Failed to parse %s\n", errorMsg);
+	if (drawInfo.indices) delete[] drawInfo.indices;
+	drawInfo.indices = nullptr;
+	if (drawInfo.vertices) delete[] drawInfo.vertices;
+	drawInfo.vertices = nullptr;
+	return false;
 }
 
 static bool parsePlyElementLine(const unsigned char*& p, unsigned int& verticesOut, unsigned int& trianglesOut) {
@@ -55,7 +65,7 @@ static bool parsePlyElementLine(const unsigned char*& p, unsigned int& verticesO
 
 static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& hasNy, bool& hasNz, bool& hasR, bool& hasG, bool& hasB, bool& hasU, bool& hasV) {
 	if (!p) {
-		fprintf(stderr, "[parsePlyHeader ERROR] Input pointer is null\n");
+		fprintf(stderr, "[parsePlyPropertyLine ERROR] Input pointer is null\n");
 		return false;
 	}
 
@@ -63,7 +73,7 @@ static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& has
 
 	char type[32]{};
 	if (!parseToken(p, (unsigned char*)type, sizeof(type))) {
-		fprintf(stderr, "[parsePlyHeader ERROR] Failed to parse property list count type, type: %s\n", type);
+		fprintf(stderr, "[parsePlyPropertyLine ERROR] Failed to parse property list count type, type: %s\n", type);
 		return false;
 	}
 
@@ -76,7 +86,7 @@ static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& has
 		char property[3][32]{};
 		for (int i = 0; i < 3; ++i) {
 			if (!parseToken(p, reinterpret_cast<unsigned char*>(property[i]), sizeof(property[i]))) {
-				fprintf(stderr, "[parsePlyHeader ERROR] Failed to parse property list number %d\n", i);
+				fprintf(stderr, "[parsePlyPropertyLine ERROR] Failed to parse property list number %d\n", i);
 				return false;
 			}
 		}
@@ -86,7 +96,7 @@ static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& has
 
 	char propertyName[32]{};
 	if(!parseToken(p, (unsigned char*)propertyName, sizeof(propertyName))) {
-		fprintf(stderr, "[parsePlyHeader ERROR] Failed to parse property name\n");
+		fprintf(stderr, "[parsePlyPropertyLine ERROR] Failed to parse property name\n");
 		return false;
 	}
 
@@ -103,7 +113,7 @@ static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& has
 
 bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut, bool& hasTexCoordsOut) {
 	if (!p) {
-		fprintf(stderr, "[parseVertices ERROR] input pointer is null\n");
+		fprintf(stderr, "[parsePlyHeader ERROR] input pointer is null\n");
 		return false;
 	}
 	skipWhitespace(p);
@@ -139,7 +149,7 @@ bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsig
 		else if (!(strncmp((const char*)p, "ply", 3)     == 0)
 		    	&& !(strncmp((const char*)p, "format", 6)  == 0)
 			    && !(strncmp((const char*)p, "comment", 7) == 0))
-			fprintf(stderr, "[Warning] %.*s\n", static_cast<int>(lineEnd - p), (const char*)p);
+			fprintf(stderr, "[parsePlyHeader Warning] %.*s\n", static_cast<int>(lineEnd - p), (const char*)p);
 
 		p = lineEnd;
 	}

@@ -10,7 +10,7 @@ Engine::Engine() :
   currentProgram{ 0 }, currentModel{ 0 },
   deltaTime{ 0.0f }, lastTime{ 0.0f },
   wireframe{ false },
-  sceneManager(meshManager, renderer, lightManager, cameraManager, textureManager),
+  sceneManager(meshManager, currentProgram, lightManager, cameraManager, textureManager),
   renderer(shaderManager, meshManager, textureManager){
 }
 Engine::~Engine() {
@@ -56,8 +56,6 @@ void Engine::setupShaders() {
     fprintf(stderr, "[setupShaders ERROR] Shader program ID is 0\n");
     return;
   }
-  glUseProgram(currentProgram);
-
   renderer.setProgram(currentProgram);
 
   constexpr float bgR = 0.2f;
