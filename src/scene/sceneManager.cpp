@@ -30,26 +30,21 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 
 	const unsigned char* p = reinterpret_cast<const unsigned char*>(src.c_str());
 	while (*p) {
-		const unsigned char* lineEnd = skipToNextLine(p);
+		const unsigned char* nextLine = p;
+		skipToNextLine(nextLine);
+		const unsigned char* endLine = nextLine;
+		trimEOL(p, endLine);
 
-		while (lineEnd > p && (lineEnd[-1] == '\n' || lineEnd[-1] == '\r'))
-			--lineEnd;
-
-		if (lineEnd == p) {
-			p = skipToNextLine(p);
+		if (endLine == p) {
+			p = nextLine;
 			continue;
 		}
 
 		if (!processSceneLine(p)) {
-			const int len = static_cast<int>(lineEnd - p);
-			fprintf(stderr, "[SceneManager ERROR] Failed to process scene line: %.*s\n", len, reinterpret_cast<const char*>(p));
+			fprintf(stderr, "[SceneManager ERROR] Failed to process scene line: \"%.*s\"\n", static_cast<int>(endLine - p), reinterpret_cast<const char*>(p));
 			return false;
 		}
-
-		p = skipToNextLine(p);
 	}
-
-	scene.setSceneName(sceneIn);
 
 	if (cameraManager.getCameraCount() == 0) {
 		Camera defaultCam;
@@ -63,37 +58,42 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 		if (!cameraManager.addCamera(defaultCam))
 			fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
 	}
+
+	scene.setSceneName(sceneIn);
 #ifndef NDEBUG
 	fprintf(stderr, "[SceneManager] Scene load finish: %f\n", glfwGetTime());
 #endif
 	return true;
 }
-bool SceneManager::processSceneLine(const unsigned char* p) {
-	if (*p == '\0') return true;
+bool SceneManager::processSceneLine(const unsigned char*& p) {
+	if (!p || *p == '\0') return true;
 
 	unsigned char token[64]{};
-	const unsigned char* linePtr = parseToken(p, token, sizeof(token));
+	parseToken(p, token, sizeof(token));
 	const char* nameStr = reinterpret_cast<const char*>(token);
 
-	if (!linePtr || strlen(nameStr) == 0)                     return true;
-	if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') return true;
+	if (!p || strlen(nameStr) == 0)                     return true;
+	if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') {
+		skipToNextLine(p); 
+		return true;
+	}
 
 	bool handled{ false };
-	if (strcmp(nameStr, "model") == 0)            handled = handleModelLine(linePtr);
-	else if (strcmp(nameStr, "light") == 0)       handled = handleLightLine(linePtr);
-	else if (strcmp(nameStr, "camera") == 0)      handled = handleCameraLine(linePtr);
-	else if (strcmp(nameStr, "texture") == 0)     handled = handleTextureLine(linePtr);
-	else if (strcmp(nameStr, "textureCube") == 0) handled = handleTextureCubeLine(linePtr);
-	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = handleCubeGridLine(linePtr);
-	else if (strcmp(nameStr, "squareGrid") == 0)  handled = handleSquareGridLine(linePtr);
-	else if (strcmp(nameStr, "triangle") == 0)    handled = handleTriangleLine(linePtr);
-	else if (strcmp(nameStr, "maze") == 0)        handled = handleMazeLine(linePtr);
-	else if (strcmp(nameStr, "mazeData") == 0)    handled = handleMazeData(linePtr);
+	if (strcmp(nameStr, "model") == 0)            handled = handleModelLine(p);
+	else if (strcmp(nameStr, "light") == 0)       handled = handleLightLine(p);
+	else if (strcmp(nameStr, "camera") == 0)      handled = handleCameraLine(p);
+	else if (strcmp(nameStr, "texture") == 0)     handled = handleTextureLine(p);
+	else if (strcmp(nameStr, "textureCube") == 0) handled = handleTextureCubeLine(p);
+	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = handleCubeGridLine(p);
+	else if (strcmp(nameStr, "squareGrid") == 0)  handled = handleSquareGridLine(p);
+	else if (strcmp(nameStr, "triangle") == 0)    handled = handleTriangleLine(p);
+	else if (strcmp(nameStr, "maze") == 0)        handled = handleMazeLine(p);
+	else if (strcmp(nameStr, "mazeData") == 0)    handled = handleMazeData(p);
 	return handled;
 }
 
 bool SceneManager::saveTxtScene() {
-	const std::string scenePath = "../../../assets/scenes/" + scene.getSceneName() + ".txt";
+	const std::string scenePath = std::string(ASSET_DIR) + "/scenes/" + scene.getSceneName() + ".txt";
 	std::ofstream file(scenePath);
 
 	if (!file.is_open()) {
@@ -182,9 +182,9 @@ bool SceneManager::saveTxtScene() {
 	return true;
 }
 
-bool SceneManager::handleModelLine(const unsigned char* p) {
+bool SceneManager::handleModelLine(const unsigned char*& p) {
 	ParsedModel model{};
-	PARSE_OR_FALSE(parseModel, model, "Failed to parse model");
+	PARSE_OR_FALSE(parseModel, model, "parse model");
 
 	ModelData data;
 	data.name = model.name;
@@ -201,12 +201,9 @@ bool SceneManager::handleModelLine(const unsigned char* p) {
 	scene.addInstance(data);
 	return true;
 }
-bool SceneManager::handleLightLine(const unsigned char* p) {
+bool SceneManager::handleLightLine(const unsigned char*& p) {
 	ParsedLight lightData{};
-	if (!(p = parseLight(p, lightData))) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to parse light\n");
-		return false;
-	}
+	PARSE_OR_FALSE(parseLight, lightData, "parse light");
 
 	Light* light = lightManager.getLightByName(lightData.name);
 	if (!light) {
@@ -222,12 +219,9 @@ bool SceneManager::handleLightLine(const unsigned char* p) {
 	light->param2 = { static_cast<float>(lightData.isEnabled), 0.0f, 0.0f, 0.0f };
 	return true;
 }
-bool SceneManager::handleCameraLine(const unsigned char* p) {
+bool SceneManager::handleCameraLine(const unsigned char*& p) {
 	ParsedCamera cameraData{};
-	if (!(p = parseCamera(p, cameraData))) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to parse camera\n");
-		return false;
-	}
+	PARSE_OR_FALSE(parseCamera, cameraData, "parse camera");
 
 	Camera cam;
 	cam.setName(cameraData.name);
@@ -248,12 +242,9 @@ bool SceneManager::handleCameraLine(const unsigned char* p) {
 	return true;
 }
 
-bool SceneManager::handleTextureLine(const unsigned char* p) {
+bool SceneManager::handleTextureLine(const unsigned char*& p) {
 	ParsedTexture t{};
-	if (!(p = parseTexture(p, t))) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to parse texture line\n");
-		return false;
-	}
+	PARSE_OR_FALSE(parseTexture, t, "Failed to parse texture line");
 
 	std::map<std::string, ModelData>& models = scene.getModelData();
 	auto it = models.find(t.modelName);
@@ -281,12 +272,9 @@ bool SceneManager::handleTextureLine(const unsigned char* p) {
 	}
 	return true;
 }
-bool SceneManager::handleTextureCubeLine(const unsigned char* p) {
+bool SceneManager::handleTextureCubeLine(const unsigned char*& p) {
 	ParsedTextureCube t{};
-	if (!(p = parseTextureCube(p, t))) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to parse texture line\n");
-		return false;
-	}
+	PARSE_OR_FALSE(parseTextureCube, t, "Failed to parse cube texture line");
 
 	std::map<std::string, ModelData>& models = scene.getModelData();
 	auto it = models.find(t.modelName);
@@ -304,7 +292,7 @@ bool SceneManager::handleTextureCubeLine(const unsigned char* p) {
 	return true;
 }
 
-bool SceneManager::handleSquareGridLine(const unsigned char* p) {
+bool SceneManager::handleSquareGridLine(const unsigned char*& p) {
 	ParsedGrid grid;
 	PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
@@ -327,7 +315,7 @@ bool SceneManager::handleSquareGridLine(const unsigned char* p) {
 
 	return true;
 }
-bool SceneManager::handleCubeGridLine(const unsigned char* p) {
+bool SceneManager::handleCubeGridLine(const unsigned char*& p) {
 	ParsedGrid grid;
 	PARSE_OR_FALSE(parseGrid, grid, "Failed to parse cubeGrid colour");
 
@@ -350,12 +338,9 @@ bool SceneManager::handleCubeGridLine(const unsigned char* p) {
 
 	return true;
 }
-bool SceneManager::handleTriangleLine(const unsigned char* p) {
+bool SceneManager::handleTriangleLine(const unsigned char*& p) {
 	ParsedTriangle triangle{};
-	if (!(p = parseTriangle(p, triangle))) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to parse triangle\n");
-		return false;
-	}
+	PARSE_OR_FALSE(parseTriangle, triangle, "Failed to parse triangle line");
 
 	std::string sharedName;
 	bool skipCache = false;
@@ -407,14 +392,14 @@ bool SceneManager::handleTriangleLine(const unsigned char* p) {
 	return true;
 }
 
-bool SceneManager::handleMazeLine(const unsigned char* p) {
+bool SceneManager::handleMazeLine(const unsigned char*& p) {
 	ParsedMaze maze;
 	PARSE_OR_FALSE(parseMaze, maze, "Failed to parse maze");
 
 	pendingMaze = maze;
 	return true;
 }
-bool SceneManager::handleMazeData(const unsigned char* p) {
+bool SceneManager::handleMazeData(const unsigned char*& p) {
 	if (!pendingMaze.has_value()) {
 		fprintf(stderr, "[SceneManager ERROR] Unexpected mazeData with no pending maze\n");
 		return false;
@@ -442,7 +427,6 @@ static bool addFloor(Scene& scene, const std::string& name, const std::string& m
 	d.rotation = rotation;
 	d.scale = Vec3{ 1.0f, 1.0f, 1.0f };
 	d.modelMatrix = Mat4::modelMatrix({ {d.position, 0.0}, d.rotation, d.scale });
-
 	d.colour = Vec4{ 1,1,1,1 };
 	d.colourMode = ColourMode::Solid;
 	d.specular = Vec4{ 1,1,1,32 };
@@ -474,7 +458,7 @@ static bool addWall(Scene& scene, const ParsedMaze& maze,
 	}
 
 	const Vec4 pos = worldPos - wallOffset;
-	const Vec3 rot = baseRot + maze.wallRot;
+	const Vec3 rot = baseRot + maze.baseRot;
 
 	for (unsigned int level = 0; level < maze.wallHeight; ++level) {
 		Vec4 stackedPos = pos;
@@ -517,15 +501,12 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
 
 		const MeshData* existingInfo = nullptr;
 		if (!meshManager.findMesh(modelPath, existingInfo)) {
-			const MeshData* drawInfo{};
-			if (!meshManager.findMesh(modelPath, drawInfo)) {
-				MeshData tempInfo;
-				tempInfo.path = modelPath;
-				if (!meshManager.loadMeshFile(modelPath, tempInfo, renderer.getProgram()) ||
-					!meshManager.findMesh(modelPath, drawInfo)) {
-					fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());
-					return false;
-				}
+			MeshData tempInfo;
+			tempInfo.path = modelPath;
+			if (!meshManager.loadMeshFile(modelPath, tempInfo, renderer.getProgram()) ||
+				!meshManager.findMesh(modelPath, existingInfo)) {
+				fprintf(stderr, "[SceneLoader ERROR] Failed to load maze model: %s\n", modelPath.c_str());
+				return false;
 			}
 		}
 	}
@@ -582,7 +563,7 @@ bool SceneManager::buildMaze(const ParsedMaze& maze) {
 					if (!addFloor(scene, maze.mazeName + "_roof_" + iteration, maze.floorWallType, roofPos, flippedRot)) return false;
 				}
 			}
-			else if (row == 0 || row == maze.layout.size() - 1 || col == 0 || col == maze.layout[row].size() - 1) {
+			else if (northEdgeCondition || southEdgeCondition || eastEdgeCondition || westEdgeCondition) {
 				bool unusedFlag{ true };
 				if (northEdgeCondition) addWall(scene, maze, worldPos, northPos, northRot, wallMesh, maze.exteriorWallType, maze.mazeName + "_exteriorwall_" + iteration + "_N", unusedFlag, unusedFlag);
 				if (southEdgeCondition) addWall(scene, maze, worldPos, southPos, southRot, wallMesh, maze.exteriorWallType, maze.mazeName + "_exteriorwall_" + iteration + "_S", unusedFlag, unusedFlag);

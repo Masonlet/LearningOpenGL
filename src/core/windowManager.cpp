@@ -22,8 +22,8 @@ bool WindowManager::createWindow(const unsigned int width, const unsigned int he
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
-  // glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); // Optional
-  // glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);   // Optional
+  glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+  //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); 
 
   window = new Window(width, height, title);
   if (!window->getGLFWwindow()) {
@@ -49,3 +49,15 @@ void WindowManager::destroyWindow() {
   window = nullptr;
 }
 
+void WindowManager::switchActiveWindowVisibiltiy() {
+  if (window) {
+
+    if (glfwGetWindowAttrib(getWindow()->getGLFWwindow(), GLFW_VISIBLE))
+      glfwHideWindow(getWindow()->getGLFWwindow());
+    else 
+      glfwShowWindow(getWindow()->getGLFWwindow());
+  }
+  else {
+		fprintf(stderr, "[WindowManager] No active window to switch visibility.\n");
+  }
+}

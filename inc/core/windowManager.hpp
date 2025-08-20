@@ -12,6 +12,8 @@ public:
 
   inline Window *getWindow() const { return window; }
 
+  void switchActiveWindowVisibiltiy();
+
 private:
   Window* window = nullptr;
 };

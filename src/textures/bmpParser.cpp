@@ -79,7 +79,7 @@ static bool readHeader(const unsigned char* buffer, int& height, int& width) {
 }
 
 bool parseBMP(const char* filename, BMP& bmpOut) {
-	unsigned char* buffer{ nullptr };
+	const unsigned char* buffer{ nullptr };
 	size_t fileSize{ 0 };
 
 	if (!loadBinaryFile(buffer, fileSize, filename) || !buffer) return false;

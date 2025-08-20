@@ -27,20 +27,20 @@ private:
 
   std::optional<ParsedMaze> pendingMaze;
 
-  bool processSceneLine(const unsigned char* p);
+  bool processSceneLine(const unsigned char*& p);
 
-  bool handleSquareGridLine(const unsigned char* p);
-  bool handleCubeGridLine(const unsigned char* p);
-  bool handleTriangleLine(const unsigned char* p);
+  bool handleSquareGridLine(const unsigned char*& p);
+  bool handleCubeGridLine(const unsigned char*& p);
+  bool handleTriangleLine(const unsigned char*& p);
 
-  bool handleModelLine(const unsigned char* p);
-  bool handleLightLine(const unsigned char* p);
-  bool handleCameraLine(const unsigned char* p);
+  bool handleModelLine(const unsigned char*& p);
+  bool handleLightLine(const unsigned char*& p);
+  bool handleCameraLine(const unsigned char*& p);
 
-  bool handleMazeLine(const unsigned char* p);
-  bool handleMazeData(const unsigned char* p);
+  bool handleMazeLine(const unsigned char*& p);
+  bool handleMazeData(const unsigned char*& p);
   bool buildMaze(const ParsedMaze& maze);
 
-  bool handleTextureLine(const unsigned char* p);
-  bool handleTextureCubeLine(const unsigned char* p);
+  bool handleTextureLine(const unsigned char*& p);
+  bool handleTextureCubeLine(const unsigned char*& p);
 };

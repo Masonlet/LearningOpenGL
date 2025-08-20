@@ -18,7 +18,7 @@ int main() {
 	if (!engine.initialize(1920, 1200, "Test"))
 		return -1;
 
-	if (!engine.setScene("Maze"))
+	if (!engine.setScene("SceneTest"))
 		return -1;
 
 	if (!engine.loadSceneMeshes())

@@ -134,6 +134,8 @@ bool Engine::loadSceneMeshes() {
 }
 
 void Engine::run() {
+  getWindowManager().switchActiveWindowVisibiltiy();
+
   while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
     inputManager.Update(windowManager.getWindow()->getGLFWwindow());

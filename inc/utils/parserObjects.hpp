@@ -48,8 +48,8 @@ struct ParsedGrid {
 
 struct ParsedMaze {
 	std::string mazeName, layoutName;
-	Vec3 pos{ 0.0f }, rot{ 0.0f };
-	float spacing{ 0.0f }, wallRot{ 0.0f };
+	Vec3 pos{ 0.0f }, rot{ 0.0f }, baseRot{ 0.0f };
+	float spacing{ 0.0f };
 	unsigned int wallHeight{ 0 };
 	bool hasRoof{ false };
 	std::vector<std::vector<bool>> layout{};

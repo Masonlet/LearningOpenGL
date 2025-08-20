@@ -7,42 +7,36 @@
 
 #ifndef PARSE_OR_FAIL
 #define PARSE_OR_FAIL(parser, target, errorMsg) \
-  if (!(p = parser(p, target))) { \
+  if (!(parser(p, target))) { \
       fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
       return nullptr; \
-  } \
-  if (*p == ',') ++p;
+  } 
 #endif
 
 #ifndef PARSE_OR_FALSE
 #define PARSE_OR_FALSE(parser, target, errorMsg) \
-  if (!(p = parser(p, target))) { \
+  if (!(parser(p, target))) { \
       fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
       return false; \
-  } \
-  if (*p == ',') ++p;
+  } 
 #endif
 
 #ifndef PARSE_OR_INVALID
 #define PARSE_OR_INVALID(parser, target, errorMsg) \
-    if (!(linePtr = parser(linePtr, target))) { \
-        fprintf(stderr, "[vaoManager ERROR]: %s\n", errorMsg); \
+    if (valid && !(parser(p, target))) { \
+        if(errorMsg && *errorMsg != '\0') fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
         valid = false; \
-    } else { \
-      if (*linePtr == ',') ++linePtr; \
-    }
+    } 
 #endif
 
 #ifndef PARSE_STRING_OR_NULL
 #define PARSE_STRING_OR_NULL(p, target, size, label) \
   do {\
     char temp[size]{}; \
-    p = parseToken(p, reinterpret_cast<unsigned char*>(temp), size); \
-    if (!p || strlen(temp) == 0) { \
+    if (!parseToken(p, reinterpret_cast<unsigned char*>(temp), size) || strlen(temp) == 0) { \
       fprintf(stderr, "[Parser ERROR] Failed to parse %s\n", label); \
       return nullptr; \
     } \
-    if (*p == ',') ++p; \
     target = temp; \
   } while (0)
 #endif
@@ -51,32 +45,28 @@
 #define PARSE_STRING_OR_FALSE(p, target, size, label) \
   do {\
     char temp[size]{}; \
-    p = parseToken(p, reinterpret_cast<unsigned char*>(temp), size); \
-    if (!p || strlen(temp) == 0) { \
+    if (!parseToken(p, reinterpret_cast<unsigned char*>(temp), size) || strlen(temp) == 0) { \
       fprintf(stderr, "[Parser ERROR] Failed to parse %s\n", label); \
       return false; \
     } \
-    if (*p == ',') ++p; \
     target = temp; \
   } while (0)
 #endif
 
-const unsigned char* skipToNextLine(const unsigned char* p);
-const unsigned char* skipToNextWord(const unsigned char* p);
-const unsigned char* skipWhitespace(const unsigned char* p, bool comma = false);
+void skipToNextLine(const unsigned char*& p);
+void skipToNextWord(const unsigned char*& p);
+void skipWhitespace(const unsigned char*& p, bool comma = true);
+void trimEOL       (const unsigned char* p, const unsigned char*& end);
 
-const unsigned char* trimEOL(const unsigned char* p, const unsigned char* e);
+bool parseUInt      (const unsigned char*& p, unsigned int& out);
+bool parseBinaryUInt(const unsigned char*& p, unsigned int& out);
+bool parseBool      (const unsigned char*& p, bool& out);
+bool parseFloat     (const unsigned char*& p, float& out);
+bool parseVec2      (const unsigned char*& p, Vec2& out);
+bool parseVec3      (const unsigned char*& p, Vec3& out);
+bool parseVec4      (const unsigned char*& p, Vec4& out);
+bool parseToken     (const unsigned char*& p, unsigned char* out, const size_t maxLength);
 
-const unsigned char* parseToken     (const unsigned char* p, unsigned char* out, const size_t maxLength);
-const unsigned char* parseFloat     (const unsigned char* p, float& out);	
-const unsigned char* parseUInt(const unsigned char* p, unsigned int& out);
-const unsigned int   parseBinaryUINT(const unsigned char* buffer);
-const unsigned char* parseBool(const unsigned char* p, bool& out);
-
-const unsigned char* parseVec2(const unsigned char* p, Vec2& out);
-const unsigned char* parseVec3(const unsigned char* p, Vec3& out);
-const unsigned char* parseVec4(const unsigned char* p, Vec4& out);
-
-const unsigned char* parseColour(const unsigned char* p, Vec4& colourOut, ColourMode& modeOut);
-const unsigned char* parseLightType(const unsigned char* p, unsigned int& typeOut);
-const unsigned char* parseCameraType(const unsigned char* p, unsigned int& typeOut);
+bool parseColour    (const unsigned char*& p, Vec4& colourOut, ColourMode& modeOut);
+bool parseLightType (const unsigned char*& p, unsigned int& typeOut);
+bool parseCameraType(const unsigned char*& p, unsigned int& typeOut);

@@ -10,7 +10,7 @@ bool MeshManager::loadMeshFile(const std::string& path, MeshData& mesh, unsigned
 	mesh.numVertices = 0;
 	mesh.numIndices = 0;
 
-  unsigned char* src{ nullptr };
+  const unsigned char* src{ nullptr };
   size_t size;
   if (!loadBinaryFile(src, size, std::string(ASSET_DIR) + "/models/" + path))
     return false;
