@@ -23,7 +23,7 @@ int main() {
 
 	if (!engine.loadSceneMeshes())
 		return -1;
-
+		
 	engine.run();
 	return 0;
 }

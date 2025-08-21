@@ -5,58 +5,34 @@
 #include "math/vec4.hpp"
 #include "core/colour.hpp"
 
-#ifndef PARSE_OR_FAIL
-#define PARSE_OR_FAIL(parser, target, errorMsg) \
+bool error(const char* caller = nullptr, const char* msg = nullptr);
+void debugLog(const char* caller = nullptr, const char* msg = nullptr, bool debug = false);
+
+#ifndef PARSE_OR 
+#define PARSE_OR(onFail, parser, target, errorMsg) \
+do { \
   if (!(parser(p, target))) { \
-      fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
-      return nullptr; \
-  } 
+      if((errorMsg) && *(errorMsg) != '\0') fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
+      onFail; \
+	} \
+} while(0)
 #endif
 
-#ifndef PARSE_OR_FALSE
-#define PARSE_OR_FALSE(parser, target, errorMsg) \
-  if (!(parser(p, target))) { \
-      fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
-      return false; \
-  } 
-#endif
-
-#ifndef PARSE_OR_INVALID
-#define PARSE_OR_INVALID(parser, target, errorMsg) \
-    if (valid && !(parser(p, target))) { \
-        if(errorMsg && *errorMsg != '\0') fprintf(stderr, "[Parser ERROR]: Failed to parse %s\n", errorMsg); \
-        valid = false; \
-    } 
-#endif
-
-#ifndef PARSE_STRING_OR_NULL
-#define PARSE_STRING_OR_NULL(p, target, size, label) \
+#ifndef PARSE_STRING_OR
+#define PARSE_STRING_OR(onFail, p, target, size, label) \
   do {\
     char temp[size]{}; \
     if (!parseToken(p, reinterpret_cast<unsigned char*>(temp), size) || strlen(temp) == 0) { \
       fprintf(stderr, "[Parser ERROR] Failed to parse %s\n", label); \
-      return nullptr; \
+      onFail; \
     } \
     target = temp; \
   } while (0)
 #endif
 
-#ifndef PARSE_STRING_OR_FALSE
-#define PARSE_STRING_OR_FALSE(p, target, size, label) \
-  do {\
-    char temp[size]{}; \
-    if (!parseToken(p, reinterpret_cast<unsigned char*>(temp), size) || strlen(temp) == 0) { \
-      fprintf(stderr, "[Parser ERROR] Failed to parse %s\n", label); \
-      return false; \
-    } \
-    target = temp; \
-  } while (0)
-#endif
-
-void skipToNextLine(const unsigned char*& p);
-void skipToNextWord(const unsigned char*& p);
-void skipWhitespace(const unsigned char*& p, bool comma = true);
-void trimEOL       (const unsigned char* p, const unsigned char*& end);
+const unsigned char* skipToNextLine(const unsigned char* p);
+const unsigned char* skipWhitespace(const unsigned char* p, bool comma = true);
+const unsigned char* trimEOL       (const unsigned char* p, const unsigned char* end);
 
 bool parseUInt      (const unsigned char*& p, unsigned int& out);
 bool parseBinaryUInt(const unsigned char*& p, unsigned int& out);

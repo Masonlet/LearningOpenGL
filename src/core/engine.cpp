@@ -96,8 +96,7 @@ void Engine::tick(const float currenttime) {
 }
   
 bool Engine::setScene(const std::string& sceneIn) {
-  if (!sceneManager.loadTxtScene(sceneIn))  return false;
-  else                                      return true;
+  return sceneManager.loadTxtScene(sceneIn); 
 }
 bool Engine::loadSceneMeshes() {
 #ifndef NDEBUG

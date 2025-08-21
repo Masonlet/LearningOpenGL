@@ -3,31 +3,42 @@
 #include <cstring>
 #include <cstdio>
 
+bool error(const char* caller, const char* msg) {
+	fprintf(stderr, "[%s ERROR] %s\n", caller, msg);
+	return false;
+}
+void debugLog(const char* caller, const char* msg, bool debug){
+	if(debug) {
+#ifndef NDEBUG
+		fprintf(stderr, "[%s LOG] %s\n", caller, msg);
+#endif
+	}
+	else fprintf(stderr, "[%s LOG] %s\n", caller, msg);
+}
+
 static inline bool isDelim(unsigned char c, bool comma = true) {
 	return c == 0 || c == ' ' || c == '\t' || c == '\n' || c == '\r' || (comma && c == ',');
 }
 
-void skipToNextLine(const unsigned char*& p) {
+const unsigned char* skipToNextLine(const unsigned char* p) {
+	if (!p) return nullptr;
 	while (*p && *p != '\n' && *p != '\r') ++p;
-
 	if (*p == '\r') ++p;
 	if (*p == '\n') ++p;
+	return p;
 }
-void skipToNextWord(const unsigned char*& p) {
-	while (*p && !isDelim(*p)) ++p;
-	while (*p && isDelim(*p)) ++p;
+const unsigned char* skipWhitespace(const unsigned char* p, bool skipComma) {
+	while (p && *p && isDelim(*p, skipComma)) ++p;
+	return p ? p : nullptr;
 }
-void skipWhitespace(const unsigned char*& p, bool skipComma) {
-	while (*p && isDelim(*p, skipComma)) ++p;
-}
-void trimEOL(const unsigned char* p, const unsigned char*& end) {
-	while (*end && end > p && (end[-1] == '\n' || end[-1] == '\r')) --end;
+const unsigned char* trimEOL(const unsigned char* p, const unsigned char* end) {
+	while (end && *end && end > p && (end[-1] == '\n' || end[-1] == '\r')) --end;
+	return end ? end : nullptr;
 }
 
 bool parseUInt(const unsigned char*& p, unsigned int& out) {
-	if (!p) return false;
-	skipWhitespace(p);
-	if (*p == '\0' || *p < '0' || *p > '9') return false;
+	p = skipWhitespace(p);
+	if (!p || *p == '\0' || *p < '0' || *p > '9') return false;
 
 	out = 0;
 	while (*p >= '0' && *p <= '9')
@@ -47,9 +58,8 @@ bool parseBinaryUInt(const unsigned char*& p, unsigned int& out) {
 	return true;
 }
 bool parseBool(const unsigned char*& p, bool& out) {
-	if (!p) return false;
-	skipWhitespace(p);
-	if (*p == '\0') return false;
+	p = skipWhitespace(p);
+	if (!p || *p == '\0') return false;
 
 	if (*p == '1') { ++p; out = true;  return true; }
 	if (*p == '0') { ++p; out = false; return true; }
@@ -82,9 +92,8 @@ static const double POW10_NEG9[10] = {
 	1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9
 };
 bool parseFloat(const unsigned char*& p, float& out) {
-	if (!p) return false;
-	skipWhitespace(p);
-	if (*p == '\0') return false;
+	p = skipWhitespace(p);
+	if (!p || *p == '\0') return false;
 
 	const unsigned char* start = p;
 	int sign = parseFloatSign(p);
@@ -162,8 +171,9 @@ bool parseVec4(const unsigned char*& p, Vec4& out) {
 
 bool parseToken(const unsigned char*& p, unsigned char* out, const size_t maxLength) {
 	if (!p || !out || maxLength == 0) return false;
-	skipWhitespace(p);
-	if (*p == '\0') return false;
+
+	p = skipWhitespace(p);
+	if (!p || *p == '\0') return false;
 
 	size_t i = 0;
 	while (*p && !isDelim(*p) && i + 1 < maxLength) out[i++] = *p++;
@@ -196,44 +206,38 @@ static bool parseNumericColour(const unsigned char*& p, Vec4& out) {
 	return false;
 }
 static bool parseSpecialColour(const char* name, ColourMode& modeOut) {
-	if (strcmp(name, "Random") == 0) modeOut = ColourMode::Random;
+	if      (strcmp(name, "Random") == 0)  modeOut = ColourMode::Random;
 	else if (strcmp(name, "Rainbow") == 0) modeOut = ColourMode::VerticalGradient;
-	else if (strcmp(name, "PLY") == 0) modeOut = ColourMode::PLYColour;
+	else if (strcmp(name, "PLY") == 0)     modeOut = ColourMode::PLYColour;
 	else return false;
 	return true;
 }
 static bool parseNamedColour(const unsigned char*& p, Vec4& colour, ColourMode& mode) {
 	unsigned char input[64]{};
-	if (!parseToken(p, input, sizeof(input))) return false;
+	if (!parseToken(p, input, sizeof(input)) || !p) return false;
 
-	mode = ColourMode::Solid;
 	const char* name = reinterpret_cast<const char*>(input);
-	if (strcmp(name, "Red") == 0)    colour = { 1.0f, 0.0f, 0.0f, 1.0f };
+	if      (strcmp(name, "Red") == 0)    colour = { 1.0f, 0.0f, 0.0f, 1.0f };
 	else if (strcmp(name, "Green") == 0)  colour = { 0.0f, 1.0f, 0.0f, 1.0f };
 	else if (strcmp(name, "Blue") == 0)   colour = { 0.0f, 0.0f, 1.0f, 1.0f };
 	else if (strcmp(name, "Yellow") == 0) colour = { 1.0f, 1.0f, 0.0f, 1.0f };
 	else if (strcmp(name, "White") == 0)  colour = { 1.0f, 1.0f, 1.0f, 1.0f };
 	else if (strcmp(name, "Gray") == 0
-		|| strcmp(name, "Grey") == 0)   colour = { 0.5f, 0.5f, 0.5f, 1.0f };
+		    || strcmp(name, "Grey") == 0)   colour = { 0.5f, 0.5f, 0.5f, 1.0f };
 	else return (parseSpecialColour(name, mode));
 	return true;
 }
 bool parseColour(const unsigned char*& p, Vec4& colourOut, ColourMode& modeOut) {
 	const unsigned char* original = p;
 	if (parseNumericColour(p, colourOut)) return true;
-
 	p = original;
 	if (parseNamedColour(p, colourOut, modeOut)) return true;
-
-	printf("[parseColour ERROR] Unknown colour format: %s\n", reinterpret_cast<const char*>(p));
 	p = original;
-	return false;
+	return error("parseColour", "Unknown colour format");
 }
 bool parseLightType(const unsigned char*& p, unsigned int& typeOut) {
-	if (!p) return false;
-	skipWhitespace(p);
-	if (*p == '\0') return false;
-
+	p = skipWhitespace(p);
+	if (!p || *p == '\0') return false;
 	if (*p == '0') { ++p; typeOut = 0; return true; }
 	if (*p == '1') { ++p; typeOut = 1; return true; }
 	if (*p == '2') { ++p; typeOut = 2; return true; }
@@ -243,41 +247,39 @@ bool parseLightType(const unsigned char*& p, unsigned int& typeOut) {
 
 	p = original;
 	unsigned char typeName[64]{};
-	parseToken(p, typeName, sizeof(typeName));
-	if (!p) return false;
+	if (!parseToken(p, typeName, sizeof(typeName)) || !p) { 
+		p = original; 
+		return false; 
+	}
 
-	if (strcmp((char*)typeName, "Point") == 0) typeOut = 0;
+	if      (strcmp((char*)typeName, "Point") == 0) typeOut = 0;
 	else if (strcmp((char*)typeName, "Spot") == 0) typeOut = 1;
 	else if (strcmp((char*)typeName, "Directional") == 0) typeOut = 2;
-	else {
-		fprintf(stderr, "[parseLightType ERROR] Unknown light type: %s\n", reinterpret_cast<const char*>(typeName));
-		return false;
-	}
+	else return error("parseLightType", "Unknown light type");
 
 	return true;
 }
 
 bool parseCameraType(const unsigned char*& p, unsigned int& typeOut) {
-	if (!p) return false;
-
-	skipWhitespace(p);
-	if (*p == '\0') return false;
+	p = skipWhitespace(p);
+	if (!p || *p == '\0') return false;
 
 	const unsigned char* original = p;
 	if (parseUInt(p, typeOut)) return true;
 
 	p = original;
 	unsigned char typeName[64]{};
-	parseToken(p, typeName, sizeof(typeName));
-	if (!p) return false;
+	if (!parseToken(p, typeName, sizeof(typeName)) || !p) {
+		p = original;
+		return false;
+	}
 
 	if (strcmp((char*)typeName, "FreeCam") == 0) typeOut = 0;
 	else if (strcmp((char*)typeName, "DungeonCam") == 0) typeOut = 1;
 	else if (strcmp((char*)typeName, "ModernCam") == 0) typeOut = 2;
 	else {
-		fprintf(stderr, "[parseCameraType ERROR] Unknown camera type: %s\n", reinterpret_cast<const char*>(typeName));
 		p = original;
-		return false;
+		return error("parseCameraType", "Unknown camera type");
 	}
 
 	return true;

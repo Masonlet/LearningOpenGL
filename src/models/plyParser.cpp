@@ -4,12 +4,9 @@
 #include <string>
 
 bool parsePlyMesh(const unsigned char*& p, unsigned int size, MeshData& drawInfo) {
-	if (!p) {
-		fprintf(stderr, "[parsePlyHeader ERROR] Input pointer is null\n");
-		return false;
-	}
+	if (!p) return error("parsePlyMesh", "Input pointer is null\n");
 
-	const char* errorMsg;
+	std::string errorMsg;
 	while (true) {
 		if (!parsePlyHeader(p, drawInfo.numVertices, drawInfo.numTriangles, drawInfo.hasNormals, drawInfo.hasColours, drawInfo.hasTexCoords)) {
 			errorMsg = "header or missing 'end_header'";
@@ -37,39 +34,31 @@ bool parsePlyMesh(const unsigned char*& p, unsigned int size, MeshData& drawInfo
 		return true;
 	}
  
-	fprintf(stderr, "[LoadModelFromFile ERROR] Failed to parse %s\n", errorMsg);
 	if (drawInfo.indices) delete[] drawInfo.indices;
 	drawInfo.indices = nullptr;
 	if (drawInfo.vertices) delete[] drawInfo.vertices;
 	drawInfo.vertices = nullptr;
-	return false;
+	return error("LoadModelFromFile", ("Failed to parse " + errorMsg + '\n').c_str());
 }
 
 static bool parsePlyElementLine(const unsigned char*& p, unsigned int& verticesOut, unsigned int& trianglesOut) {
-	if (!p) {
-		fprintf(stderr, "[parsePlyHeader ERROR] Input pointer is null\n");
-		return false;
-	}
-	
-	skipWhitespace(p += 7);
+	if (!p) return error("parsePlyHeader", "Input pointer is null\n");
+	p = skipWhitespace(p += 7);
+
 	if (strncmp((const char*)p, "vertex", 6) == 0 && (p[6] == ' ' || p[6] == '\t')) {
-		skipWhitespace(p += 6);
+		p = skipWhitespace(p += 6);
 		return parseUInt(p, verticesOut);
 	}
 	else if (strncmp((const char*)p, "face", 4) == 0 && (p[4] == ' ' || p[4] == '\t')) {
-		skipWhitespace(p += 4);
+		p = skipWhitespace(p += 4);
 		return parseUInt(p, trianglesOut);
 	}
 	return false;
 }
 
 static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& hasNy, bool& hasNz, bool& hasR, bool& hasG, bool& hasB, bool& hasU, bool& hasV) {
-	if (!p) {
-		fprintf(stderr, "[parsePlyPropertyLine ERROR] Input pointer is null\n");
-		return false;
-	}
-
-	skipWhitespace(p += 8);
+	if (!p) return error("parsePlyPropertyLine", "Input pointer is null\n");
+	p = skipWhitespace(p += 8);
 
 	char type[32]{};
 	if (!parseToken(p, (unsigned char*)type, sizeof(type))) {
@@ -112,22 +101,18 @@ static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& has
 }
 
 bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut, bool& hasTexCoordsOut) {
-	if (!p) {
-		fprintf(stderr, "[parsePlyHeader ERROR] input pointer is null\n");
-		return false;
-	}
-	skipWhitespace(p);
+	if (!p) return error("parsePlyHeader", "Input pointer is null\n");
+	p = skipWhitespace(p);
+
 	bool hasNx = false, hasNy = false, hasNz = false;
 	bool hasRed = false, hasGreen = false, hasBlue = false;
 	bool hasU = false, hasV = false;
-
 	while (*p) {
-		const unsigned char* lineEnd = p;
-		skipToNextLine(lineEnd);
-		trimEOL(p, lineEnd);
+		const unsigned char* nextLine = skipToNextLine(p);
+		const unsigned char* lineEnd = trimEOL(p, nextLine);
 
 		if (lineEnd == p) {
-			p++;
+			p = nextLine;
 			continue;
 		}
 
@@ -143,7 +128,7 @@ bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsig
 			hasNormalsOut = hasNx && hasNy && hasNz;
 			hasColoursOut = hasRed && hasGreen && hasBlue;
 			hasTexCoordsOut = hasU && hasV;
-			p = lineEnd;
+			p = nextLine;
 			return true;
 		}
 		else if (!(strncmp((const char*)p, "ply", 3)     == 0)
@@ -151,61 +136,67 @@ bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsig
 			    && !(strncmp((const char*)p, "comment", 7) == 0))
 			fprintf(stderr, "[parsePlyHeader Warning] %.*s\n", static_cast<int>(lineEnd - p), (const char*)p);
 
-		p = lineEnd;
+		p = nextLine;
 	}
 
 	return false;
 }
 
 bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
-	if (!p) {
-		fprintf(stderr, "[parseVertices ERROR] input pointer is null\n");
-		return false;
-	}
-
-	if (!drawInfo.vertices || drawInfo.numVertices == 0) {
-		fprintf(stderr, "[parseVertices ERROR] vertices buffer not allocated!\n");
-		return false;
-	}
+	if (!p) return error("parseVertices", "Input pointer is null\n");
+	if (!drawInfo.numVertices) return error("parseVertices", "No vertices declared in header\n");
 
 	float minY = FLT_MAX, maxY = -FLT_MAX;
 	unsigned int i = 0;
 	while (i < drawInfo.numVertices && *p) {
 		Vertex& v = drawInfo.vertices[i];
-		const unsigned char* lineEnd = p; 
-		skipToNextLine(lineEnd);
-		trimEOL(p, lineEnd);
+		const unsigned char* nextLine = skipToNextLine(p);
+		const unsigned char* lineEnd = trimEOL(p, nextLine);
 
 		if (lineEnd == p) {
-			p++;
+			p = nextLine;
 			continue;
 		}
 
-		if(*p == '\0')  return false;
+		if(*p == '\0') return false;
 		
 		bool valid = true;
-		PARSE_OR_INVALID(parseFloat, v.pos.x, "Failed to parse position X");
-		PARSE_OR_INVALID(parseFloat, v.pos.y, "Failed to parse position Y");
-		PARSE_OR_INVALID(parseFloat, v.pos.z, "Failed to parse position Z");
+		while (valid) {
+			PARSE_OR(valid = false, parseFloat, v.pos.x, "Failed to parse position X");
+			PARSE_OR(valid = false, parseFloat, v.pos.y, "Failed to parse position Y");
+			PARSE_OR(valid = false, parseFloat, v.pos.z, "Failed to parse position Z");
+			break;
+		}
 		v.pos.w = 1.0f;
 		if (!valid) {
-			p = lineEnd;
+			p = nextLine;
 			continue;
 		}
 
 		if (drawInfo.hasNormals) {
-			PARSE_OR_INVALID(parseFloat, v.norm.x, "Failed to parse normal X");
-			PARSE_OR_INVALID(parseFloat, v.norm.y, "Failed to parse normal Y");
-			PARSE_OR_INVALID(parseFloat, v.norm.z, "Failed to parse normal Z");
+			while (valid) {
+				PARSE_OR(valid = false, parseFloat, v.norm.x, "Failed to parse normal X");
+				PARSE_OR(valid = false, parseFloat, v.norm.y, "Failed to parse normal Y");
+				PARSE_OR(valid = false, parseFloat, v.norm.z, "Failed to parse normal Z");
+				break;
+			}
+
+			if(!valid) {
+				p = nextLine;
+				continue;
+			}
 		}
 
 		if (drawInfo.hasColours) {
 			if (*p != '\0') {
 				Vec3 colour = { 1.0f, 1.0f, 1.0f };
 				const unsigned char* original = p;
-				PARSE_OR_INVALID(parseFloat, colour.r, "Failed to parse float colour R");
-				PARSE_OR_INVALID(parseFloat, colour.g, "Failed to parse float colour G");
-				PARSE_OR_INVALID(parseFloat, colour.b, "Failed to parse float colour B");
+				while (valid) {
+					PARSE_OR(valid = false, parseFloat, colour.r, "Failed to parse float colour R");
+					PARSE_OR(valid = false, parseFloat, colour.g, "Failed to parse float colour G");
+					PARSE_OR(valid = false, parseFloat, colour.b, "Failed to parse float colour B");
+					break;
+				}
 
 				if (valid &&
 					colour.x >= 0.0f && colour.x <= 1.0f &&
@@ -219,9 +210,12 @@ bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
 					unsigned int ri = 0, gi = 0, bi = 0, ai = 256;
 
 					valid = true;
-					PARSE_OR_INVALID(parseUInt, ri, "");
-					PARSE_OR_INVALID(parseUInt, gi, "");
-					PARSE_OR_INVALID(parseUInt, bi, "");
+					while (valid) {
+						PARSE_OR(valid = false, parseUInt, ri, "");
+						PARSE_OR(valid = false, parseUInt, gi, "");
+						PARSE_OR(valid = false, parseUInt, bi, "");
+						break;
+					}
 					if (!parseUInt(p, ai)) ai = 255;
 
 					if (valid && ri <= 255 && gi <= 255 && bi <= 255) {
@@ -237,15 +231,18 @@ bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
 		}
 
 		if (drawInfo.hasTexCoords) {
-			PARSE_OR_INVALID(parseFloat, v.texCoord.x, "Failed to parse texcoord U");
-			PARSE_OR_INVALID(parseFloat, v.texCoord.y, "Failed to parse texcoord V");
+			while(valid){
+				PARSE_OR(valid = false, parseFloat, v.texCoord.x, "Failed to parse texcoord U");
+				PARSE_OR(valid = false, parseFloat, v.texCoord.y, "Failed to parse texcoord V");
+				break;
+			}
 		}
 
 		if (v.pos.y < minY) minY = v.pos.y;
 		if (v.pos.y > maxY) maxY = v.pos.y;
 
 		++i;
-		p = lineEnd;
+		p = nextLine;
 	}
 
 	drawInfo.minY = minY;
@@ -254,43 +251,38 @@ bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
 }
 
 bool parseIndices(const unsigned char*& p, MeshData& drawInfo) {
-	if (!p) {
-		fprintf(stderr, "[parseIndices ERROR] input pointer is null\n");
-		return false;
-	}
-	
-	if (!drawInfo.indices || drawInfo.numIndices == 0) {
-		fprintf(stderr, "[parseIndices ERROR] index buffer not allocated!\n");
-		return false;
-	}
+	if (!p) return error("parseIndices", "Input pointer is null");
+	if (!drawInfo.indices || drawInfo.numIndices == 0) return error("parseIndices", "Index buffer not allocated");
 
 	unsigned int triangleIndex = 0;
 	while (triangleIndex < drawInfo.numTriangles && *p) {
-		const unsigned char* lineEnd = p;
-		skipToNextLine(lineEnd);
-		trimEOL(p, lineEnd);
+		const unsigned char* nextLine = skipToNextLine(p);
+		const unsigned char* lineEnd = trimEOL(p, nextLine);
 
 		if (lineEnd == p) {
-			p++;
+			p = nextLine;
 			continue;
 		}
 
 		unsigned int count = 0;
 		if (!parseUInt(p, count)) {
-			p = lineEnd;
+			p = nextLine;
 			continue;
 		}
 
 		if (count != 3) {
-			p = lineEnd;
+			p = nextLine;
 			continue;
 		}
 
 		unsigned int i0{ 0 }, i1{ 0 }, i2{ 0 };
 		bool valid = true;
-		PARSE_OR_INVALID(parseUInt, i0, "Failed to parse indice 1");
-		PARSE_OR_INVALID(parseUInt, i1, "Failed to parse indice 2");
-		PARSE_OR_INVALID(parseUInt, i2, "Failed to parse indice 3");
+		while (valid) {
+			PARSE_OR(valid = false, parseUInt, i0, "Failed to parse indice 1");
+			PARSE_OR(valid = false, parseUInt, i1, "Failed to parse indice 2");
+			PARSE_OR(valid = false, parseUInt, i2, "Failed to parse indice 3");
+			break;
+		}
 
 		if (valid) {
 			unsigned int base = triangleIndex * 3;
@@ -300,8 +292,8 @@ bool parseIndices(const unsigned char*& p, MeshData& drawInfo) {
 			++triangleIndex;
 		}
 
-		p = lineEnd;
+		p = nextLine;
 	}
 
-	return p;
+	return true;
 }
