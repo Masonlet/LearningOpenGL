@@ -6,7 +6,7 @@
 class Light {
 public:
 	Light();
-	Vec4 position;	// xyz = position, ignoring w = TBD
+	Vec4 pos;	// xyz = position, ignoring w = TBD
 	Vec4 diffuse;   // rgb = diffuse colour, w = intensity
 	Vec4 specular;	// rgb = highlight colour, w = power
 	Vec4 atten;		  // x = constant, y = linear, z = quadratic, w = cutoff distance

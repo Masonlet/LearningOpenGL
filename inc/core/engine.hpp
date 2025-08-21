@@ -8,8 +8,8 @@
 #include "scene/sceneManager.hpp"
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
+#include "graphics/textureManager.hpp"
 #include "lights/lightManager.hpp"
-#include "textures/textureManager.hpp"
 
 class Engine {
 public:
@@ -52,7 +52,8 @@ private:
 	unsigned int currentProgram, currentModel;
 	float deltaTime, lastTime;
 
-	void setupShaders();	
+	bool setupShaders();	
+
 	void tick(const float currentTime);
 	void renderFrame();
 };

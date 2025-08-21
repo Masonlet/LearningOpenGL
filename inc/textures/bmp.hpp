@@ -55,8 +55,8 @@ struct BMP {
 
 class BMPTexture {
 public:
-	bool CreateBMPTexture(std::string name, std::string path, bool generateMIPMap);
-	bool CreateCubeBMPTexture(std::string cubeMapName,
+	bool createBMPTexture(std::string name, std::string path, bool generateMIPMap);
+	bool createCubeBMPTexture(std::string cubeMapName,
 		std::string posXfileName, std::string negXfileName,
 		std::string posYfileName, std::string negYfileName,
 		std::string posZfileName, std::string negZfileName,

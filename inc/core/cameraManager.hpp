@@ -14,7 +14,7 @@ public:
 	int getCameraCount();
 
 	void updateActiveCamera(
-		const Vec3& position,
+		const Vec3& pos,
 		const float yaw, const float pitch, 
 		const float fov, const float nearPlane, const float farPlane
 	);

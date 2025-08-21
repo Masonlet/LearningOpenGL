@@ -1,13 +1,13 @@
 #include "core/windowManager.hpp"
 #include "core/callbacks.hpp"
-
+#include "utils/log.hpp"
 #include <cstdio>
 
 constexpr int GL_MAJOR{ 3 };
 constexpr int GL_MINOR{ 3 };
 
 WindowManager::WindowManager() : window(nullptr) {
-  if (!glfwInit()) fprintf(stderr, "Failed to initialize GLFW\n");
+  if (!glfwInit()) debugLog("WindowManager", "Failed to initialize GLFW\n");
 }
 
 WindowManager::~WindowManager() {
@@ -16,9 +16,7 @@ WindowManager::~WindowManager() {
 }
 
 bool WindowManager::createWindow(const unsigned int width, const unsigned int height, const char* title) {
-#ifndef NDEBUG
-  fprintf(stderr, "[WindowManager] Create start: %f\n", glfwGetTime());
-#endif
+	debugLog("WindowManager", "Create start time: " + std::to_string(glfwGetTime()), true);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
@@ -39,9 +37,7 @@ bool WindowManager::createWindow(const unsigned int width, const unsigned int he
   glfwSetInputMode(window->getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSwapInterval(1);
 
-#ifndef NDEBUG
-  fprintf(stderr, "[WindowManager] Create finish: %f\n", glfwGetTime());
-#endif
+	debugLog("WindowManager", "Create finish time: " + std::to_string(glfwGetTime()), true);
   return true;
 }
 void WindowManager::destroyWindow() {
@@ -50,14 +46,10 @@ void WindowManager::destroyWindow() {
 }
 
 void WindowManager::switchActiveWindowVisibiltiy() {
-  if (window) {
-
-    if (glfwGetWindowAttrib(getWindow()->getGLFWwindow(), GLFW_VISIBLE))
-      glfwHideWindow(getWindow()->getGLFWwindow());
-    else 
-      glfwShowWindow(getWindow()->getGLFWwindow());
-  }
-  else {
-		fprintf(stderr, "[WindowManager] No active window to switch visibility.\n");
-  }
+  if (window) 
+    glfwGetWindowAttrib(getWindow()->getGLFWwindow(), GLFW_VISIBLE)
+      ? glfwHideWindow(getWindow()->getGLFWwindow())
+      : glfwShowWindow(getWindow()->getGLFWwindow());
+  
+  else debugLog("WindowManager", "No active window to switch visibility.");
 }

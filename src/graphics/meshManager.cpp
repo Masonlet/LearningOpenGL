@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include "graphics/meshManager.hpp"
 #include "utils/fileParser.hpp"
+#include "utils/log.hpp"
 #include "models/plyParser.hpp"
 
 bool MeshManager::loadMeshFile(const std::string& path, MeshData& mesh, unsigned int shaderID) {
@@ -18,18 +19,14 @@ bool MeshManager::loadMeshFile(const std::string& path, MeshData& mesh, unsigned
   if (!parsePlyMesh(src, size, mesh))
     return false;
 
-  if (!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) {
-    fprintf(stderr, "[LoadMeshFromFile ERROR] Invalid mesh data: %s\n", path.c_str());
-    return false;
-  }
+  if (!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) 
+		return error("MeshManager", "LoadMeshFromFile", "Invalid mesh data: " + path);
 
 	return UploadMeshToGPU(mesh, shaderID);
 }
 bool MeshManager::loadMeshPrimitive(MeshData& mesh, unsigned int shaderID) {
-  if(!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) {
-    fprintf(stderr, "[LoadMeshPrimitive ERROR] Invalid mesh data\n");
-    return false;
-	}
+  if(!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) 
+		return error("MeshManager", "loadMeshPrimitive", "Invalid primitive mesh data");
 
 	return UploadMeshToGPU(mesh, shaderID);
 }
@@ -86,14 +83,10 @@ bool MeshManager::UploadMeshToGPU(MeshData& mesh, unsigned int shaderID) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   GLenum err = glGetError();
-  if (err != GL_NO_ERROR) {
-		printf("[UploadToGPU ERROR] OpenGL error \"%u\"after uploading mesh %s\n", err, mesh.path.c_str());
-    return false;
-  }
+	if (err != GL_NO_ERROR) return error("MeshManager", "UploadToGPU", "OpenGL error " + std::to_string(err) + "after uploading mesh " + mesh.path);
 
   delete[] mesh.vertices;
   mesh.vertices = nullptr;
-
   delete[] mesh.indices;
   mesh.indices = nullptr;
 

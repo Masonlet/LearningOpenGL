@@ -1,16 +1,11 @@
 #include "core/cameraManager.hpp"
+#include "utils/log.hpp"
 
 bool CameraManager::addCamera(const Camera& camera) {
-	if (cameras.size() >= MAX_CAMERAS) {
-		fprintf(stderr, "[CameraManager ERROR] Max cameras reached, cannot add camera\n");
-		return false;
-	}
+	if (cameras.size() >= MAX_CAMERAS) return error("CameraManager", "addCamera", "max cameras reached");
 
 	const std::string& name = camera.getName();
-	if (cameras.find(name) != cameras.end()) {
-		fprintf(stderr, "[CameraManager ERROR] Camera with name '%s' already exists\n", name.c_str());
-		return false;
-	}
+	if (cameras.find(name) != cameras.end()) return error("CameraManager", "addCamera", "name '" + name + "' already exists");
 
 	cameras[name] = camera;
 	if (cameras.size() == 1) activeCameraName = name;
@@ -19,7 +14,7 @@ bool CameraManager::addCamera(const Camera& camera) {
 
 void CameraManager::setActiveCamera(unsigned int index) {
 	if (index >= cameras.size()) {
-		printf("[CameraManager WARN] Invalid camera index: %u\n", index);
+		debugLog("CameraManager", "Invalid camera index : " + index, true);
 		return;
 	}
 
@@ -36,14 +31,14 @@ int CameraManager::getCameraCount() {
 	return cameras.size();
 }
 
-void CameraManager::updateActiveCamera(const Vec3& position, 
+void CameraManager::updateActiveCamera(const Vec3& pos, 
 	const float yaw, const float pitch,
 	const float fov, const float nearPlane, const float farPlane) {
 
 	Camera* cam = getActiveCamera();
 	if (!cam) return;
 
-	cam->setPos(position);
+	cam->setPos(pos);
 	cam->setYaw(yaw);
 	cam->setPitch(pitch);
 	cam->setFov(fov);

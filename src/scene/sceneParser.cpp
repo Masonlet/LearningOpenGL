@@ -1,13 +1,14 @@
 #include "scene/sceneParser.hpp"
 #include "utils/parser.hpp"
+#include "utils/log.hpp"
 
 bool parseModel(const unsigned char*& p, ParsedModel& out) {
   PARSE_OR(return false, parseBool, out.isVisible, "model enabled");
   PARSE_OR(return false, parseBool, out.isLighted, "model lighting");
   PARSE_STRING_OR(return false, p, out.name, 64, "model name");
   PARSE_STRING_OR(return false, p, out.path, 128, "model path");
-  PARSE_OR(return false, parseVec3, out.position, "model position");
-  PARSE_OR(return false, parseVec3, out.rotation, "model rotation");
+  PARSE_OR(return false, parseVec3, out.pos, "model position");
+  PARSE_OR(return false, parseVec3, out.rot, "model rotation");
   PARSE_OR(return false, parseVec3, out.scale, "model scale");
   if (!parseColour(p, out.colour, out.colourMode)) return false;
   PARSE_OR(return false, parseVec4, out.specular, "model specular");
@@ -17,7 +18,7 @@ bool parseLight(const unsigned char*& p, ParsedLight& out) {
   PARSE_OR(return false, parseBool, out.isEnabled, "light enabled");
   PARSE_STRING_OR(return false, p, out.name, 64, "light name");
   PARSE_OR(return false, parseLightType, out.param1Type, "light type");
-  PARSE_OR(return false, parseVec3, out.position, "light position");
+  PARSE_OR(return false, parseVec3, out.pos, "light position");
   PARSE_OR(return false, parseVec4, out.diffuse, "light diffuse");
   PARSE_OR(return false, parseVec4, out.atten, "light attenuation");
   PARSE_OR(return false, parseVec4, out.direction, "light direction");
@@ -28,7 +29,7 @@ bool parseCamera(const unsigned char*& p, ParsedCamera& out) {
   PARSE_OR(return false, parseBool, out.isEnabled, "camera enabled");
   PARSE_STRING_OR(return false, p, out.name, 64, "camera name");
   PARSE_OR(return false, parseCameraType, out.type, "camera type");
-  PARSE_OR(return false, parseVec3, out.position, "camera position");
+  PARSE_OR(return false, parseVec3, out.pos, "camera position");
   PARSE_OR(return false, parseFloat, out.yaw, "camera yaw");
   PARSE_OR(return false, parseFloat, out.pitch, "camera pitch");
   PARSE_OR(return false, parseFloat, out.fov, "camera fov");
@@ -65,9 +66,9 @@ bool parseTriangle(const unsigned char*& p, ParsedTriangle& out) {
 
   Vec3 temp;
   PARSE_OR(return false, parseVec3, temp, "triangle position");
-  out.transform.position = { temp, 0.0f };
+  out.transform.pos = { temp, 0.0f };
 
-  PARSE_OR(return false, parseVec3, out.transform.rotation, "triangle rotation");
+  PARSE_OR(return false, parseVec3, out.transform.rot, "triangle rotation");
   PARSE_OR(return false, parseVec3, out.transform.scale, "triangle size");
   if (!parseColour(p, out.colour, out.colourMode)) return false;
   return true;
@@ -76,7 +77,7 @@ bool parseGrid(const unsigned char*& p, ParsedGrid& out) {
   PARSE_OR(return false, parseUInt, out.layout.count, "cubeGrid count");
   PARSE_OR(return false, parseFloat, out.layout.spacing, "cubeGrid spacing");
   PARSE_OR(return false, parseVec3, out.layout.start, "cubeGrid start position");
-  PARSE_OR(return false, parseVec3, out.layout.rotation, "cubeGrid rotation");
+  PARSE_OR(return false, parseVec3, out.layout.rot, "cubeGrid rotation");
   PARSE_OR(return false, parseVec3, out.layout.scale, "cubeGrid scale");
   if (!parseColour(p, out.colour, out.colourMode)) return false;
   return true;
@@ -116,12 +117,9 @@ static bool parseMazeLayoutRow(const unsigned char* p, const unsigned char* line
     const char c = *s;
     if      (c == '.')      outRow.push_back(true);
     else if (c == 'X')      outRow.push_back(false);
-    else {
-      fprintf(stderr, "[SceneLoader ERROR] Invalid character '%c' in maze layout line: \"%.*s\"\n", c, static_cast<int>(lineEnd - p), p);
-      return false;
-    }
+		else return error("SceneParser", "parseMazeLayoutRow", "Invalid character" + std::string(1, c));
   }
-	return outRow.empty() ? error("Scene Loader", "Empty maze layout row found") : true;
+	return outRow.empty() ? error("SceneParser", "parseMazeLayoutRow", "Empty row found") : true;
 }
 bool parseMazeData(const unsigned char*& p, ParsedMaze& maze) {
   p = skipWhitespace(p);
@@ -154,5 +152,5 @@ bool parseMazeData(const unsigned char*& p, ParsedMaze& maze) {
     if (found) break;
   }
 
-	return maze.layout.empty() ? error("Scene Loader", "No maze layout data found") : true;
+	return maze.layout.empty() ? error("SceneParser", "parseMazeData", "No maze layout data found") : true;
 }

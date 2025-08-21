@@ -5,6 +5,7 @@
 
 #include "utils/fileParser.hpp"
 #include "utils/parser.hpp"
+#include "utils/log.hpp"
 
 #include "models/grids.hpp"
 #include "models/primitives.hpp"
@@ -17,16 +18,11 @@ SceneManager::SceneManager(MeshManager& meshManager, unsigned int& program, Ligh
 }
 
 bool SceneManager::loadTxtScene(const std::string& sceneIn) {
-#ifndef NDEBUG
-	fprintf(stderr, "[SceneManager] Scene load start: %f\n", glfwGetTime());
-#endif
+	debugLog("SceneManager", "Scene load start time: " + std::to_string(glfwGetTime()), true);
 
 	const std::string scenepath = std::string(ASSET_DIR) + "/scenes/" + sceneIn + ".txt";
 	std::string src{};
-	if (!loadFile(src, scenepath)) {
-		fprintf(stderr, "[createSceneFromName ERROR] failed to load scene: %s\n", scenepath.c_str());
-		return false;
-	}
+	if (!loadFile(src, scenepath)) return error("SceneManager", "loadTxtScene", "Failed to load scene file: " + scenepath);
 
 	const unsigned char* p = reinterpret_cast<const unsigned char*>(src.c_str());
 	while (*p) {
@@ -38,29 +34,12 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 			continue;
 		}
 
-		if (!processSceneLine(p)) {
-			fprintf(stderr, "[SceneManager ERROR] Failed to process scene line: \"%.*s\"\n", static_cast<int>(endLine - p), reinterpret_cast<const char*>(p));
-			return false;
-		}
-	}
-
-	if (cameraManager.getCameraCount() == 0) {
-		Camera defaultCam;
-		defaultCam.setPos({ 0.0f, 5.0f, 10.0f });
-		defaultCam.setYaw(-90.0f);
-		defaultCam.setPitch(0.0f);
-		defaultCam.setNear(0.1f);
-		defaultCam.setFar(10000.0f);
-		defaultCam.setType(0);
-
-		if (!cameraManager.addCamera(defaultCam))
-			fprintf(stderr, "[SceneManager WARNING] Failed to add fallback camera\n");
+		if (!processSceneLine(p)) 
+			return error("SceneManager", "loadTxtScene","Failed to process scene line: " + std::string(reinterpret_cast<const char*>(p), endLine - p));
 	}
 
 	scene.setSceneName(sceneIn);
-#ifndef NDEBUG
-	fprintf(stderr, "[SceneManager] Scene load finish: %f\n", glfwGetTime());
-#endif
+	debugLog("SceneManager", "Scene load finish time:" + std::to_string(glfwGetTime()), true);
 	return true;
 }
 bool SceneManager::processSceneLine(const unsigned char*& p) {
@@ -70,14 +49,14 @@ bool SceneManager::processSceneLine(const unsigned char*& p) {
 	parseToken(p, token, sizeof(token));
 	const char* nameStr = reinterpret_cast<const char*>(token);
 
-	if (!p || strlen(nameStr) == 0)                     return true;
+	if (!p || strlen(nameStr) == 0) return true;
 	if (strcmp(nameStr, "comment") == 0 || nameStr[0] == '#') {
 		p = skipToNextLine(p); 
 		return true;
 	}
 
 	bool handled{ false };
-	if (strcmp(nameStr, "model") == 0)            handled = handleModelLine(p);
+	if      (strcmp(nameStr, "model") == 0)       handled = handleModelLine(p);
 	else if (strcmp(nameStr, "light") == 0)       handled = handleLightLine(p);
 	else if (strcmp(nameStr, "camera") == 0)      handled = handleCameraLine(p);
 	else if (strcmp(nameStr, "texture") == 0)     handled = handleTextureLine(p);
@@ -94,10 +73,7 @@ bool SceneManager::saveTxtScene() {
 	const std::string scenePath = std::string(ASSET_DIR) + "/scenes/" + scene.getSceneName() + ".txt";
 	std::ofstream file(scenePath);
 
-	if (!file.is_open()) {
-		fprintf(stderr, "[saveTxtScene ERROR] Failed to open scene file for saving: %s\n", scenePath.c_str());
-		return false;
-	}
+	if (!file.is_open()) return error("SceneManager", "saveTxtScene", "Failed to open scene file for saving: " + scenePath);
 	file << std::fixed << std::setprecision(3);
 
 	file << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
@@ -111,13 +87,14 @@ bool SceneManager::saveTxtScene() {
 			(cam.getType() == 1) ? "DungeonCam" :
 			/*  .getType() == 2)*/ "ModernCam";
 
-		file << "camera, " << name << ", " << camType << ", "
+		file << "camera, "
+			<< name << ", "
+			<< camType << ", "
 			<< pos.x << " " << pos.y << " " << pos.z << ", "
 			<< cam.getYaw() << " " << cam.getPitch() << ", "
 			<< cam.getFov() << ", "
 			<< cam.getNearPlane() << " " << cam.getFarPlane() << ", "
 			<< cam.getMoveSpeed();
-
 		if (cam.getType() != 0) file << ", " << cam.getMoveDistance();
 		file << '\n';
 	}
@@ -131,10 +108,11 @@ bool SceneManager::saveTxtScene() {
 		if (name.rfind("triangle_instance", 0) == 0 || name.rfind("cube_instance_", 0) == 0 || name.rfind("square_instance_", 0) == 0 || name.rfind("maze_", 0) == 0)
 			continue;
 
-		file << "model, " << name << ", "
+		file << "model, " 
+			<< name << ", "
 			<< instance.meshPath << ", "
-			<< instance.position.x << " " << instance.position.y << " " << instance.position.z << ", "
-			<< instance.rotation.x << " " << instance.rotation.y << " " << instance.rotation.z << ", "
+		  << instance.pos.x << " " << instance.pos.y << " " << instance.pos.z << ", "
+		  << instance.rot.x << " " << instance.rot.y << " " << instance.rot.z << ", "
 			<< instance.scale.x << " " << instance.scale.y << " " << instance.scale.z << ", ";
 
 		switch (instance.colourMode) {
@@ -144,7 +122,7 @@ bool SceneManager::saveTxtScene() {
 			int b = static_cast<int>(instance.colour.z * 255.0f);
 			int a = static_cast<int>(instance.colour.w * 255.0f);
 
-			if (r == 255 && g == 0 && b == 0) file << "Red";
+			if      (r == 255 && g == 0 && b == 0) file << "Red";
 			else if (r == 0 && g == 255 && b == 0) file << "Green";
 			else if (r == 0 && g == 0 && b == 255) file << "Blue";
 			else                                   file << r << " " << g << " " << b << " " << a;
@@ -164,12 +142,15 @@ bool SceneManager::saveTxtScene() {
 		const Light& light = lightManager.theLights[i];
 		if (light.param2.x == 0.0f) continue;
 
-		const std::string camType = (light.param1.x == 0) ? "Point" :
+		const std::string camType = 
+			(light.param1.x == 0) ? "Point" :
 			(light.param1.x == 1) ? "Spot" :
 			/*     param1.x == 2)*/ "Directional";
 
-		file << "light, " << lightManager.getLightName(i) << ", " << camType << ", "
-			<< light.position.x << " " << light.position.y << " " << light.position.z << ", "
+		file << "light, " 
+			<< lightManager.getLightName(i) << ", " 
+			<< camType << ", "
+			<< light.pos.x << " " << light.pos.y << " " << light.pos.z << ", "
 			<< light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
 			<< light.atten.x << " " << light.atten.y << " " << light.atten.z << " " << light.atten.w << ", "
 			<< light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
@@ -187,10 +168,10 @@ bool SceneManager::handleModelLine(const unsigned char*& p) {
 	ModelData data;
 	data.name = model.name;
 	data.meshPath = model.path;
-	data.position = model.position;
-	data.rotation = model.rotation;
+	data.pos = model.pos;
+	data.rot = model.rot;
 	data.scale = model.scale;
-	data.modelMatrix = Mat4::modelMatrix({ {data.position, 0.0 }, data.rotation, data.scale });
+	data.modelMatrix = Mat4::modelMatrix({ {data.pos, 0.0 }, data.rot, data.scale });
 	data.colour = model.colour;
 	data.colourMode = model.colourMode;
 	data.specular = model.specular;
@@ -204,12 +185,9 @@ bool SceneManager::handleLightLine(const unsigned char*& p) {
 	PARSE_OR(return false, parseLight, lightData, "parse light");
 
 	Light* light = lightManager.getLightByName(lightData.name);
-	if (!light) {
-		fprintf(stderr, "[SceneManager ERROR] Unable to store light: %s\n", lightData.name.c_str());
-		return false;
-	}
+	if (!light) return error("SceneManager", "handleLightLine", "Unable to store light: " + lightData.name);
 
-	light->position = { lightData.position, 1.0 };
+	light->pos = { lightData.pos, 1.0 };
 	light->diffuse = lightData.diffuse;
 	light->atten = lightData.atten;
 	light->direction = lightData.direction;
@@ -225,7 +203,7 @@ bool SceneManager::handleCameraLine(const unsigned char*& p) {
 	cam.setName(cameraData.name);
 	cam.setYaw(cameraData.yaw);
 	cam.setPitch(cameraData.pitch);
-	cam.setPos(cameraData.position);
+	cam.setPos(cameraData.pos);
 	cam.setMoveSpeed(cameraData.speed);
 	cam.setType(cameraData.type);
 	cam.setFov(cameraData.fov);
@@ -233,10 +211,7 @@ bool SceneManager::handleCameraLine(const unsigned char*& p) {
 	cam.setFar(cameraData.farPlane);
 	if (cam.getType() != 0) cam.setMoveDistance(cameraData.moveDistance);
 
-	if (!cameraManager.addCamera(cam)) {
-		fprintf(stderr, "[SceneManager ERROR] Could not add camera\n");
-		return false;
-	}
+	if (!cameraManager.addCamera(cam)) return error("SceneManager", "handleCameraLine", "Failed to add camera: " + cameraData.name);
 	return true;
 }
 
@@ -246,15 +221,10 @@ bool SceneManager::handleTextureLine(const unsigned char*& p) {
 
 	std::map<std::string, ModelData>& models = scene.getModelData();
 	auto it = models.find(t.modelName);
-	if (it == models.end()) {
-		fprintf(stderr, "[SceneManager ERROR] Texture refers to unknown model: %s\n", t.modelName.c_str());
-		return false;
-	}
+	if (it == models.end()) return error("SceneManager", "handleTextureLine", "Texture refers to unknown model: " + t.modelName);
 
-	if (t.textureNum >= ModelData::NUM_TEXTURES) {
-		fprintf(stderr, "[SceneManager ERROR] Texture slot %u out of range for %s\n", t.textureNum, t.modelName.c_str());
-		return false;
-	}
+	if (t.textureNum >= ModelData::NUM_TEXTURES) 
+		return error("SceneManager", "handleTextureLine", "Texture slot " + std::to_string(t.textureNum) + " out of range for " + t.modelName);
 
 	ModelData& m = it->second;
 	m.useTextures = true;
@@ -262,12 +232,10 @@ bool SceneManager::handleTextureLine(const unsigned char*& p) {
 	m.textureMixRatio[t.textureNum] = t.mix;
 	m.textureTiling = t.tiling;
 
-	if (textureManager.getTextureIDFromName(t.textureFile) == 0) {
-		if (!textureManager.Create2DBMPTexture(t.textureFile.c_str(), true)) {
-			fprintf(stderr, "[SceneManager ERROR] Could not create 2D texture: %s\n", t.textureFile.c_str());
-			return false;
-		}
-	}
+	if (textureManager.getTextureIDFromName(t.textureFile) == 0) 
+		if (!textureManager.Create2DBMPTexture(t.textureFile.c_str(), true)) 
+			return error("SceneManager", "handleTextureLine", "Could not create 2D texture: " + t.textureFile);
+	
 	return true;
 }
 bool SceneManager::handleTextureCubeLine(const unsigned char*& p) {
@@ -276,17 +244,12 @@ bool SceneManager::handleTextureCubeLine(const unsigned char*& p) {
 
 	std::map<std::string, ModelData>& models = scene.getModelData();
 	auto it = models.find(t.modelName);
-	if (it == models.end()) {
-		fprintf(stderr, "[SceneManager ERROR] Texture refers to unknown model: %s\n", t.modelName.c_str());
-		return false;
-	}
+	if (it == models.end()) return error("SceneManager", "handleTextureCubeLine", "Texture refers to unknown model: " + t.modelName);
 
-	if (textureManager.getTextureIDFromName(t.modelName) == 0) {
-		if (!textureManager.CreateCubeBMPTexture(t.modelName, t.textureFile1, t.textureFile2, t.textureFile3, t.textureFile4, t.textureFile5, t.textureFile6, true, true)) {
-			fprintf(stderr, "[SceneManager ERROR] Could not create cube texture: %s\n", t.modelName.c_str());
-			return false;
-		}
-	}
+	if (textureManager.getTextureIDFromName(t.modelName) == 0) 
+		if (!textureManager.createCubeBMPTexture(t.modelName, t.textureFile1, t.textureFile2, t.textureFile3, t.textureFile4, t.textureFile5, t.textureFile6, true, true)) 
+			return error("SceneManager", "handleTextureCubeLine", "Could not create cube texture: " + t.modelName);
+		
 	return true;
 }
 
@@ -294,10 +257,8 @@ bool SceneManager::handleSquareGridLine(const unsigned char*& p) {
 	ParsedGrid grid;
 	PARSE_OR(return false, parseGrid, grid, "Failed to parse cubeGrid colour");
 
-	if (!createSquareGrid(&meshManager, program, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, { grid.layout.scale.x, grid.layout.scale.y })) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
-		return false;
-	}
+	if (!createSquareGrid(&meshManager, program, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rot, { grid.layout.scale.x, grid.layout.scale.y })) 
+		return error("SceneManager", "handleSquareGridLine", "Failed to create squareGrid");
 
 	std::map<std::string, ModelData>& modelData = scene.getModelData();
 	std::map<std::string, ModelData>::iterator it = modelData.begin();
@@ -317,10 +278,8 @@ bool SceneManager::handleCubeGridLine(const unsigned char*& p) {
 	ParsedGrid grid;
 	PARSE_OR(return false, parseGrid, grid, "Failed to parse cubeGrid colour");
 
-	if (!createCubeGrid(&meshManager, program, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rotation, grid.layout.scale)) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to create cubeGrid\n");
-		return false;
-	}
+	if (!createCubeGrid(&meshManager, program, "cube", 0, grid.layout.count, { grid.layout.spacing, grid.layout.spacing }, grid.layout.rot, grid.layout.scale)) 
+		return error("SceneManager", "handleCubeGridLine", "Failed to create cubeGrid");
 
 	std::map<std::string, ModelData>& modelData = scene.getModelData();
 	std::map<std::string, ModelData>::iterator it = modelData.begin();
@@ -356,36 +315,28 @@ bool SceneManager::handleTriangleLine(const unsigned char*& p) {
 
 	if (!meshExists) {
 		Vec4 bakedVertexColour = { triangle.colour.x, triangle.colour.y, triangle.colour.z, 1.0f };
-		if (!createTriangle(&meshManager, sharedName, program, { triangle.transform.scale.x, triangle.transform.scale.y }, bakedVertexColour)) {
-			fprintf(stderr, "[SceneManager ERROR] Failed to create triangle mesh: %s\n", sharedName.c_str());
-			return false;
-		}
+		if (!createTriangle(&meshManager, sharedName, program, { triangle.transform.scale.x, triangle.transform.scale.y }, bakedVertexColour)) 
+			return error("SceneManager", "handleTriangleLine", "Failed to create triangle mesh: " + sharedName);
 
-		if (!meshManager.findMesh(sharedName, info)) {
-			fprintf(stderr, "[SceneManager ERROR] Mesh still not found after creation: %s\n", sharedName.c_str());
-			return false;
-		}
+		if (!meshManager.findMesh(sharedName, info)) 
+			return error("SceneManager", "handleTriangleLine", "Mesh still not found after creation: " + sharedName);
 	}
 
 	std::string instanceName = std::string(triangle.name) + "_instance";
 	ModelData data;
 	data.name = instanceName;
 	data.meshPath = sharedName;
-	data.position = { triangle.transform.position.x, triangle.transform.position.y, triangle.transform.position.z };
-	data.rotation = triangle.transform.rotation;
+	data.pos = { triangle.transform.pos.x, triangle.transform.pos.y, triangle.transform.pos.z };
+	data.rot = triangle.transform.rot;
 	data.scale = triangle.transform.scale;
-	data.modelMatrix = Mat4::modelMatrix({ {data.position, 0.0}, data.rotation, data.scale });
+	data.modelMatrix = Mat4::modelMatrix({ {data.pos, 0.0}, data.rot, data.scale });
 	data.colour = triangle.colour;
 	data.colourMode = triangle.colourMode;
 	data.specular = Vec4{ 1.0f, 1.0f, 1.0f, 32.0f };
 	data.isVisible = true;
 	data.isLighted = true;
 	data.useTextures = false;
-
-	if (!scene.addInstance(data)) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to add triangle instance\n");
-		return false;
-	}
+	if (!scene.addInstance(data)) return error("SceneManager", "handleTriangleLine", "Failed to add triangle instance: " + instanceName);
 
 	return true;
 }
@@ -398,44 +349,35 @@ bool SceneManager::handleMazeLine(const unsigned char*& p) {
 	return true;
 }
 bool SceneManager::handleMazeData(const unsigned char*& p) {
-	if (!pendingMaze.has_value()) {
-		fprintf(stderr, "[SceneManager ERROR] Unexpected mazeData with no pending maze\n");
-		return false;
-	}
+	if (!pendingMaze.has_value()) 
+		return error("SceneManager", "handleMazeData", "No pending maze to apply mazeData to");
 
-	if (!(parseMazeData(p, *pendingMaze))) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to parse mazeData\n");
-		return false;
-	}
+	if (!(parseMazeData(p, *pendingMaze))) 
+		return error("SceneManager", "handleMazeData", "Failed to parse mazeData");
 
-	if (!buildMaze(*pendingMaze)) {
-		fprintf(stderr, "[SceneManager ERROR] Failed to build maze\n");
-		return false;
-	}
+	if (!buildMaze(*pendingMaze)) 
+		return error("SceneManager", "handleMazeData", "Failed to build maze from mazeData");
 
 	pendingMaze.reset();
 	return true;
 }
 
-static bool addFloor(Scene& scene, const std::string& name, const std::string& mesh, const Vec4& worldPos, const Vec3& rotation) {
+static bool addFloor(Scene& scene, const std::string& name, const std::string& mesh, const Vec4& worldPos, const Vec3& rot) {
 	ModelData d;
 	d.name = name;
 	d.meshPath = mesh;
-	d.position = Vec3{ worldPos.x, worldPos.y, worldPos.z };
-	d.rotation = rotation;
+	d.pos = Vec3{ worldPos.x, worldPos.y, worldPos.z };
+	d.rot = rot;
 	d.scale = Vec3{ 1.0f, 1.0f, 1.0f };
-	d.modelMatrix = Mat4::modelMatrix({ {d.position, 0.0}, d.rotation, d.scale });
+	d.modelMatrix = Mat4::modelMatrix({ {d.pos, 0.0}, d.rot, d.scale });
 	d.colour = Vec4{ 1,1,1,1 };
 	d.colourMode = ColourMode::Solid;
 	d.specular = Vec4{ 1,1,1,32 };
 	d.isVisible = true;
 	d.isLighted = true;
 	d.useTextures = false;
+	if (!scene.addInstance(d)) return error("SceneLoader", "addFloor", ("Failed to add " + name).c_str());
 
-	if (!scene.addInstance(d)) {
-		fprintf(stderr, "[SceneLoader ERROR] Failed to add floor instance: %s\n", name.c_str());
-		return false;
-	}
 	return true;
 }
 static bool addWall(Scene& scene, const ParsedMaze& maze,
@@ -466,10 +408,10 @@ static bool addWall(Scene& scene, const ParsedMaze& maze,
 		ModelData d;
 		d.name = instanceName;
 		d.meshPath = (level == 0) ? finalMesh : (edgeCondition ? maze.exteriorWallType : defaultMesh);
-		d.position = Vec3{ stackedPos.x, stackedPos.y, stackedPos.z };
-		d.rotation = rot;
+		d.pos = Vec3{ stackedPos.x, stackedPos.y, stackedPos.z };
+		d.rot = rot;
 		d.scale = Vec3{ 1.0f, 1.0f, 1.0f };
-		d.modelMatrix = Mat4::modelMatrix({ {d.position, 0.0}, d.rotation, d.scale });
+		d.modelMatrix = Mat4::modelMatrix({ {d.pos, 0.0}, d.rot, d.scale });
 		d.colour = Vec4{ 1,1,1,1 };
 		d.colourMode = ColourMode::Solid;
 		d.specular = Vec4{ 1,1,1,32 };
@@ -477,7 +419,7 @@ static bool addWall(Scene& scene, const ParsedMaze& maze,
 		d.isLighted = true;
 		d.useTextures = false;
 
-		if (!scene.addInstance(d)) return error("SceneLoader", ("Failed to add maze instance" + instanceName).c_str());
+		if (!scene.addInstance(d)) return error("SceneLoader", "addWall", ("Failed to add " + instanceName).c_str());
 	}
 
 	return true;

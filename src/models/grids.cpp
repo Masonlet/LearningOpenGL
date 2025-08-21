@@ -13,7 +13,7 @@ static Vec3 calculateGridPosition(const int index, const int gridSize, const Vec
 				     : Vec3{ spacing.x * col, spacing.y * row, 0.0f };
 }
 
-bool createSquareGrid(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec2& size) {
+bool createSquareGrid(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rot, const Vec2& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	std::string sharedName = baseName + "_sharedSquare";
 
@@ -32,7 +32,7 @@ bool createSquareGrid(MeshManager* meshManager, unsigned int shaderProgramID, co
 	return true;
 }
 
-bool createCubeGrid(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& size) {
+bool createCubeGrid(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rot, const Vec3& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 
 	const std::string sharedName = baseName + "_sharedCube";
@@ -55,7 +55,7 @@ bool createCubeGrid(MeshManager* meshManager, unsigned int shaderProgramID, cons
 	return true;
 }
 
-bool createMeshGridFromPath(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, const std::string& path, int startIndex, int count, const Vec2& spacing, const Vec3& rotation, const Vec3& scale, bool hasNormals) {
+bool createMeshGridFromPath(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, const std::string& path, int startIndex, int count, const Vec2& spacing, const Vec3& rot, const Vec3& scale, bool hasNormals) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	std::string sharedName = baseName + "_sharedMesh";
 

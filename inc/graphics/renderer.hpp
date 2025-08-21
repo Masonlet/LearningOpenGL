@@ -2,7 +2,7 @@
 
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
-#include "textures/textureManager.hpp"
+#include "graphics/textureManager.hpp"
 #include "models/modelData.hpp"
 #include "math/mat4.hpp"
 

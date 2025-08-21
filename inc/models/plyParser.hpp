@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/meshData.hpp"
+#include "models/meshData.hpp"
 
 bool parsePlyMesh(const unsigned char*& p, unsigned int size, MeshData& drawInfo);
 bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut, bool& hasTexCoordsOut);

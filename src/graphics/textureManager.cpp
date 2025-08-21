@@ -1,4 +1,4 @@
-#include "textures/textureManager.hpp"
+#include "graphics/textureManager.hpp"
 
 TextureManager::~TextureManager() {
 	std::map<std::string, BMPTexture*>::iterator it = this->nameToTexture.begin();
@@ -19,7 +19,7 @@ bool TextureManager::Create2DBMPTexture(const char* textureFileName, bool genera
 	std::string pathName = std::string(ASSET_DIR) + "/textures/" + textureFileName;
 
 	BMPTexture* tempTexture = new BMPTexture();
-	if (!tempTexture->CreateBMPTexture(textureFileName, pathName, generateMIPMap)) {
+	if (!tempTexture->createBMPTexture(textureFileName, pathName, generateMIPMap)) {
 		delete tempTexture;
 		return false;
 	}
@@ -27,7 +27,7 @@ bool TextureManager::Create2DBMPTexture(const char* textureFileName, bool genera
 	this->nameToTexture[textureFileName] = tempTexture;
 	return true;
 }
-bool TextureManager::CreateCubeBMPTexture(std::string cubeMapName,
+bool TextureManager::createCubeBMPTexture(std::string cubeMapName,
 	std::string posXfileName, std::string negXfileName,
 	std::string posYfileName, std::string negYfileName,
 	std::string posZfileName, std::string negZfileName,
@@ -41,7 +41,7 @@ bool TextureManager::CreateCubeBMPTexture(std::string cubeMapName,
 	std::string negZfileNamePath = dir + negZfileName;
 
 	BMPTexture* tempTexture = new BMPTexture();
-	if (!tempTexture->CreateCubeBMPTexture(cubeMapName,
+	if (!tempTexture->createCubeBMPTexture(cubeMapName,
 		posXfileNamePath, negXfileNamePath,
 		posYfileNamePath, negYfileNamePath,
 		posZfileNamePath, negZfileNamePath,

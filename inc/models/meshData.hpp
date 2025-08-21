@@ -12,19 +12,19 @@ ModelDrawInfo
 * Its also storing the information we need to tell the GPU which model we want to draw.
 */
 struct MeshData {
-	std::string path;
+	std::string path{};
 
-	unsigned int VAOID, VertexBufferID, IndexBufferID;
-	unsigned int VertexBuffer_Start_Index, IndexBuffer_Start_Index;
-	unsigned int numVertices, numIndices, numTriangles;
+	unsigned int VAOID{ 0 }, VertexBufferID{ 0 }, IndexBufferID{ 0 };
+	unsigned int VertexBuffer_Start_Index{ 0 }, IndexBuffer_Start_Index{ 0 };
+	unsigned int numVertices{ 0 }, numIndices{ 0 }, numTriangles{ 0 };
 
-	Vertex*       vertices;
-	unsigned int* indices;
+	Vertex* vertices { nullptr };
+	unsigned int* indices{ nullptr };
 
-	bool hasNormals, hasColours, hasTexCoords;
-	float minY, maxY;
+	bool hasNormals{ false }, hasColours{ false }, hasTexCoords{ false };
+	float minY{ 0.0f }, maxY{ 0.0 };
 
-	MeshData();
+	MeshData() = default;
 	~MeshData();
 
 	MeshData(const MeshData&) = delete;

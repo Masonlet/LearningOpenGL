@@ -1,10 +1,11 @@
 #include "models/plyParser.hpp"
 #include "utils/parser.hpp"
+#include "utils/log.hpp"
 #include "math/constants.hpp"
 #include <string>
 
 bool parsePlyMesh(const unsigned char*& p, unsigned int size, MeshData& drawInfo) {
-	if (!p) return error("parsePlyMesh", "Input pointer is null\n");
+	if (!p) return error("PlyParser", "parsePlyMesh", "Input pointer is null\n");
 
 	std::string errorMsg;
 	while (true) {
@@ -38,11 +39,11 @@ bool parsePlyMesh(const unsigned char*& p, unsigned int size, MeshData& drawInfo
 	drawInfo.indices = nullptr;
 	if (drawInfo.vertices) delete[] drawInfo.vertices;
 	drawInfo.vertices = nullptr;
-	return error("LoadModelFromFile", ("Failed to parse " + errorMsg + '\n').c_str());
+	return error("PlyParser", "LoadModelFromFile", ("Failed to parse " + errorMsg + '\n').c_str());
 }
 
 static bool parsePlyElementLine(const unsigned char*& p, unsigned int& verticesOut, unsigned int& trianglesOut) {
-	if (!p) return error("parsePlyHeader", "Input pointer is null\n");
+	if (!p) return error("PlyParser", "parsePlyHeader", "Input pointer is null\n");
 	p = skipWhitespace(p += 7);
 
 	if (strncmp((const char*)p, "vertex", 6) == 0 && (p[6] == ' ' || p[6] == '\t')) {
@@ -57,14 +58,12 @@ static bool parsePlyElementLine(const unsigned char*& p, unsigned int& verticesO
 }
 
 static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& hasNy, bool& hasNz, bool& hasR, bool& hasG, bool& hasB, bool& hasU, bool& hasV) {
-	if (!p) return error("parsePlyPropertyLine", "Input pointer is null\n");
+	if (!p) return error("PlyParser", "parsePlyPropertyLine", "Input pointer is null\n");
 	p = skipWhitespace(p += 8);
 
 	char type[32]{};
-	if (!parseToken(p, (unsigned char*)type, sizeof(type))) {
-		fprintf(stderr, "[parsePlyPropertyLine ERROR] Failed to parse property list count type, type: %s\n", type);
-		return false;
-	}
+	if (!parseToken(p, (unsigned char*)type, sizeof(type)))
+		return error("PlyParser", "parsePlyPropertyLine", "Failed to parse property type :" + std::string(type));
 
 	if (strcmp(type, "list") == 0) {
 		/*
@@ -73,21 +72,16 @@ static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& has
 		 3 = Property Name
 		*/
 		char property[3][32]{};
-		for (int i = 0; i < 3; ++i) {
-			if (!parseToken(p, reinterpret_cast<unsigned char*>(property[i]), sizeof(property[i]))) {
-				fprintf(stderr, "[parsePlyPropertyLine ERROR] Failed to parse property list number %d\n", i);
-				return false;
-			}
-		}
+		for (int i = 0; i < 3; ++i) 
+			if (!parseToken(p, reinterpret_cast<unsigned char*>(property[i]), sizeof(property[i]))) 
+				return error("PlyParser", "parsePlyPropertyLine", "Failed to parse property list type, number: " + std::to_string(i));
 
 		return true;
 	}
 
 	char propertyName[32]{};
-	if(!parseToken(p, (unsigned char*)propertyName, sizeof(propertyName))) {
-		fprintf(stderr, "[parsePlyPropertyLine ERROR] Failed to parse property name\n");
-		return false;
-	}
+	if(!parseToken(p, (unsigned char*)propertyName, sizeof(propertyName))) 
+		return error("PlyParser", "parsePlyPropertyLine", "Failed to parse property name :" + std::string(propertyName));
 
 	if (strcmp(propertyName, "nx") == 0 || strcmp(propertyName, "normal_x") == 0) hasNx = true;
 	else if (strcmp(propertyName, "ny") == 0 || strcmp(propertyName, "normal_y") == 0) hasNy = true;
@@ -101,7 +95,7 @@ static bool parsePlyPropertyLine(const unsigned char*& p, bool& hasNx, bool& has
 }
 
 bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsigned int& numTrianglesOut, bool& hasNormalsOut, bool& hasColoursOut, bool& hasTexCoordsOut) {
-	if (!p) return error("parsePlyHeader", "Input pointer is null\n");
+	if (!p) return error("PlyParser", "parsePlyHeader", "Input pointer is null\n");
 	p = skipWhitespace(p);
 
 	bool hasNx = false, hasNy = false, hasNz = false;
@@ -134,7 +128,7 @@ bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsig
 		else if (!(strncmp((const char*)p, "ply", 3)     == 0)
 		    	&& !(strncmp((const char*)p, "format", 6)  == 0)
 			    && !(strncmp((const char*)p, "comment", 7) == 0))
-			fprintf(stderr, "[parsePlyHeader Warning] %.*s\n", static_cast<int>(lineEnd - p), (const char*)p);
+			debugLog("parsePlyHeader", "Unknown line in PLY header: %.*s\n" + static_cast<int>(lineEnd - p), (const char*)p);
 
 		p = nextLine;
 	}
@@ -143,8 +137,8 @@ bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsig
 }
 
 bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
-	if (!p) return error("parseVertices", "Input pointer is null\n");
-	if (!drawInfo.numVertices) return error("parseVertices", "No vertices declared in header\n");
+	if (!p) return error("PlyParser", "parseVertices", "Input pointer is null\n");
+	if (!drawInfo.numVertices) return error("PlyParser", "parseVertices", "No vertices declared in header\n");
 
 	float minY = FLT_MAX, maxY = -FLT_MAX;
 	unsigned int i = 0;
@@ -251,8 +245,8 @@ bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
 }
 
 bool parseIndices(const unsigned char*& p, MeshData& drawInfo) {
-	if (!p) return error("parseIndices", "Input pointer is null");
-	if (!drawInfo.indices || drawInfo.numIndices == 0) return error("parseIndices", "Index buffer not allocated");
+	if (!p) return error("PlyParser", "parseIndices", "Input pointer is null");
+	if (!drawInfo.indices || drawInfo.numIndices == 0) return error("PlyParser", "parseIndices", "Index buffer not allocated");
 
 	unsigned int triangleIndex = 0;
 	while (triangleIndex < drawInfo.numTriangles && *p) {

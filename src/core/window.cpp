@@ -1,27 +1,16 @@
 #include <glad/glad.h> 
-
 #include "core/window.hpp"
-
+#include "utils/log.hpp"
 #include <cstdio>
 
 Window::Window(const unsigned int width, const unsigned int height, const char* title): width(width), height(height) {
-#ifndef NDEBUG
-	printf("[Window] Create start: %f\n", glfwGetTime());
-#endif
+	debugLog("Window", "Create strat time: " + std::to_string(glfwGetTime()), true);
 
-	window = glfwCreateWindow(width, height, title, nullptr, nullptr);
-	if (!window) {
-		fprintf(stderr, "[Window ERROR] Failed to create GLFW window\n");
-		return;
-	}
-
-	glfwMakeContextCurrent(window);
-	initGLAD();
+	if (!createWindow(width, height, title)) return;
+	if (!initGLAD()) return;
 	setupGLState();
 
-#ifndef NDEBUG
-	printf("[Window] Create finish: %f\n", glfwGetTime());
-#endif
+	debugLog("Window", "Create finish time: " + std::to_string(glfwGetTime()), true);
 }
 
 Window::~Window() {
@@ -47,13 +36,16 @@ void Window::updateViewport(const unsigned int widthIn, const unsigned int heigh
 	glViewport(0, 0, width, height);
 }
 
-bool Window::initGLAD() {
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		fprintf(stderr, "[Window ERROR] Failed to initialize GLAD\n");
-		return false;
-	}
-	
+bool Window::createWindow(const unsigned int width, const unsigned int height, const char* title) {
+	window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+	if (!window) return error("Window", "createWindow", "Failed to create GLFW window");
+
+	glfwMakeContextCurrent(window);
 	return true;
+}
+
+bool Window::initGLAD() {	
+  return gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) ? true : error("Window", "initGLAD", "Failed to initialize GLAD");
 }
 
 void Window::setupGLState() {

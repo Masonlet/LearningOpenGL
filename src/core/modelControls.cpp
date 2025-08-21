@@ -31,11 +31,11 @@ void handleModelInput(InputManager* input, float deltaTime, std::map<std::string
   std::advance(it, currentModel);
 
   ModelData& instance = it->second;
-  processObject(input, instance.position, instance.rotation, instance.scale, deltaTime);
+  processObject(input, instance.pos, instance.rot, instance.scale, deltaTime);
 
   instance.modelMatrix = Mat4::modelMatrix({
-    .position = {instance.position, 0.0f},
-    .rotation = instance.rotation,
+    .pos = {instance.pos, 0.0f},
+    .rot = instance.rot,
     .scale = instance.scale
   });
 }

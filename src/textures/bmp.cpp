@@ -1,13 +1,11 @@
 #include <glad/glad.h>
 #include "textures/bmp.hpp"
 #include "textures/bmpParser.hpp"
+#include "utils/log.hpp"
 
-bool BMPTexture::CreateBMPTexture(std::string name, std::string path, bool generateMIPMap) {
+bool BMPTexture::createBMPTexture(std::string name, std::string path, bool generateMIPMap) {
 	BMP temp;
-	if (!parseBMP(path.c_str(), temp)) {
-		std::fprintf(stderr, "[BMPTexture] Failed to parse %s\n", path.c_str());
-		return false;
-	}
+	if (!parseBMP(path.c_str(), temp)) return error("BMPTexture", "createBMPTexture", "Failed to parse " + path);
 
 	GLuint tex = 0;
 	glGenTextures(1, &tex);
@@ -33,7 +31,7 @@ bool BMPTexture::CreateBMPTexture(std::string name, std::string path, bool gener
 	return true;
 }
 
-bool BMPTexture::CreateCubeBMPTexture(std::string cubeMapName,
+bool BMPTexture::createCubeBMPTexture(std::string cubeMapName,
 	std::string posXfileName, std::string negXfileName,
 	std::string posYfileName, std::string negYfileName,
 	std::string posZfileName, std::string negZfileName,
@@ -42,15 +40,12 @@ bool BMPTexture::CreateCubeBMPTexture(std::string cubeMapName,
   const std::string paths[6] = { posXfileName, negXfileName, posYfileName, negYfileName, posZfileName, negZfileName };
   for (int i = 0; i < 6; ++i) {
     if (!parseBMP(paths[i].c_str(), faces[i])) {
-      std::fprintf(stderr, "[BMPTexture] Failed to load cube face: %s\n", paths[i].c_str());
       for (int j = 0; j < i; ++j) delete[] faces[j].data;
-      return false;
+			return error("BMPTexture", "createCubeBMPTexture", "Failed to parse " + paths[i]);
     }
-    if (faces[i].infoHeader.width != faces[0].infoHeader.width ||
-      faces[i].infoHeader.height != faces[0].infoHeader.height) {
-      std::fprintf(stderr, "[BMPTexture] Cube faces must have identical dimensions\n");
+    if (faces[i].infoHeader.width != faces[0].infoHeader.width || faces[i].infoHeader.height != faces[0].infoHeader.height) {
       for (int j = 0; j <= i; ++j) delete[] faces[j].data;
-      return false;
+			return error("BMPTexture", "createCubeBMPTexture", "Cube faces must have identical dimensions");
     }
   }
 
@@ -85,7 +80,6 @@ bool BMPTexture::CreateCubeBMPTexture(std::string cubeMapName,
   this->texturePath = ""; 
   this->isCubeMap = true;
   this->is2DTexture = false;
-
   if (this->bmp.data) { delete[] this->bmp.data; this->bmp.data = nullptr; }
   return true;
 }

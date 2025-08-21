@@ -22,6 +22,7 @@ private:
 	GLFWwindow* window = nullptr;
 	unsigned int width, height;
 
+	bool createWindow(const unsigned int width, const unsigned int height, const char* title);
 	bool initGLAD();
 	void setupGLState();
 };

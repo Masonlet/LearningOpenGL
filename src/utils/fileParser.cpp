@@ -1,48 +1,32 @@
 #include "utils/fileParser.hpp"
+#include "utils/log.hpp"
 
 constexpr size_t MAX_SIZE = static_cast<size_t>(200 * 1024) * 1024; //200MB Limit
-
 static bool getFileSize(FILE* file, size_t& sizeOut) {
-	// Seek to end 
-	if (fseek(file, 0, SEEK_END) != 0) {
-		fprintf(stderr, "[getFileSize] Failed to seek end of file\n");
-		return false;
-	}
-
-	// Get the file size
+	if (fseek(file, 0, SEEK_END) != 0) return error("FileParser", "getFileSize", "Failed to seek end of file");
+	
 	long size = ftell(file);
-	if (size == -1L) {
-		fprintf(stderr, "[getFileSize] Invalid file, ftell failed\n");
-		return false;
-	}
-
-	if (size <= 0 || static_cast<size_t>(size) > MAX_SIZE) {
-		fprintf(stderr, "[getFileSize] Invalid file size\n");
-		return false;
-	}
-
-	if (fseek(file, 0, SEEK_SET) != 0) { 
-		fprintf(stderr, "[getFileSize] rewind failed\n"); 
-		return false; 
-	}
+	if (size == -1L)
+		return error("FileParser", "getFileSize", "Invalid file, ftell failed");
+	
+	if (size <= 0 || static_cast<size_t>(size) > MAX_SIZE) 
+		return error("FileParser", "getFileSize", "Invalid file size");
+	
+	if (fseek(file, 0, SEEK_SET) != 0)
+		return error("FileParser", "getFileSize", "Failed to rewind file");
 
 	sizeOut = static_cast<size_t>(size);
 	return true;
 }
 
 bool loadFile(std::string& out, const std::string& path) {
-	// Open File
 	FILE* file = fopen(path.c_str(), "rb");
-	if (!file) {
-		fprintf(stderr, "[loadFile] Failed to open file: %s\n", path.c_str());
-		return false;
-	}	
+	if (!file) return error("FileParser", "loadFile", "Failed to open file: " + path);
 
 	size_t fileSize;
 	if (!getFileSize(file, fileSize)) {
-		fprintf(stderr, "[loadFile] Failed to get file size\n"); 
 		fclose(file); 
-		return false;
+		return error("FileParser", "loadFile", "Failed to get file size");
 	}
 
 	out.resize(fileSize);
@@ -52,10 +36,9 @@ bool loadFile(std::string& out, const std::string& path) {
 		size_t byteRead = fread(&out[bytesRead], 1, fileSize - bytesRead, file);
 		if (byteRead == 0) {
 			if (ferror(file)) {
-				fprintf(stderr, "[loadFile] fread failed at byte %zu\n", bytesRead);
 				fclose(file);
 				out.clear();
-				return false;
+				return error("FileParser", "loadFile", "fread failed at byte " + std::to_string(bytesRead));
 			}
 			break;
 		}
@@ -65,46 +48,39 @@ bool loadFile(std::string& out, const std::string& path) {
 	fclose(file);
 
 	if (bytesRead != fileSize) {
-		fprintf(stderr, "[loadFile] fread failed. Expected %zu bytes, got %zu\n", fileSize, bytesRead);
 		out.clear();
-		return false;
+		return error("FileParser", "loadFile", "fread failed. Expected " + std::to_string(fileSize) + ", got " + std::to_string(bytesRead));
 	}
-
 	return true;
 }
 
 bool loadBinaryFile(const unsigned char*& dataOut, size_t& sizeOut, const std::string& path) {
-	// Open File
 	FILE* file = fopen(path.c_str(), "rb");
 	if (!file) {
-		fprintf(stderr, "[loadBinaryFile] Failed to open file: %s\n", path.c_str());
 		dataOut = nullptr;
 		sizeOut = 0;
-		return false;
+		return error("FileParser", "loadBinaryFile", "Failed to open file: " + path);
 	}
 
 	size_t fileSize;
 	if (!getFileSize(file, fileSize)) {
-		fprintf(stderr, "[loadBinaryFile] Failed to get file size\n"); 
 		fclose(file); 
 		dataOut = nullptr;
 		sizeOut = 0;
-		return false;
+		return error("FileParser", "loadBinaryFile", "Failed to get file size");
 	}
 
-	// Read file into buffer
 	unsigned char* buffer = new unsigned char[fileSize];
 	size_t bytesRead = 0;
 	while(bytesRead < fileSize) {
 		size_t byteRead = fread(buffer + bytesRead, 1, fileSize - bytesRead, file);
 		if (byteRead == 0) {
 			if (ferror(file)) {
-				fprintf(stderr, "[loadBinaryFile] fread failed at byte %zu\n", bytesRead);
 				delete[] buffer;
 				fclose(file);
 				dataOut = nullptr;
 				sizeOut = 0;
-				return false;
+				return error("FileParser", "loadBinaryFile", "fread failed at byte " + std::to_string(bytesRead));
 			}
 			break;
 		}
@@ -113,8 +89,10 @@ bool loadBinaryFile(const unsigned char*& dataOut, size_t& sizeOut, const std::s
 	fclose(file);
 
 	if (bytesRead != fileSize) {
-		fprintf(stderr, "[loadBinaryFile] Short read. Expected %zu, got %zu\n", fileSize, bytesRead);
-		delete[] buffer; dataOut = nullptr; sizeOut = 0; return false;
+		delete[] buffer; 
+		dataOut = nullptr;
+		sizeOut = 0; 
+		return error("FileParser", "loadBinaryFile", "fread failed. Expected " + std::to_string(fileSize) + ", got " + std::to_string(bytesRead));
 	}
 
 	if (dataOut) delete[] dataOut;

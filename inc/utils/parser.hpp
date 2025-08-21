@@ -5,9 +5,6 @@
 #include "math/vec4.hpp"
 #include "core/colour.hpp"
 
-bool error(const char* caller = nullptr, const char* msg = nullptr);
-void debugLog(const char* caller = nullptr, const char* msg = nullptr, bool debug = false);
-
 #ifndef PARSE_OR 
 #define PARSE_OR(onFail, parser, target, errorMsg) \
 do { \
@@ -31,11 +28,10 @@ do { \
 #endif
 
 const unsigned char* skipToNextLine(const unsigned char* p);
-const unsigned char* skipWhitespace(const unsigned char* p, bool comma = true);
+const unsigned char* skipWhitespace(const unsigned char* p, bool skipComma = true);
 const unsigned char* trimEOL       (const unsigned char* p, const unsigned char* end);
 
 bool parseUInt      (const unsigned char*& p, unsigned int& out);
-bool parseBinaryUInt(const unsigned char*& p, unsigned int& out);
 bool parseBool      (const unsigned char*& p, bool& out);
 bool parseFloat     (const unsigned char*& p, float& out);
 bool parseVec2      (const unsigned char*& p, Vec2& out);

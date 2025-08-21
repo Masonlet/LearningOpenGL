@@ -2,6 +2,7 @@
 
 #include "core/engine.hpp"
 #include "core/modelControls.hpp"
+#include "utils/log.hpp"
 
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };
@@ -20,19 +21,13 @@ Engine::~Engine() {
 }
 
 bool Engine::initialize(const unsigned int width, const unsigned int height, const char* title) {
-  if (!windowManager.createWindow(width, height, title)) {
-    fprintf(stderr, "Failed to create window\n");
-    return false;
-  }
-
+  if (!windowManager.createWindow(width, height, title)) return false;
   glfwSetWindowUserPointer(windowManager.getWindow()->getGLFWwindow(), this);
 
-#ifndef NDEBUG
-  printf("[Debug] Opengl info\n");
-  printf("[Debug] Vendor: %s\n", glGetString(GL_VENDOR));
-  printf("[Debug] Renderer: %s\n", glGetString(GL_RENDERER));
-  printf("[Debug] Version: %s\n", glGetString(GL_VERSION));
-#endif
+  debugLog("Engine", "OpenGL Info", true);
+	debugLog("Engine", "Version: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))), true);
+	debugLog("Engine", "Vendor: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR))), true);
+	debugLog("Engine", "Renderer: " + std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER))), true);
 
   setupShaders();
 
@@ -40,22 +35,19 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
   return true;
 }
 
-void Engine::setupShaders() {
-#ifndef NDEBUG
-  printf("[setupShaders] Shader setup start time: %f\n", glfwGetTime());
-#endif
+bool Engine::setupShaders() {
+	debugLog("setupShaders", "Shader setup start time: " + std::to_string(glfwGetTime()), true);
 
   ShaderManager::Shader vert_shader{ "vertex_shader.glsl" };
   ShaderManager::Shader frag_shader{ "fragment_shader.glsl" };
 
-  if (!shaderManager.createProgramFromFile("shader1", vert_shader, frag_shader))
-    fprintf(stderr, "[setupShaders ERROR] %s\n", shaderManager.getLastError().c_str());
+  if (!shaderManager.createProgramFromFile("shader1", vert_shader, frag_shader)) 
+    return error("Engine", "setupShaders", "Failed to create shader program from file");
 
   currentProgram = shaderManager.getIDFromFriendlyName("shader1");
-  if (currentProgram == 0) {
-    fprintf(stderr, "[setupShaders ERROR] Shader program ID is 0\n");
-    return;
-  }
+  if (currentProgram == 0) 
+		return error("Engine", "setupShaders", "Shader program ID is 0 after creation");
+  
   renderer.setProgram(currentProgram);
 
   constexpr float bgR = 0.2f;
@@ -64,9 +56,8 @@ void Engine::setupShaders() {
   constexpr float bgA = 1.0f;
   glClearColor(bgR, bgG, bgB, bgA);
 
-#ifndef NDEBUG
-  printf("[setupShaders] Shader setup finish time: %f\n", glfwGetTime());
-#endif
+	debugLog("setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);
+  return true;
 }
 
 void Engine::updateWireframe() {
@@ -85,9 +76,7 @@ void Engine::tick(const float currenttime) {
   constexpr float smoothing_factor = 0.9f;
 
   if (rawdelta > max_delta) {
-#ifndef NDEBUG
-    printf("[Tick WARN] deltaTime clamped to %.3f (was %.3f)\n", max_delta, rawdelta);
-#endif
+		debugLog("Tick", "deltaTime clamped to " + std::to_string(max_delta) + " (was " + std::to_string(rawdelta) + ")", true);
     rawdelta = max_delta;
   }
 
@@ -99,14 +88,13 @@ bool Engine::setScene(const std::string& sceneIn) {
   return sceneManager.loadTxtScene(sceneIn); 
 }
 bool Engine::loadSceneMeshes() {
-#ifndef NDEBUG
-  printf("[loadSceneModels] Load start time: %f\n", glfwGetTime());
-#endif
+  if (sceneManager.getScene().getSceneName().empty())
+    if (!sceneManager.loadTxtScene("Default"))
+			return error("Engine", "loadSceneModels", "No scene loaded and failed to load default scene");
+
+	debugLog("loadSceneModels", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   const unsigned int shaderProgramID = renderer.getProgram();
-  if (shaderProgramID == 0) {
-    fprintf(stderr, "[Engine ERROR] No active shader program set before loading meshes.\n");
-    return false;
-  }
+  if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
 
 	std::map<std::string, ModelData>& modelData = sceneManager.getScene().getModelData();
 	std::map<std::string, ModelData>::iterator it = modelData.begin();
@@ -117,20 +105,21 @@ bool Engine::loadSceneMeshes() {
     if (!meshManager.findMesh(data.meshPath, info)) {
       MeshData tempData;
       if (!meshManager.loadMeshFile(data.meshPath, tempData, shaderProgramID) ||
-        !meshManager.findMesh(data.meshPath, info)) {
-        fprintf(stderr, "[Engine ERROR] Failed to load mesh: %s\n", data.meshPath.c_str());
-        return false;
-      }
+				  !meshManager.findMesh(data.meshPath, info)) 
+        return error("Engine", "loadSceneModels", "Failed to load mesh: " + data.meshPath);
     }
 	}
 
-#ifndef NDEBUG
-  printf("[loadSceneModels] Load finish time: %f\n", glfwGetTime());
-#endif
+	debugLog("loadSceneModels", "Load finish time: " + std::to_string(glfwGetTime()), true);
   return true;
 }
 
 void Engine::run() {
+	if (cameraManager.getCameraCount() == 0) {
+		if (!cameraManager.addCamera(Camera()))	debugLog("SceneManger", " Failed to add fallback camera");
+		else                                    debugLog("SceneManger", " Added fallback camera", true);
+	}
+
   getWindowManager().switchActiveWindowVisibiltiy();
 
   while (!windowManager.getWindow()->shouldClose()) {	
@@ -170,8 +159,8 @@ void Engine::renderFrame() {
 
   for (size_t i = 0; i < transparentInstances.size(); ++i) {
     for (size_t j = 0; j < transparentInstances.size() - i - 1; ++j) {
-      const Vec3& a = transparentInstances[j]->position;
-      const Vec3& b = transparentInstances[j + 1]->position;
+      const Vec3& a = transparentInstances[j]->pos;
+      const Vec3& b = transparentInstances[j + 1]->pos;
 
       float distA = (a.x - eye.x) * (a.x - eye.x) + (a.y - eye.y) * (a.y - eye.y) + (a.z - eye.z) * (a.z - eye.z);
       float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
@@ -191,8 +180,8 @@ void Engine::renderFrame() {
   if (skyBox) {
     skyBox->isVisible = true;
 
-    skyBox->position = cameraManager.getActiveCamera()->getPos();
-    skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->position, 0.0f }, skyBox->rotation, skyBox->scale });
+    skyBox->pos = cameraManager.getActiveCamera()->getPos();
+    skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->pos, 0.0f }, skyBox->rot, skyBox->scale });
     
     int skyboxTextureID = textureManager.getTextureIDFromName(skyBox->name);
 

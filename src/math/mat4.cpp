@@ -14,10 +14,10 @@ Mat4 Mat4::identity() {
 }
 
 Mat4 Mat4::modelMatrix(const Transform& t) {
-  return Mat4::translation(t.position) 
-         * Mat4::rotateX(t.rotation.x)
-         * Mat4::rotateY(t.rotation.y) 
-         * Mat4::rotateZ(t.rotation.z) 
+  return Mat4::translation(t.pos) 
+         * Mat4::rotateX(t.rot.x)
+         * Mat4::rotateY(t.rot.y) 
+         * Mat4::rotateZ(t.rot.z) 
          * Mat4::scale(t.scale);
 }
 
@@ -212,9 +212,9 @@ Mat4 Mat4::rotateZ(const float angle) {
 Transform Mat4::decompose() const {
   Transform t;
 
-  t.position.x = data[12];
-  t.position.y = data[13];
-  t.position.z = data[14];
+  t.pos.x = data[12];
+  t.pos.y = data[13];
+  t.pos.z = data[14];
 
   Vec3 col0 = {data[0], data[1], data[2] };
   Vec3 col1 = {data[4], data[5], data[6] };
@@ -229,18 +229,18 @@ Transform Mat4::decompose() const {
   if (t.scale.y != 0) col1 = col1 / t.scale.y;
   if (t.scale.z != 0) col2 = col2 / t.scale.z;
 
-  t.rotation.y = asinf(-col0.z);  // Y-axis
-  if (cosf(t.rotation.y) != 0.0f) {
-    t.rotation.x = atan2f(col1.z, col2.z); // X-axis
-    t.rotation.z = atan2f(col0.y, col0.x); // Z-axis
+  t.rot.y = asinf(-col0.z);  // Y-axis
+  if (cosf(t.rot.y) != 0.0f) {
+    t.rot.x = atan2f(col1.z, col2.z); // X-axis
+    t.rot.z = atan2f(col0.y, col0.x); // Z-axis
   } else {
-    t.rotation.x = atan2f(-col2.x, col1.y); // Gimbal lock case
-    t.rotation.z = 0.0f;
+    t.rot.x = atan2f(-col2.x, col1.y); // Gimbal lock case
+    t.rot.z = 0.0f;
   }
 
-  t.rotation.x = degrees(t.rotation.x);
-  t.rotation.y = degrees(t.rotation.y);
-  t.rotation.z = degrees(t.rotation.z);
+  t.rot.x = degrees(t.rot.x);
+  t.rot.y = degrees(t.rot.y);
+  t.rot.z = degrees(t.rot.z);
 
   return t;
 }

@@ -1,20 +1,8 @@
 #include "utils/parser.hpp"
+#include "utils/log.hpp"
 #include <cstdlib>  
 #include <cstring>
 #include <cstdio>
-
-bool error(const char* caller, const char* msg) {
-	fprintf(stderr, "[%s ERROR] %s\n", caller, msg);
-	return false;
-}
-void debugLog(const char* caller, const char* msg, bool debug){
-	if(debug) {
-#ifndef NDEBUG
-		fprintf(stderr, "[%s LOG] %s\n", caller, msg);
-#endif
-	}
-	else fprintf(stderr, "[%s LOG] %s\n", caller, msg);
-}
 
 static inline bool isDelim(unsigned char c, bool comma = true) {
 	return c == 0 || c == ' ' || c == '\t' || c == '\n' || c == '\r' || (comma && c == ',');
@@ -41,20 +29,7 @@ bool parseUInt(const unsigned char*& p, unsigned int& out) {
 	if (!p || *p == '\0' || *p < '0' || *p > '9') return false;
 
 	out = 0;
-	while (*p >= '0' && *p <= '9')
-		out = out * 10 + (*p++ - '0');
-
-	return true;
-}
-bool parseBinaryUInt(const unsigned char*& p, unsigned int& out) {
-	if (!p) return false;
-
-	out = (static_cast<unsigned int>(p[0]) << 24
-		| static_cast<unsigned int>(p[1]) << 16
-		| static_cast<unsigned int>(p[2]) << 8
-		| static_cast<unsigned int>(p[3]));
-
-	p += 4;
+	while (*p >= '0' && *p <= '9') out = out * 10 + (*p++ - '0');
 	return true;
 }
 bool parseBool(const unsigned char*& p, bool& out) {
@@ -66,6 +41,7 @@ bool parseBool(const unsigned char*& p, bool& out) {
 
 	unsigned char tok[6]{};
 	if (!parseToken(p, tok, sizeof(tok))) return false;
+
 	const char* str = reinterpret_cast<const char*>(tok);
 	if (strcmp(str, "true") == 0 || strcmp(str, "on") == 0) { out = true; return true; }
 	if (strcmp(str, "false") == 0 || strcmp(str, "off") == 0) { out = false; return true; }
@@ -97,7 +73,6 @@ bool parseFloat(const unsigned char*& p, float& out) {
 
 	const unsigned char* start = p;
 	int sign = parseFloatSign(p);
-
 	unsigned long long i = 0ULL;
 	int iCount = parseFloatDigit(p, i);
 
@@ -119,7 +94,10 @@ bool parseFloat(const unsigned char*& p, float& out) {
 		if (kept > 0) val += static_cast<double>(f) * POW10_NEG9[kept];
 	}
 
-	if (iCount == 0 && !hasFrac) { p = start; return false; }
+	if (iCount == 0 && !hasFrac) { 
+		p = start;
+		return false;
+	}
 
 	if (*p == 'e' || *p == 'E') {
 		++p;
@@ -133,7 +111,10 @@ bool parseFloat(const unsigned char*& p, float& out) {
 			if (e < 100000000) e = e * 10 + (*p - '0');
 			++p;
 		}
-		if (!any) { p = start; return false; }
+		if (!any) { 
+			p = start; 
+			return false; 
+		}
 
 		static const double P10P[39] = {
 			1.0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9,
@@ -149,13 +130,11 @@ bool parseFloat(const unsigned char*& p, float& out) {
 		};
 
 		if (esign >= 0) val *= (e > 38 ? 1e308 : P10P[e]);
-		else            val *= (e > 38 ? 0.0 : P10N[e]);
+		else            val *= (e > 38 ? 0.0   : P10N[e]);
 	}
 
 	if (sign < 0) val = -val;
-
-	out = (float)val;
-
+	out = static_cast<float>(val);
 	return true;
 }
 
@@ -171,13 +150,11 @@ bool parseVec4(const unsigned char*& p, Vec4& out) {
 
 bool parseToken(const unsigned char*& p, unsigned char* out, const size_t maxLength) {
 	if (!p || !out || maxLength == 0) return false;
-
 	p = skipWhitespace(p);
 	if (!p || *p == '\0') return false;
 
 	size_t i = 0;
 	while (*p && !isDelim(*p) && i + 1 < maxLength) out[i++] = *p++;
-
 	out[i] = '\0';
 	return true;
 }
@@ -206,10 +183,11 @@ static bool parseNumericColour(const unsigned char*& p, Vec4& out) {
 	return false;
 }
 static bool parseSpecialColour(const char* name, ColourMode& modeOut) {
-	if      (strcmp(name, "Random") == 0)  modeOut = ColourMode::Random;
+	if      (strcmp(name, "Random")  == 0) modeOut = ColourMode::Random;
 	else if (strcmp(name, "Rainbow") == 0) modeOut = ColourMode::VerticalGradient;
-	else if (strcmp(name, "PLY") == 0)     modeOut = ColourMode::PLYColour;
+	else if (strcmp(name, "PLY")     == 0) modeOut = ColourMode::PLYColour;
 	else return false;
+
 	return true;
 }
 static bool parseNamedColour(const unsigned char*& p, Vec4& colour, ColourMode& mode) {
@@ -225,6 +203,7 @@ static bool parseNamedColour(const unsigned char*& p, Vec4& colour, ColourMode& 
 	else if (strcmp(name, "Gray") == 0
 		    || strcmp(name, "Grey") == 0)   colour = { 0.5f, 0.5f, 0.5f, 1.0f };
 	else return (parseSpecialColour(name, mode));
+
 	return true;
 }
 bool parseColour(const unsigned char*& p, Vec4& colourOut, ColourMode& modeOut) {
@@ -233,7 +212,7 @@ bool parseColour(const unsigned char*& p, Vec4& colourOut, ColourMode& modeOut) 
 	p = original;
 	if (parseNamedColour(p, colourOut, modeOut)) return true;
 	p = original;
-	return error("parseColour", "Unknown colour format");
+	return error("Parser", "parseColour", "Unknown colour format");
 }
 bool parseLightType(const unsigned char*& p, unsigned int& typeOut) {
 	p = skipWhitespace(p);
@@ -252,11 +231,10 @@ bool parseLightType(const unsigned char*& p, unsigned int& typeOut) {
 		return false; 
 	}
 
-	if      (strcmp((char*)typeName, "Point") == 0) typeOut = 0;
-	else if (strcmp((char*)typeName, "Spot") == 0) typeOut = 1;
+	if      (strcmp((char*)typeName, "Point") == 0)       typeOut = 0;
+	else if (strcmp((char*)typeName, "Spot") == 0)        typeOut = 1;
 	else if (strcmp((char*)typeName, "Directional") == 0) typeOut = 2;
-	else return error("parseLightType", "Unknown light type");
-
+	else return error("Parser", "parseLightType", "Unknown light type");
 	return true;
 }
 
@@ -274,13 +252,12 @@ bool parseCameraType(const unsigned char*& p, unsigned int& typeOut) {
 		return false;
 	}
 
-	if (strcmp((char*)typeName, "FreeCam") == 0) typeOut = 0;
+	if      (strcmp((char*)typeName, "FreeCam") == 0)    typeOut = 0;
 	else if (strcmp((char*)typeName, "DungeonCam") == 0) typeOut = 1;
-	else if (strcmp((char*)typeName, "ModernCam") == 0) typeOut = 2;
+	else if (strcmp((char*)typeName, "ModernCam") == 0)  typeOut = 2;
 	else {
 		p = original;
-		return error("parseCameraType", "Unknown camera type");
+		return error("Parser", "parseCameraType", "Unknown camera type");
 	}
-
 	return true;
 }

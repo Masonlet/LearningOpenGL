@@ -1,25 +1,19 @@
 #include "textures/bmpParser.hpp"
 #include "textures/bmp.hpp"
 #include "utils/fileParser.hpp"
+#include "utils/log.hpp"
 #include <cstdio>
 
 static bool readHeader(const unsigned char* buffer, int& height, int& width) {
-	if (!buffer) return false;
-
-	if (buffer[0] != 'B' || buffer[1] != 'M') {
-		std::fprintf(stderr, "[BMP Parser] Bad signature (not BM)\n");
-		return false;
-	}
+	if (!buffer) return error("BMPParser", "readHeader", "Null buffer");
+	if (buffer[0] != 'B' || buffer[1] != 'M') return error("BMPParser", "readHeader", "Bad signature (not BM): " + buffer[0] + buffer[1]);
 
 	unsigned int dibSize =
 		(unsigned int)buffer[14] |
 		((unsigned int)buffer[15] << 8) |
 		((unsigned int)buffer[16] << 16) |
 		((unsigned int)buffer[17] << 24);
-	if (dibSize < 40U) {
-		std::fprintf(stderr, "[BMP Parser] Unsupported DIB header size: %u\n", dibSize);
-		return false;
-	}
+	if (dibSize < 40U) return error("BMPParser", "readHeader", "Unsupported DIB header size: " + dibSize);
 
 	int32_t w = static_cast<int32_t>(
 		static_cast<unsigned int>(buffer[18]) |
@@ -27,10 +21,7 @@ static bool readHeader(const unsigned char* buffer, int& height, int& width) {
 		(static_cast<unsigned int>(buffer[20]) << 16) |
 		(static_cast<unsigned int>(buffer[21]) << 24)
 	);
-	if (w <= 0) {
-		std::fprintf(stderr, "[BMP Parser] Invalid width: %d\n", static_cast<int>(w));
-		return false;
-	}
+	if (w <= 0) return error("BMPParser", "readHeader", "Invalid width: " + std::to_string(w));
 
 	int32_t h = static_cast<int32_t>(
 		static_cast<unsigned int>(buffer[22]) |
@@ -38,28 +29,19 @@ static bool readHeader(const unsigned char* buffer, int& height, int& width) {
 		(static_cast<unsigned int>(buffer[24]) << 16) |
 		(static_cast<unsigned int>(buffer[25]) << 24)
 	);
-	if (h == 0) {
-		std::fprintf(stderr, "[BMP Parser] Invalid height: %d\n", static_cast<int>(h));
-		return false;
-	}
+	if (h == 0) return error("BMPParser", "readHeader",  "Invalid height: " + std::to_string(h));
 
 	unsigned short planes = static_cast<unsigned short>(
 		static_cast<unsigned int>(buffer[26]) |
 		(static_cast<unsigned int>(buffer[27]) << 8)
 	);
-	if (planes != 1) {
-		std::fprintf(stderr, "[BMP Parser] Planes != 1: %u\n", (unsigned)planes);
-		return false;
-	}
+	if (planes != 1) return error("BMPParser", "readHeader", "Planes != 1: " + std::to_string(planes));
 
 	unsigned short bpp = (unsigned short)(
 		static_cast<unsigned int>(buffer[28]) |
 		(static_cast<unsigned int>(buffer[29]) << 8)
 	);
-	if (bpp != 24) {
-		std::fprintf(stderr, "[BMP Parser] Only 24bpp supported: %u\n", (unsigned)bpp);
-		return false;
-	}
+	if (bpp != 24) return error("BMPParser", "readHeader", "Only 24bpp supported: " + std::to_string(bpp));
 
 	unsigned int compression =
 		static_cast<unsigned int>(buffer[30]) |
@@ -67,10 +49,7 @@ static bool readHeader(const unsigned char* buffer, int& height, int& width) {
 		(static_cast<unsigned int>(buffer[32]) << 16) |
 		(static_cast<unsigned int>(buffer[33]) << 24
 	);
-	if (compression != 0) {
-		std::fprintf(stderr, "[BMP Parser] Compressed BMP not supported: %u\n", compression);
-		return false;
-	}
+	if (compression != 0) return error("BMPParser", "readHeader", "Compressed BMP not supported: " + std::to_string(compression));
 
 	width = static_cast<int>(w);
 	height = (h > 0) ? static_cast<int>(h) 
@@ -84,9 +63,8 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 
 	if (!loadBinaryFile(buffer, fileSize, filename) || !buffer) return false;
 	if (fileSize < 54) {
-		std::fprintf(stderr, "[BMP Parser] File too small\n");
 		delete[] buffer;
-		return false;
+		return error("BMPParser", "parseBMP", "File too small to be a valid BMP: " + std::to_string(fileSize) + " bytes");
 	}   
 
 	// Check 54-byte header
@@ -102,9 +80,8 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 		(static_cast<unsigned int>(buffer[12]) << 16) |
 		(static_cast<unsigned int>(buffer[13]) << 24);
 	if (dataOffset >= fileSize) {
-		std::fprintf(stderr, "[BMP Parser] Bad data offset\n");
 		delete[] buffer;
-		return false;
+		return error("BMPParser", "parseBMP", "Bad data offset: " + std::to_string(dataOffset) + " bytes");
 	}
 
 	unsigned int dibSize =
@@ -151,17 +128,15 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 		(static_cast<unsigned int>(buffer[53]) << 24);
 
 	if (dataOffset >= fileSize) {
-		std::fprintf(stderr, "[BMP Parser] Bad data offset\n");
 		delete[] buffer;
-		return false;
+		return error("BMPParser", "parseBMP", "File too small to be a valid BMP: " + std::to_string(fileSize) + " bytes");
 	}
 
 	size_t rowStridePadded = (static_cast<size_t>(width) * 3 + 3) & ~static_cast<size_t>(3);
 	size_t needed = static_cast<size_t>(dataOffset) + rowStridePadded * static_cast<size_t>(height);
 	if (needed > fileSize) {
-		std::fprintf(stderr, "[BMP Parser] File too small for declared dimensions\n");
 		delete[] buffer;
-		return false;
+		return error("BMPParser", "parseBMP", "File too small for declared dimensions: " + std::to_string(fileSize) + " bytes, need " + std::to_string(needed) + " bytes");
 	}
 
 	bmpOut.fileSize = static_cast<uint32_t>(fileSize);

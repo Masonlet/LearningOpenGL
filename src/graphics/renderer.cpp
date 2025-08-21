@@ -1,6 +1,6 @@
 #include <glad/glad.h>
-
 #include "graphics/renderer.hpp"
+#include "utils/log.hpp"
 
 Renderer::Renderer(ShaderManager& shaderManagerIn, MeshManager& meshManagerIn, TextureManager& textureManagerIn)
 	: shaderManager(shaderManagerIn), meshManager(meshManagerIn), textureManager(textureManagerIn),
@@ -64,10 +64,8 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 	if (!instance.isVisible) return true;
 
 	const MeshData* info{};
-	if (!meshManager.findMesh(instance.meshPath, info)) {
-		fprintf(stderr, "[Renderer ERROR] Could not find mesh: %s\n", instance.meshPath.c_str());
-		return false;
-	}
+	if (!meshManager.findMesh(instance.meshPath, info)) 
+		return error("Renderer", "drawModel", "Could not find mesh: " + instance.meshPath);
 	 
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.data);
 	Mat4 modelIT = instance.modelMatrix.inverse().transpose();
@@ -99,10 +97,7 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 			if (name.empty()) continue;
 
 			int textureID = textureManager.getTextureIDFromName(name);
-			if(textureID == 0) {
-				fprintf(stderr, "[Renderer ERROR] Could not find texture: %s\n", name.c_str());
-				return false;
-			}
+			if (textureID == 0) return error("Renderer", "drawModel", "Could not find texture: " + name);
 
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, textureID);

@@ -1,28 +1,7 @@
-#include "core/modelDrawInfo.hpp"
+#include "models/meshData.hpp"
 #include "math/constants.hpp"
 
-ModelDrawInfo::ModelDrawInfo() {
-  this->VAOID = 0;
-
-  this->VertexBufferID = 0;
-  this->VertexBuffer_Start_Index = 0;
-  this->numVertices = 0;
-
-  this->IndexBufferID = 0;
-  this->IndexBuffer_Start_Index = 0;
-  this->numIndices = 0;
-  this->numTriangles = 0;
-
-  this->vertices = nullptr;
-  this->indices = nullptr;
-
-  this->hasNormals = false;
-  this->hasColours = false;
-
-  this->minY = 0.0f;
-	this->maxY = 0.0f;
-}
-ModelDrawInfo::~ModelDrawInfo() {
+MeshData::~MeshData() {
   if (vertices) {
     delete[] vertices;
     vertices = nullptr;
@@ -33,16 +12,16 @@ ModelDrawInfo::~ModelDrawInfo() {
   }
 }
 
-ModelDrawInfo::ModelDrawInfo(ModelDrawInfo&& other) noexcept {
-  *this = static_cast<ModelDrawInfo&&>(other);
+MeshData::MeshData(MeshData&& other) noexcept {
+  *this = static_cast<MeshData&&>(other);
 }
 
-ModelDrawInfo& ModelDrawInfo::operator=(ModelDrawInfo&& other) noexcept {
+MeshData& MeshData::operator=(MeshData&& other) noexcept {
   if (this != &other) {
     delete[] vertices;
     delete[] indices;
 
-    meshPath = other.meshPath;
+    path = other.path;
 
     VAOID = other.VAOID;
     VertexBufferID = other.VertexBufferID;
@@ -59,6 +38,7 @@ ModelDrawInfo& ModelDrawInfo::operator=(ModelDrawInfo&& other) noexcept {
 
     hasNormals = other.hasNormals;
     hasColours = other.hasColours;
+		hasTexCoords = other.hasTexCoords;
 
 		minY = other.minY;
 		maxY = other.maxY;

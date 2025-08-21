@@ -11,14 +11,14 @@
 struct ParsedModel {
 	std::string name, path;
 	bool isVisible{true}, isLighted{false};
-	Vec3 position{0.0f}, rotation{0.0f}, scale{1.0f};
+	Vec3 pos{0.0f}, rot{0.0f}, scale{1.0f};
 	Vec4 colour{1.0f}, specular{1.0f, 1.0f, 1.0f, 32.0f};
 	ColourMode colourMode{ColourMode::Solid};
 };
 struct ParsedLight {
 	std::string name;
 	bool isEnabled;
-	Vec3 position{0.0f};
+	Vec3 pos{0.0f};
 	Vec4 diffuse{1.0f}, atten{1.0f, 0.0f, 0.0f, 10000.0f}, direction{0.0f, -1.0f, 0.0f, 0.0f};
 	unsigned int param1Type{ 1 };
 	Vec3 param1Direction{ 0.0f };
@@ -27,7 +27,7 @@ struct ParsedCamera {
 	std::string name;
 	unsigned int type{ 0 };
 	bool isEnabled;
-	Vec3 position{0.0f};
+	Vec3 pos{0.0f};
 	float yaw{0.0f}, pitch{0.0f};
 	float fov{75.0f}, nearPlane{0.1f}, farPlane{10000.0f};
 	float speed{200.0f}, moveDistance{1.0f};

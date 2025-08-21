@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 
 Light::Light() {
-    this->position  = Vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    this->pos  = Vec4(0.0f, 0.0f, 0.0f, 1.0f);
     this->diffuse   = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
     this->specular  = Vec4(1.0f, 1.0f, 1.0f, 1.0f);
     this->atten     = Vec4(0.0f, 0.01f, 0.01f, 1.0f);
@@ -32,7 +32,7 @@ void LightManager::GetUniformLocations(int shaderProgram) {
 void LightManager::UpdateShaderUniforms(int shaderProgram) const {
     for (unsigned int index = 0; index != LightManager::NUMBEROFLIGHTS; index++) {
         glUniform4f(this->theLights[index].position_UL, 
-          this->theLights[index].position.x, this->theLights[index].position.y, this->theLights[index].position.z, this->theLights[index].position.w);
+          this->theLights[index].pos.x, this->theLights[index].pos.y, this->theLights[index].pos.z, this->theLights[index].pos.w);
         glUniform4f(this->theLights[index].diffuse_UL, 
           this->theLights[index].diffuse.r, this->theLights[index].diffuse.g, this->theLights[index].diffuse.b, this->theLights[index].diffuse.a);
         glUniform4f(this->theLights[index].specular_UL,	

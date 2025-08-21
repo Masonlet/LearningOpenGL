@@ -5,16 +5,16 @@
 #include "vec4.hpp"
 
 struct Triangle {
-	Vec4 position;
-	Vec3 rotation;
+	Vec4 pos;
+	Vec3 rot;
 	Vec3 scale;
 
 	Triangle();
 };
 
 struct Square {
-	Vec4 position;
-	Vec3 rotation;
+	Vec4 pos;
+	Vec3 rot;
 	Vec2 size;
 
 	Square();
@@ -24,7 +24,7 @@ struct Grid {
 	unsigned int count;
 	float spacing;
 	Vec3 start;
-	Vec3 rotation;
+	Vec3 rot;
 	Vec3 scale;
 
 	Grid();
