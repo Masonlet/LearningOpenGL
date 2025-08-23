@@ -6,14 +6,14 @@
 
 static bool readHeader(const unsigned char* buffer, int& height, int& width) {
 	if (!buffer) return error("BMPParser", "readHeader", "Null buffer");
-	if (buffer[0] != 'B' || buffer[1] != 'M') return error("BMPParser", "readHeader", "Bad signature (not BM): " + buffer[0] + buffer[1]);
+	if (buffer[0] != 'B' || buffer[1] != 'M') return error("BMPParser", "readHeader", "Bad signature (not BM)");
 
 	unsigned int dibSize =
 		(unsigned int)buffer[14] |
 		((unsigned int)buffer[15] << 8) |
 		((unsigned int)buffer[16] << 16) |
 		((unsigned int)buffer[17] << 24);
-	if (dibSize < 40U) return error("BMPParser", "readHeader", "Unsupported DIB header size: " + dibSize);
+	if (dibSize < 40U) return error("BMPParser", "readHeader", "Unsupported DIB header size: " + std::to_string(dibSize));
 
 	int32_t w = static_cast<int32_t>(
 		static_cast<unsigned int>(buffer[18]) |
@@ -61,7 +61,9 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 	const unsigned char* buffer{ nullptr };
 	size_t fileSize{ 0 };
 
-	if (!loadBinaryFile(buffer, fileSize, filename) || !buffer) return false;
+	if (!loadBinaryFile(buffer, fileSize, filename) || !buffer)
+		return error("BMPParser", "parseBMP", std::string("Failed to load file: ") + filename);
+
 	if (fileSize < 54) {
 		delete[] buffer;
 		return error("BMPParser", "parseBMP", "File too small to be a valid BMP: " + std::to_string(fileSize) + " bytes");
@@ -97,7 +99,7 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 		(static_cast<unsigned int>(buffer[25]) << 24)
 	);
 	int bottomUp = (signedHeight > 0) ? 1 : 0;
-
+		
 	int32_t xppm = 0;
 	int32_t yppm = 0;
 	if (dibSize >= 40U) {
@@ -127,7 +129,7 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 		(static_cast<unsigned int>(buffer[52]) << 16) |
 		(static_cast<unsigned int>(buffer[53]) << 24);
 
-	if (dataOffset >= fileSize) {
+	if (dataOffset > fileSize) {
 		delete[] buffer;
 		return error("BMPParser", "parseBMP", "File too small to be a valid BMP: " + std::to_string(fileSize) + " bytes");
 	}
@@ -149,27 +151,22 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 	bmpOut.infoHeader.yPixelsPerMeter = yppm;
 	bmpOut.infoHeader.colorsUsed      = colorsUsed;
 	bmpOut.infoHeader.colorsImportant = colorsImportant;
-
-	size_t outSize = static_cast<size_t>(width) * static_cast<size_t>(height) * 3;
-	unsigned char* rgb = new unsigned char[outSize];
+	bmpOut.pixels.resize(static_cast<size_t>(width) * static_cast<size_t>(height) * 3);
 
 	const unsigned char* srcPixels = buffer + dataOffset;
 	for (int row = 0; row < height; ++row) {
 		int srcRow = bottomUp ? (height - 1 - row) : row;
 		const unsigned char* src = srcPixels + rowStridePadded * static_cast<size_t>(srcRow);
-		unsigned char* dst = rgb + static_cast<size_t>(row) * static_cast<size_t>(width) * 3;
+		unsigned char* dst = bmpOut.pixels.data() + static_cast<size_t>(row) * static_cast<size_t>(width) * 3;
 
 		for (int col = 0; col < width; ++col) {
-			unsigned char b = src[col * 3 + 0];
-			unsigned char g = src[col * 3 + 1];
-			unsigned char r = src[col * 3 + 2];
-			dst[col * 3 + 0] = r;
-			dst[col * 3 + 1] = g;
-			dst[col * 3 + 2] = b;
+			const size_t s = static_cast<size_t>(col) * 3;
+			dst[s + 0] = src[s + 2];
+			dst[s + 1] = src[s + 1];
+			dst[s + 2] = src[s + 0];
 		}
 	}
 
 	delete[] buffer;
-	bmpOut.data = rgb;
 	return true;
 }

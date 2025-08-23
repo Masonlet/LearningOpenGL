@@ -2,19 +2,6 @@
 #include "graphics/renderer.hpp"
 #include "utils/log.hpp"
 
-Renderer::Renderer(ShaderManager& shaderManagerIn, MeshManager& meshManagerIn, TextureManager& textureManagerIn)
-	: shaderManager(shaderManagerIn), meshManager(meshManagerIn), textureManager(textureManagerIn),
-	  program(0),
-	  modelLocation(-1), modelViewLocation(-1), modelProjectionLocation(-1),
-		modelInverseTransposeLocation(-1), modelSpecularLocation(-1),
-		modelLightedLocation(false), modelUseTexturesLocation(false),
-		modelColourModeLocation(-1), modelColourOverrideLocation(-1),
-		modelHasVertColourLocation(-1), modelMinYMaxYLocation(-1),
-		modelSeedLocation(-1), modelIsSkyboxLocation(-1), modelSkyboxTextureLocation(-1) {
-}
-
-Renderer::~Renderer() {}
-
 void Renderer::setProgram(unsigned int program) {
 	this->program = program;
 	glUseProgram(program);
@@ -60,22 +47,21 @@ static Vec3 seedFromName(const std::string& s) {
 	b = fmod(b / 255.0f, 1.0f);
 	return { r, g, b };
 }
-bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4& projection) {
+bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, const ModelData& instance, const Mat4& view, const Mat4& projection) const {
 	if (!instance.isVisible) return true;
 
-	const MeshData* info{};
-	if (!meshManager.findMesh(instance.meshPath, info)) 
-		return error("Renderer", "drawModel", "Could not find mesh: " + instance.meshPath);
+	MeshData* data;
+	if (!meshManager.getMesh(instance.meshPath, data)) return error("Renderer", "drawModel", "Could not find mesh: " + instance.meshPath);
 	 
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.data);
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.models);
 	Mat4 modelIT = instance.modelMatrix.inverse().transpose();
-	glUniformMatrix4fv(modelInverseTransposeLocation, 1, GL_FALSE, modelIT.data);
+	glUniformMatrix4fv(modelInverseTransposeLocation, 1, GL_FALSE, modelIT.models);
 	glUniform4fv(modelSpecularLocation, 1, &instance.specular.x);
 
 	glUniform1i(modelColourModeLocation, static_cast<int>(instance.colourMode));
 	glUniform4fv(modelColourOverrideLocation, 1, &instance.colour.x);
-	glUniform1i(modelHasVertColourLocation, info->hasColours ? 1 : 0);
-	glUniform2f(modelMinYMaxYLocation, info->minY, info->maxY);
+	glUniform1i(modelHasVertColourLocation, data->hasColours ? 1 : 0);
+	glUniform2f(modelMinYMaxYLocation, data->minY, data->maxY);
 
 	Vec3 randSeed = seedFromName(instance.name);
 	glUniform3f(modelSeedLocation, randSeed.x, randSeed.y, randSeed.z);
@@ -92,11 +78,11 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 				instance.textureMixRatio[3]);
 		}
 
-		for (size_t i = 0; i < 4; ++i) {
+		for (size_t i = 0; i < instance.textureNames->size(); ++i) {
 			const std::string& name = instance.textureNames[i];
 			if (name.empty()) continue;
 
-			int textureID = textureManager.getTextureIDFromName(name);
+			int textureID = sceneManager.scene.getTextureIDFromName(name);
 			if (textureID == 0) return error("Renderer", "drawModel", "Could not find texture: " + name);
 
 			glActiveTexture(GL_TEXTURE0 + i);
@@ -107,8 +93,8 @@ bool Renderer::drawModel(const ModelData& instance, const Mat4& view, const Mat4
 	glUniform1i(modelLightedLocation, instance.isLighted ? 1 : 0);
 
 	if (instance.colour.w < 1.0f)	glDepthMask(GL_FALSE);
-	glBindVertexArray(info->VAOID);
-	glDrawElements(GL_TRIANGLES, info->numIndices, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(data->VAOID);
+	glDrawElements(GL_TRIANGLES, data->numIndices, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 	if (instance.colour.w < 1.0f) glDepthMask(GL_TRUE);
 

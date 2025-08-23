@@ -1,7 +1,9 @@
 #pragma once
 
+#include "math/vec2.hpp"
 #include <cstdint>
 #include <string>
+#include <vector>
 
 struct BMPHeader {
 	uint32_t offsetData{ 0 }; // Start pos of pixel data
@@ -29,47 +31,38 @@ struct BMPColourHeader {
 struct BMP {
 	BMP() = default;
 	BMP(const BMP&) = delete;
-	~BMP() { if (data) delete[] data; data = nullptr; }
 
-	uint32_t        fileSize{ 0 }; //Bytes
+	uint32_t        fileSize{ 0 };
 	BMPHeader       fileHeader;
 	BMPInfoHeader   infoHeader;
 	BMPColourHeader colourHeader;
-	uint8_t*        data{ nullptr };
+
+	std::vector<uint8_t> pixels;
 
 	BMP& operator=(const BMP&) = delete;
 	BMP(BMP&& other) noexcept { *this = std::move(other); }
 	BMP& operator=(BMP&& other) noexcept {
 		if (this != &other) {
-			if (data) { delete[] data; }
 			fileSize = other.fileSize;
 			fileHeader = other.fileHeader;
 			infoHeader = other.infoHeader;
 			colourHeader = other.colourHeader;
-			data = other.data;
-			other.data = nullptr;
 		}
 		return *this;
 	}
 };
 
-class BMPTexture {
-public:
-	bool createBMPTexture(std::string name, std::string path, bool generateMIPMap);
-	bool createCubeBMPTexture(std::string cubeMapName,
-		std::string posXfileName, std::string negXfileName,
-		std::string posYfileName, std::string negYfileName,
-		std::string posZfileName, std::string negZfileName,
-		bool isSeamless, bool generateMIPMap);
-		
-	int getTextureNum() const { return textureNum; }
-	std::string getTextureName() const { return textureName; }
-	std::string getTexturePath() const { return texturePath; }
-private:
-	int textureNum{ 0 };
-	std::string textureName;
-	std::string texturePath;
-	BMP bmp;
+struct BMPTexture {
+	std::string name;
+	unsigned int index{ 0 }, slot{ 0 };
+	float mix{ 0.0f };
+	Vec2 tiling{ 0.0f };
+	bool isCube{ false };
+	int width{ 0 }, height{ 0 };
 
-	bool isCubeMap{ false }, is2DTexture{ false };
+	bool createBMPTexture(std::string path, bool generateMIPMap);
+	bool createBMPCubeTexture(std::string posXfileName, std::string negXfileName, 
+		std::string posYfileName, std::string negYfileName, 
+		std::string posZfileName, std::string negZfileName,	
+		bool isSeamless, bool generateMIPMap);
 };

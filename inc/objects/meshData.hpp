@@ -1,0 +1,75 @@
+#pragma once
+
+#include "math/Vec4.hpp"
+#include "math/vertex.hpp"
+#include "core/colour.hpp"
+#include <string>
+
+/*
+ModelDrawInfo
+* Represents a single mesh (3d object) structure ' INDEXED' format
+* Its layout is set up to match how the GPU sees the mesh, not how the file was, etc
+* Its also storing the information we need to tell the GPU which model we want to draw.
+*/
+struct MeshData {
+	std::string path{};
+
+	unsigned int VAOID{ 0 }, VertexBufferID{ 0 }, IndexBufferID{ 0 };
+	unsigned int VertexBuffer_Start_Index{ 0 }, IndexBuffer_Start_Index{ 0 };
+	unsigned int numVertices{ 0 }, numIndices{ 0 }, numTriangles{ 0 };
+
+	Vertex* vertices { nullptr };
+	unsigned int* indices{ nullptr };
+
+	bool hasNormals{ false }, hasColours{ false }, hasTexCoords{ false };
+	float minY{ 0.0f }, maxY{ 0.0 };
+
+	MeshData() = default;
+  ~MeshData() {
+    if (vertices) {
+      delete[] vertices;
+      vertices = nullptr;
+    }
+    if (indices) {
+      delete[] indices;
+      indices = nullptr;
+    }
+  }
+
+	MeshData(const MeshData&) = delete;
+	MeshData& operator=(const MeshData&) = delete;
+
+  MeshData(MeshData&& other) noexcept { *this = static_cast<MeshData&&>(other); }
+  MeshData& operator=(MeshData&& other) noexcept {
+    if (this != &other) {
+      delete[] vertices;
+      delete[] indices;
+
+      path = other.path;
+
+      VAOID = other.VAOID;
+      VertexBufferID = other.VertexBufferID;
+      IndexBufferID = other.IndexBufferID;
+      VertexBuffer_Start_Index = other.VertexBuffer_Start_Index;
+      IndexBuffer_Start_Index = other.IndexBuffer_Start_Index;
+
+      numVertices = other.numVertices;
+      numIndices = other.numIndices;
+      numTriangles = other.numTriangles;
+
+      vertices = other.vertices;
+      indices = other.indices;
+
+      hasNormals = other.hasNormals;
+      hasColours = other.hasColours;
+      hasTexCoords = other.hasTexCoords;
+
+      minY = other.minY;
+      maxY = other.maxY;
+
+      other.vertices = nullptr;
+      other.indices = nullptr;
+    }
+    return *this;
+  }
+};

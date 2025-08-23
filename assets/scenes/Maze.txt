@@ -1,6 +1,6 @@
-camera, on, Cam1, FreeCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200
-camera, on, Cam2, DungeonCam, -250.0 350.0 -5800.0, -90.0 0.0, 75.0, 0.1 25000, 200, 500
-camera, on, Cam3, ModernCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200, 500
+camera, on, Cam1, FreeCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 10
+camera, on, Cam2, DungeonCam, -250.0 350.0 -5800.0, -90.0 0.0, 75.0, 0.1 25000, 200, 10
+camera, on, Cam3, ModernCam, -250.0 350.0 -5800.0, 0.0 0.0, 75.0, 0.1 25000, 200, 10
 
 light, on, sunlight, Directional, 0.0 0.0 0.0, 0.55 0.52 0.48 1.0, 0.0 0.01 0.005 0.0, -0.5 -1.0 -0.5 0.0, 0.0 0.0 0.0
 model, on, off, skybox, Isoshphere_smooth_xyz_n_rgba_uv.ply, 0.000 0.000 0.000, 0.000 -0.500 0.000, 20000.000 20000.000 20000.000, PLY, 1.000 1.000 1.000 32.000
@@ -11,7 +11,7 @@ comment, maze name, maze spacing, maze start pos, maze start rotation, wall num,
 maze, testMaze, 500.0, 0.0 0.0 0.0, 0.0 0.0 0.0, 3, true, SM_Env_Dwarf_Floor_01.ply, SM_Env_Dwarf_Floor_02.ply, SM_Env_Dwarf_Floor_03.ply, SM_Env_Dwarf_Floor_04.ply, SM_Env_Dwarf_Floor_05.ply, SM_Env_Dwarf_Floor_06.ply, SM_Env_Dwarf_Floor_07.ply, SM_Env_Dwarf_Wall_01.ply, SM_Env_Dwarf_Wall_02.ply, SM_Env_Dwarf_Wall_03.ply, SM_Env_Dwarf_Wall_04.ply, SM_Env_Dwarf_Wall_05.ply, SM_Env_Dwarf_Wall_06.ply, SM_Env_Dwarf_Wall_Archway_01.ply, SM_Env_Dwarf_Wall_Archway_02.ply, SM_Env_Dwarf_Wall_Window_01.ply, 0.0 0.0 0.0, mazeData1
 
 comment, maze data name maze data
-mazeData, mazeData1
+mazeData, testMaze
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 X...X.....X...X.....X.....X..
 X.X.X.X.....X.X.XXX.X.X.XXX.X
@@ -27,4 +27,4 @@ X.........X.XXXXX.X.XXXXX.X.X
 X.XXX.....X.X.XXXXXXXXXXX.X.X
 X...........X.............X.X
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-mazeData1
+testMaze

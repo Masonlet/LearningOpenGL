@@ -7,19 +7,6 @@
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };
 
-Engine::Engine() :
-  currentProgram{ 0 }, currentModel{ 0 },
-  deltaTime{ 0.0f }, lastTime{ 0.0f },
-  wireframe{ false },
-  sceneManager(meshManager, currentProgram, lightManager, cameraManager, textureManager),
-  renderer(shaderManager, meshManager, textureManager){
-}
-Engine::~Engine() {
-  inputManager = {};
-  meshManager.Shutdown();
-  windowManager.destroyWindow();
-}
-
 bool Engine::initialize(const unsigned int width, const unsigned int height, const char* title) {
   if (!windowManager.createWindow(width, height, title)) return false;
   glfwSetWindowUserPointer(windowManager.getWindow()->getGLFWwindow(), this);
@@ -31,7 +18,6 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 
   setupShaders();
 
-  lightManager.GetUniformLocations(currentProgram);
   return true;
 }
 
@@ -60,10 +46,6 @@ bool Engine::setupShaders() {
   return true;
 }
 
-void Engine::updateWireframe() {
-  wireframe = !wireframe;
-}
-
 void Engine::tick(const float currenttime) {
   if (lastTime == 0.0f) {
     lastTime = currenttime;
@@ -84,49 +66,38 @@ void Engine::tick(const float currenttime) {
   deltaTime = smoothing_factor * deltaTime + (2.0f - smoothing_factor) * rawdelta;
 }
   
-bool Engine::setScene(const std::string& sceneIn) {
-  return sceneManager.loadTxtScene(sceneIn); 
-}
 bool Engine::loadSceneMeshes() {
-  if (sceneManager.getScene().getSceneName().empty())
+  if (sceneManager.scene.getSceneName().empty())
     if (!sceneManager.loadTxtScene("Default"))
-			return error("Engine", "loadSceneModels", "No scene loaded and failed to load default scene");
+      return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
 
-	debugLog("loadSceneModels", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
+	debugLog("loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   const unsigned int shaderProgramID = renderer.getProgram();
   if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
 
-	std::map<std::string, ModelData>& modelData = sceneManager.getScene().getModelData();
+	std::map<std::string, ModelData>& modelData = sceneManager.scene.getModels();
 	std::map<std::string, ModelData>::iterator it = modelData.begin();
   for(; it != modelData.end(); ++it) {
-    ModelData& data = it->second;
-
-    const MeshData* info{};
-    if (!meshManager.findMesh(data.meshPath, info)) {
-      MeshData tempData;
-      if (!meshManager.loadMeshFile(data.meshPath, tempData, shaderProgramID) ||
-				  !meshManager.findMesh(data.meshPath, info)) 
-        return error("Engine", "loadSceneModels", "Failed to load mesh: " + data.meshPath);
+    ModelData& model = it->second;
+ 
+    if (!meshManager.findMesh(model.meshPath)) {
+      if(!meshManager.loadMeshFile(model.meshPath, shaderProgramID)) return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + model.meshPath);
+      if(!meshManager.findMesh(model.meshPath)) return error("Engine", "loadSceneMeshes", "Failed to find mesh after creation: " + model.meshPath);
     }
 	}
 
-	debugLog("loadSceneModels", "Load finish time: " + std::to_string(glfwGetTime()), true);
+  sceneManager.scene.updateLights(currentProgram);
+	debugLog("loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);
   return true;
 }
 
 void Engine::run() {
-	if (cameraManager.getCameraCount() == 0) {
-		if (!cameraManager.addCamera(Camera()))	debugLog("SceneManger", " Failed to add fallback camera");
-		else                                    debugLog("SceneManger", " Added fallback camera", true);
-	}
-
-  getWindowManager().switchActiveWindowVisibiltiy();
-
+  windowManager.switchActiveWindowVisibiltiy();
   while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
     inputManager.Update(windowManager.getWindow()->getGLFWwindow());
-    cameraManager.getActiveCamera()->processInputs(&inputManager, getDeltaTime());
-    handleModelInput(&inputManager, getDeltaTime(), sceneManager.getScene().getModelData(), currentModel);
+    sceneManager.scene.getActiveCamera()->processInputs(&inputManager, glfwGetTime());
+    handleModelInput(&inputManager, deltaTime, sceneManager.scene.getModels(), currentModel);
     renderFrame();
 
     windowManager.getWindow()->swapBuffers();
@@ -138,52 +109,51 @@ void Engine::renderFrame() {
   // Begin Frame
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  const Mat4 view = cameraManager.getActiveCamera()->LookAt();
-  const Mat4 projection = cameraManager.getActiveCamera()->Perspective(windowManager.getWindow()->getAspect());
-  const Vec3 eye = cameraManager.getActiveCamera()->getPos();
+  const Mat4 view = sceneManager.scene.getActiveCamera()->LookAt();
+  const Mat4 projection = sceneManager.scene.getActiveCamera()->Perspective(windowManager.getWindow()->getAspect());
+  const Vec3 eye = sceneManager.scene.getActiveCamera()->pos;
   renderer.updateCameraUniforms(eye, view, projection);
-
-  lightManager.UpdateShaderUniforms(currentProgram);
+  sceneManager.scene.updateLightUniforms(currentProgram);
 
   // Draw Frame
-  ModelData* skyBox = nullptr;
-  std::vector<const ModelData*> transparentInstances;
-  std::map<std::string, ModelData>& instances = sceneManager.getScene().getModelData();
+  ModelData* skyBox{ nullptr };
+  std::vector<ModelData> transparentInstances;
+  std::map<std::string, ModelData>& instances = sceneManager.scene.getModels();
   for (std::map<std::string, ModelData>::iterator it = instances.begin(); it != instances.end(); ++it) {
     ModelData& instance = it->second;
     if (instance.name == "skybox") skyBox = &instance;
+    instance.modelMatrix = Mat4::modelMatrix({ { instance.pos, 0.0f }, instance.rot, instance.size });
 
-    if (instance.colour.w >= 1.0f) renderer.drawModel(instance, view, projection);
-    else                           transparentInstances.push_back(&instance);
+    if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, sceneManager, instance, view, projection);
+    else                           transparentInstances.push_back(instance);
   }
 
   for (size_t i = 0; i < transparentInstances.size(); ++i) {
     for (size_t j = 0; j < transparentInstances.size() - i - 1; ++j) {
-      const Vec3& a = transparentInstances[j]->pos;
-      const Vec3& b = transparentInstances[j + 1]->pos;
+      const Vec3& a = transparentInstances[j].pos;
+      const Vec3& b = transparentInstances[j + 1].pos;
 
       float distA = (a.x - eye.x) * (a.x - eye.x) + (a.y - eye.y) * (a.y - eye.y) + (a.z - eye.z) * (a.z - eye.z);
       float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
 
       if (distA < distB) {
-        const ModelData* temp = transparentInstances[j];
+        ModelData& temp = transparentInstances[j];
         transparentInstances[j] = transparentInstances[j + 1];
         transparentInstances[j + 1] = temp;
       }
     }
   }
 
-  for (const ModelData* instance : transparentInstances) 
-    renderer.drawModel(*instance, view, projection);
+  for (ModelData& instance : transparentInstances) 
+    renderer.drawModel(meshManager, sceneManager, instance, view, projection);
 
   glUniform1i(renderer.getIsSkyboxLocation(), GL_TRUE);
   if (skyBox) {
     skyBox->isVisible = true;
-
-    skyBox->pos = cameraManager.getActiveCamera()->getPos();
-    skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->pos, 0.0f }, skyBox->rot, skyBox->scale });
+    skyBox->pos = sceneManager.scene.getActiveCamera()->pos;
+    skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->pos, 0.0f }, skyBox->rot, skyBox->size });
     
-    int skyboxTextureID = textureManager.getTextureIDFromName(skyBox->name);
+    int skyboxTextureID = sceneManager.scene.getTextureIDFromName(skyBox->name);
 
     glActiveTexture(GL_TEXTURE20);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
@@ -194,7 +164,7 @@ void Engine::renderFrame() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);     
     glDepthMask(GL_FALSE);
-    renderer.drawModel(*skyBox, view, projection);
+    renderer.drawModel(meshManager, sceneManager, *skyBox, view, projection);
     skyBox->isVisible = false;
     glDepthMask(GL_TRUE);
     glCullFace(GL_BACK);
@@ -206,12 +176,12 @@ void Engine::renderFrame() {
 }
 
 void Engine::incrementModel() {
-  if (sceneManager.getScene().getModelData().empty()) return;
-  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneManager.getScene().getModelData().size());
+  if (sceneManager.scene.getModels().empty()) return;
+  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneManager.scene.getModels().size());
 }
 
 void Engine::decrementModel() {
-  if (sceneManager.getScene().getModelData().empty()) return;
-  currentModel = (currentModel == 0) ? static_cast<unsigned int>(sceneManager.getScene().getModelData().size() - 1)
+  if (sceneManager.scene.getModels().empty()) return;
+  currentModel = (currentModel == 0) ? static_cast<unsigned int>(sceneManager.scene.getModels().size() - 1)
                                      : currentModel - 1;
 }

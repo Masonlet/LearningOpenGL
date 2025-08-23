@@ -22,7 +22,7 @@ comment, name, pos (xyz), rot (xyz), scale (xyz), colour
 comment, triangle, tri1, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, Red
 
 comment amount offset, pos (xyz), rot (xyz), scale (xyz), colour
-comment, squareGrid 40000 1.0, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, White
+comment, grid1, squareGrid 40000 1.0, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, White
 
 comment amount offset, pos (xyz), rot (xyz), scale (xyz), colour
-comment, cubeGrid 100000 1.0, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, White
+comment, grid2, cubeGrid 100000 1.0, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, White

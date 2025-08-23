@@ -6,7 +6,7 @@
 class InputManager {
 public:
   void Update(GLFWwindow* window);
-
+    
   bool IsKeyDown(int key) const;
   bool IsKeyPressed(int key) const;
 

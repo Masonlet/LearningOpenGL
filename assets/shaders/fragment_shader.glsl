@@ -5,13 +5,13 @@ const int DIRECTIONAL_LIGHT_TYPE = 2;
 const int NUMBEROFLIGHTS = 50;
 
 struct Light {
-	vec4 position;	// xyz = position, ignoring w = TBD
-	vec4 diffuse;	// rgb = diffuse colour, w = intensity
-	vec4 specular;	// rgb = highlight colour, w = power
-	vec4 atten;		// x = constant, y = linear, z = quadratic, w = cutoff distance
-	vec4 direction;	// xyz = direction (spot/directional), w = unused
-	vec4 param1;	// x = lightType (0 = Point, 1 = Spot, 2 = Directional), y = inner angle (spot), z = outer angle (spot), w = TBD
-	vec4 param2;	// x = enabled (0 = off, 1 = on), yzw = TBD
+	vec4 position;	  // xyz = position, ignoring w = TBD
+	vec4 diffuse;	  // rgb = diffuse colour, w = intensity
+	vec4 specular;	  // rgb = highlight colour, w = power
+	vec4 attenuation; // x = constant, y = linear, z = quadratic, w = cutoff distance
+	vec4 direction;   // xyz = direction (spot/directional), w = unused
+	vec4 param1;	  // x = lightType (0 = Point, 1 = Spot, 2 = Directional), y = inner angle (spot), z = outer angle (spot), w = TBD
+	vec4 param2;	  // x = enabled (0 = off, 1 = on), yzw = TBD
 };
 
 uniform Light theLights[NUMBEROFLIGHTS];
@@ -108,9 +108,9 @@ vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 ve
 						
 		// Attenuation
 		float dist = length(vLightToVertex);		
-		float att = 1.0 / (theLights[i].atten.x + 
-									theLights[i].atten.y * dist + 
-									theLights[i].atten.z * dist * dist);  	
+		float att = 1.0 / (theLights[i].attenuation.x + 
+						   theLights[i].attenuation.y * dist + 
+						   theLights[i].attenuation.z * dist * dist);  	
 				  
 		// total light contribution is Diffuse + Specular
 		lightDiffuseContrib *= att;

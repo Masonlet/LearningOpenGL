@@ -1,10 +1,17 @@
-#include "models/plyParser.hpp"
+#include "objects/plyParser.hpp"
 #include "utils/parser.hpp"
+#include "utils/fileParser.hpp"
 #include "utils/log.hpp"
 #include "math/constants.hpp"
 #include <string>
 
-bool parsePlyMesh(const unsigned char*& p, unsigned int size, MeshData& drawInfo) {
+bool parsePlyMesh(const std::string& path, MeshData& drawInfo) {
+	const unsigned char* p{ nullptr };
+	size_t size;
+	if (!loadBinaryFile(p, size, std::string(ASSET_DIR) + "/models/" + path))
+		return false;
+	else drawInfo.path = path;
+
 	if (!p) return error("PlyParser", "parsePlyMesh", "Input pointer is null\n");
 
 	std::string errorMsg;

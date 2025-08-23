@@ -2,15 +2,12 @@
 
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
-#include "graphics/textureManager.hpp"
-#include "models/modelData.hpp"
+#include "objects/modelData.hpp"
+#include "scene/sceneManager.hpp"
 #include "math/mat4.hpp"
 
 class Renderer {
 public:
-	Renderer(ShaderManager& shaderManagerIn, MeshManager& meshManagerIn, TextureManager& textureManagerIn);
-	~Renderer();
-
 	void setProgram(unsigned int program);
 
 	unsigned int getProgram() const { return program; }
@@ -19,20 +16,16 @@ public:
 
 	void updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const;
 
-	bool drawModel(const ModelData& instance, const Mat4& view, const Mat4& projection);
+	bool drawModel(MeshManager&, SceneManager& sceneManager, const ModelData& instance, const Mat4& view, const Mat4& projection) const;
 
 private:
-	ShaderManager& shaderManager;
-	MeshManager& meshManager;
-	TextureManager& textureManager;
+	unsigned int program{ 0 };
 
-	unsigned int program;
-
-	int modelLightedLocation, modelUseTexturesLocation, modelIsSkyboxLocation;
-	int modelColourModeLocation, modelColourOverrideLocation;
-	int modelHasVertColourLocation, modelMinYMaxYLocation, modelSeedLocation;
-	int modelLocation, modelViewLocation, modelProjectionLocation;
-	int modelInverseTransposeLocation;
-	int modelSpecularLocation;
-	int modelSkyboxTextureLocation;
+	int modelLightedLocation{ -1 }, modelUseTexturesLocation{ -1 }, modelIsSkyboxLocation{ -1 };
+	int modelColourModeLocation{ -1 }, modelColourOverrideLocation{ -1 };
+	int modelHasVertColourLocation{ -1 }, modelMinYMaxYLocation{ -1 }, modelSeedLocation{ -1 };
+	int modelLocation{ -1 }, modelViewLocation{ -1 }, modelProjectionLocation{ -1 };
+	int modelInverseTransposeLocation{ -1 };
+	int modelSpecularLocation{ -1 };
+	int modelSkyboxTextureLocation{ -1 };
 };

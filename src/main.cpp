@@ -14,7 +14,7 @@ int main() {
 	//_CrtSetBreakAlloc();
 #endif
 	
-	Engine engine{};
+	Engine engine;
 	if (!engine.initialize(1920, 1200, "Test"))
 		return -1;
 

@@ -5,27 +5,30 @@
 #include "vec4.hpp"
 
 struct Triangle {
-	Vec4 pos;
-	Vec3 rot;
-	Vec3 scale;
-
-	Triangle();
+	std::string name;
+	Vec3 pos  { 0.0f };
+	Vec3 rot  { 0.0f };
+	Vec3 size{ 1.0f };
+	Vec4 colour{ 1.0f };
+	ColourMode colourMode{ ColourMode::Solid };
 };
 
 struct Square {
-	Vec4 pos;
-	Vec3 rot;
-	Vec2 size;
-
-	Square();
+	std::string name;
+	Vec4 pos { 0.0f };
+	Vec3 rot { 0.0f };
+	Vec2 size{ 1.0f };
+	Vec4 colour{ 1.0f };
+	ColourMode colourMode{ ColourMode::Solid };
 };
 
 struct Grid {
-	unsigned int count;
-	float spacing;
-	Vec3 start;
-	Vec3 rot;
-	Vec3 scale;
-
-	Grid();
+	std::string name;
+	unsigned int count{ 1 };
+	float spacing{ 1.0f };
+	Vec3 start{ 0.0f };
+	Vec3 rot{ 0.0f };
+	Vec3 size{ 1.0f };
+	Vec4 colour{ 1.0f };
+	ColourMode colourMode{ ColourMode::Solid };
 };

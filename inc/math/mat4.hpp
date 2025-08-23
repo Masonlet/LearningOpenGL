@@ -3,10 +3,10 @@
 #include "math/transform.hpp"
 
 struct Mat4 {
-	float data[16]{0.0f};
+	float models[16]{0.0f};
 
-	inline const float* ptr() const { return data; }
-	inline float* ptr() { return data; }
+	inline const float* ptr() const { return models; }
+	inline float* ptr() { return models; }
 
 	static Mat4 identity();
 	static Mat4 modelMatrix(const Transform& t);
@@ -14,7 +14,7 @@ struct Mat4 {
 	Mat4 inverse() const;
 
   static Mat4 translation(const Vec4& t);
-  static Mat4 scale(const Vec3& t);
+  static Mat4 size(const Vec3& t);
 
   static Mat4 rotateX(const float angle);
   static Mat4 rotateY(const float angle);

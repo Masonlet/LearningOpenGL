@@ -2,21 +2,22 @@
 #include "graphics/meshManager.hpp"
 #include "utils/fileParser.hpp"
 #include "utils/log.hpp"
-#include "models/plyParser.hpp"
+#include "objects/plyParser.hpp"
 
-bool MeshManager::loadMeshFile(const std::string& path, MeshData& mesh, unsigned int shaderID) {
-	mesh.path = path;
-	mesh.hasNormals = false;
-	mesh.hasColours = false;
-	mesh.numVertices = 0;
-	mesh.numIndices = 0;
+MeshManager::~MeshManager() {
+  for (std::map<std::string, MeshData>::iterator it = nameToMeshes.begin(); it != nameToMeshes.end(); ++it) {
+    MeshData& mesh = it->second;
 
-  const unsigned char* src{ nullptr };
-  size_t size;
-  if (!loadBinaryFile(src, size, std::string(ASSET_DIR) + "/models/" + path))
-    return false;
+    if (glIsVertexArray(mesh.VAOID))     glDeleteVertexArrays(1, &mesh.VAOID);
+    if (glIsBuffer(mesh.VertexBufferID)) glDeleteBuffers(1, &mesh.VertexBufferID);
+    if (glIsBuffer(mesh.IndexBufferID))  glDeleteBuffers(1, &mesh.IndexBufferID);
+  }
 
-  if (!parsePlyMesh(src, size, mesh))
+  nameToMeshes.clear();
+}
+bool MeshManager::loadMeshFile(const std::string& path, unsigned int shaderID) {
+  MeshData mesh;
+  if (!parsePlyMesh(path, mesh))
     return false;
 
   if (!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) 
@@ -26,17 +27,20 @@ bool MeshManager::loadMeshFile(const std::string& path, MeshData& mesh, unsigned
 }
 bool MeshManager::loadMeshPrimitive(MeshData& mesh, unsigned int shaderID) {
   if(!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) 
-		return error("MeshManager", "loadMeshPrimitive", "Invalid primitive mesh data");
-
+    return error("MeshManager", "loadMeshPrimitive", "Invalid primitive mesh data");
 	return UploadMeshToGPU(mesh, shaderID);
 }
 
-bool MeshManager::findMesh(const std::string& path, const MeshData*& mesh) const {
+bool MeshManager::findMesh(const std::string& path) const {
 	std::map<std::string, MeshData>::const_iterator it = nameToMeshes.find(path);
 	if (it == nameToMeshes.end()) return false;
-
-	mesh = &it->second;
 	return true;
+}
+bool MeshManager::getMesh(const std::string& name, MeshData*& data) {
+  std::map<std::string, MeshData>::iterator it = nameToMeshes.find(name);
+  if (it == nameToMeshes.end()) return false;
+  data = &it->second;
+  return true;
 }
 
 bool MeshManager::UploadMeshToGPU(MeshData& mesh, unsigned int shaderID) {
@@ -58,7 +62,7 @@ bool MeshManager::UploadMeshToGPU(MeshData& mesh, unsigned int shaderID) {
   int vpos_location = glGetAttribLocation(shaderID, "vPos");
   if (vpos_location != -1) {
     glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+    glVertexAttribPointer(vpos_location,  4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
   }
   int vnorm_location = glGetAttribLocation(shaderID, "vNorm");
   if (vnorm_location != -1) {
@@ -92,16 +96,4 @@ bool MeshManager::UploadMeshToGPU(MeshData& mesh, unsigned int shaderID) {
 
   this->nameToMeshes[mesh.path] = std::move(mesh);
   return true;
-}
-
-void MeshManager::Shutdown() {
-  for (std::map<std::string, MeshData>::iterator it = nameToMeshes.begin(); it != nameToMeshes.end(); ++it) {
-    MeshData& mesh = it->second;
-
-    if (glIsVertexArray(mesh.VAOID))     glDeleteVertexArrays(1, &mesh.VAOID);
-    if (glIsBuffer(mesh.VertexBufferID)) glDeleteBuffers(1, &mesh.VertexBufferID);
-    if (glIsBuffer(mesh.IndexBufferID))  glDeleteBuffers(1, &mesh.IndexBufferID);
-  }
-
-  nameToMeshes.clear();
 }

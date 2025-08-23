@@ -1,4 +1,4 @@
-#include "models/primitives.hpp"
+#include "objects/primitives.hpp"
 
 bool createTriangle(MeshManager* meshManager, const std::string& name, unsigned int shaderID, const Vec2& size, const Vec4& vertexColour) {
 	MeshData info;

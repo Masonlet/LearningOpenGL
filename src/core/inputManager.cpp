@@ -1,5 +1,5 @@
 #include <GLFW/glfw3.h>
-
+#include "utils/log.hpp"
 #include "core/inputManager.hpp"
 
 void InputManager::Update(GLFWwindow* window) {
@@ -8,27 +8,27 @@ void InputManager::Update(GLFWwindow* window) {
     keyState[i] = glfwGetKey(window, trackedKeys[i]) == GLFW_PRESS;
   }
   
-  double xpos, ypos;
-  glfwGetCursorPos(window, &xpos, &ypos);
+  double xPos, yPos;
+  glfwGetCursorPos(window, &xPos, &yPos);
 
   if (!cursorLocked) {
     mouseDelta = { 0.0f, 0.0f };
-    lastMouseX = xpos;
-    lastMouseY = ypos;
+    lastMouseX = xPos;
+    lastMouseY = yPos;
     firstMouse = true;
     return;
   }
 
   if (firstMouse) {
-    lastMouseX = xpos;
-    lastMouseY = ypos;
+    lastMouseX = xPos;
+    lastMouseY = yPos;
     firstMouse = false;
   }
 
-  mouseDelta.x = static_cast<float>(xpos - lastMouseX);
-  mouseDelta.y = static_cast<float>(lastMouseY - ypos);
-  lastMouseX = xpos;
-  lastMouseY = ypos;
+  mouseDelta.x = static_cast<float>(xPos - lastMouseX);
+  mouseDelta.y = static_cast<float>(lastMouseY - yPos);
+  lastMouseX = xPos;
+  lastMouseY = yPos;
 }
 
 bool InputManager::IsKeyDown(int key) const {

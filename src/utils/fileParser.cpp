@@ -60,7 +60,7 @@ bool loadBinaryFile(const unsigned char*& dataOut, size_t& sizeOut, const std::s
 		dataOut = nullptr;
 		sizeOut = 0;
 		return error("FileParser", "loadBinaryFile", "Failed to open file: " + path);
-	}
+		}
 
 	size_t fileSize;
 	if (!getFileSize(file, fileSize)) {

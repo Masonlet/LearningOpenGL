@@ -2,31 +2,31 @@
 #include "utils/parser.hpp"
 #include "utils/log.hpp"
 
-bool parseModel(const unsigned char*& p, ParsedModel& out) {
+bool parseModel(const unsigned char*& p, ModelData& out) {
   PARSE_OR(return false, parseBool, out.isVisible, "model enabled");
   PARSE_OR(return false, parseBool, out.isLighted, "model lighting");
   PARSE_STRING_OR(return false, p, out.name, 64, "model name");
-  PARSE_STRING_OR(return false, p, out.path, 128, "model path");
+  PARSE_STRING_OR(return false, p, out.meshPath, 128, "model path");
   PARSE_OR(return false, parseVec3, out.pos, "model position");
   PARSE_OR(return false, parseVec3, out.rot, "model rotation");
-  PARSE_OR(return false, parseVec3, out.scale, "model scale");
+  PARSE_OR(return false, parseVec3, out.size, "model scale");
   if (!parseColour(p, out.colour, out.colourMode)) return false;
   PARSE_OR(return false, parseVec4, out.specular, "model specular");
   return true;
 }
-bool parseLight(const unsigned char*& p, ParsedLight& out) {
-  PARSE_OR(return false, parseBool, out.isEnabled, "light enabled");
+bool parseLight(const unsigned char*& p, Light& out) {
+  PARSE_OR(return false, parseBool, out.enabled, "light enabled");
   PARSE_STRING_OR(return false, p, out.name, 64, "light name");
-  PARSE_OR(return false, parseLightType, out.param1Type, "light type");
+  PARSE_OR(return false, parseLightType, out.type, "light type");
   PARSE_OR(return false, parseVec3, out.pos, "light position");
   PARSE_OR(return false, parseVec4, out.diffuse, "light diffuse");
-  PARSE_OR(return false, parseVec4, out.atten, "light attenuation");
+  PARSE_OR(return false, parseVec4, out.attenuation, "light attenuation");
   PARSE_OR(return false, parseVec4, out.direction, "light direction");
-  PARSE_OR(return false, parseVec3, out.param1Direction, "light param1");
+  PARSE_OR(return false, parseVec3, out.param1, "light param1");
   return true;
 }
-bool parseCamera(const unsigned char*& p, ParsedCamera& out) {
-  PARSE_OR(return false, parseBool, out.isEnabled, "camera enabled");
+bool parseCamera(const unsigned char*& p, Camera& out) {
+  PARSE_OR(return false, parseBool, out.enabled, "camera enabled");
   PARSE_STRING_OR(return false, p, out.name, 64, "camera name");
   PARSE_OR(return false, parseCameraType, out.type, "camera type");
   PARSE_OR(return false, parseVec3, out.pos, "camera position");
@@ -35,57 +35,57 @@ bool parseCamera(const unsigned char*& p, ParsedCamera& out) {
   PARSE_OR(return false, parseFloat, out.fov, "camera fov");
   PARSE_OR(return false, parseFloat, out.nearPlane, "camera near plane");
   PARSE_OR(return false, parseFloat, out.farPlane, "camera far plane");
-  PARSE_OR(return false, parseFloat, out.speed, "camera speed");
+  PARSE_OR(return false, parseFloat, out.moveSpeed, "camera speed");
   if (out.type != 0) PARSE_OR(return false, parseFloat, out.moveDistance, "camera move distance");
   return true;
 }
-bool parseTexture(const unsigned char*& p, ParsedTexture& out) {
-  PARSE_STRING_OR(return false, p, out.modelName, 64, "texture model name");
-  PARSE_STRING_OR(return false, p, out.textureFile, 128, "texture file");
-  PARSE_OR(return false, parseUInt, out.textureNum, "texture num");
+bool parseTexture(const unsigned char*& p, BMPTexture& out) {
+  PARSE_STRING_OR(return false, p, out.name, 128, "texture name");
+  std::string path;
+  PARSE_STRING_OR(return false, p, path, 128, "texture file");
   PARSE_OR(return false, parseFloat, out.mix, "texture mix");
   PARSE_OR(return false, parseVec2, out.tiling, "texture tiling");
-  return true;
+  return out.createBMPTexture(path, true);
 }
-bool parseTextureCube(const unsigned char*& p, ParsedTextureCube& out) {
-  PARSE_STRING_OR(return false, p, out.modelName, 64, "texture model name");
-  PARSE_STRING_OR(return false, p, out.textureFile1, 128, "texture file");
-  PARSE_STRING_OR(return false, p, out.textureFile2, 128, "texture file");
-  PARSE_STRING_OR(return false, p, out.textureFile3, 128, "texture file");
-  PARSE_STRING_OR(return false, p, out.textureFile4, 128, "texture file");
-  PARSE_STRING_OR(return false, p, out.textureFile5, 128, "texture file");
-  PARSE_STRING_OR(return false, p, out.textureFile6, 128, "texture file");
-  PARSE_OR(return false, parseUInt, out.textureNum, "texture num");
+bool parseCubeTexture(const unsigned char*& p, BMPTexture& out) {
+  PARSE_STRING_OR(return false, p, out.name, 128, "texture name");
+  std::string path1, path2, path3, path4, path5, path6;
+  PARSE_STRING_OR(return false, p, path1, 128, "texture file");
+  PARSE_STRING_OR(return false, p, path2, 128, "texture file");
+  PARSE_STRING_OR(return false, p, path3, 128, "texture file");
+  PARSE_STRING_OR(return false, p, path4, 128, "texture file");
+  PARSE_STRING_OR(return false, p, path5, 128, "texture file");
+  PARSE_STRING_OR(return false, p, path6, 128, "texture file");
   PARSE_OR(return false, parseFloat, out.mix, "texture mix");
   PARSE_OR(return false, parseVec2, out.tiling, "texture tiling");
+	return out.createBMPCubeTexture(path1, path2, path3, path4, path5, path6, true, true);
+}
+bool parseTextureConnection(const unsigned char*& p, std::string& model, unsigned int& slot, std::string& texture, float& mix) {
+  PARSE_STRING_OR(return false, p, model, 64, "texture connection model name");
+  PARSE_OR(return false, parseUInt, slot, "texture connection slot");
+  PARSE_STRING_OR(return false, p, texture, 128, "texture connection name");
+  PARSE_OR(return false, parseFloat, mix, "texture connection mix");
   return true;
 }
-
-bool parseTriangle(const unsigned char*& p, ParsedTriangle& out) {
+bool parseTriangle(const unsigned char*& p, Triangle& out) {
   PARSE_STRING_OR(return false, p, out.name, 64, "triangle name");
-
-  Vec3 temp;
-  PARSE_OR(return false, parseVec3, temp, "triangle position");
-  out.transform.pos = { temp, 0.0f };
-
-  PARSE_OR(return false, parseVec3, out.transform.rot, "triangle rotation");
-  PARSE_OR(return false, parseVec3, out.transform.scale, "triangle size");
-  if (!parseColour(p, out.colour, out.colourMode)) return false;
-  return true;
+  PARSE_OR(return false, parseVec3, out.pos, "triangle position");
+  PARSE_OR(return false, parseVec3, out.rot, "triangle rotation");
+  PARSE_OR(return false, parseVec3, out.size, "triangle size");
+  return parseColour(p, out.colour, out.colourMode);
 }
-bool parseGrid(const unsigned char*& p, ParsedGrid& out) {
-  PARSE_OR(return false, parseUInt, out.layout.count, "cubeGrid count");
-  PARSE_OR(return false, parseFloat, out.layout.spacing, "cubeGrid spacing");
-  PARSE_OR(return false, parseVec3, out.layout.start, "cubeGrid start position");
-  PARSE_OR(return false, parseVec3, out.layout.rot, "cubeGrid rotation");
-  PARSE_OR(return false, parseVec3, out.layout.scale, "cubeGrid scale");
-  if (!parseColour(p, out.colour, out.colourMode)) return false;
-  return true;
+bool parseGrid(const unsigned char*& p, Grid& out) {
+  PARSE_OR(return false, parseUInt, out.count, "cubeGrid count");
+  PARSE_OR(return false, parseFloat, out.spacing, "cubeGrid spacing");
+  PARSE_OR(return false, parseVec3, out.start, "cubeGrid start position");
+  PARSE_OR(return false, parseVec3, out.rot, "cubeGrid rotation");
+  PARSE_OR(return false, parseVec3, out.size, "cubeGrid scale");
+  return parseColour(p, out.colour, out.colourMode);
 } 
 
 bool parseMaze(const unsigned char*& p, ParsedMaze& out) {
   out.layout.clear();
-  PARSE_STRING_OR(return false, p, out.mazeName, 64, "maze name");
+  PARSE_STRING_OR(return false, p, out.name, 64, "maze name");
   PARSE_OR(return false, parseFloat, out.spacing, "maze spacing");
   PARSE_OR(return false, parseVec3, out.pos, "maze position");
   PARSE_OR(return false, parseVec3, out.rot, "maze rotation");
@@ -108,30 +108,28 @@ bool parseMaze(const unsigned char*& p, ParsedMaze& out) {
   PARSE_STRING_OR(return false, p, out.exitType, 64, "exit mesh");
   PARSE_STRING_OR(return false, p, out.exteriorWallType, 64, "exterior wall mesh");
   PARSE_OR(return false, parseVec3, out.baseRot, "maze base wall rotation");
-  PARSE_STRING_OR(return false, p, out.layoutName, 64, "layout name");
   return true;
 }
 static bool parseMazeLayoutRow(const unsigned char* p, const unsigned char* lineEnd, std::vector<bool>& outRow) {
   outRow.clear();
   for (const char* s = reinterpret_cast<const char*>(p); s < reinterpret_cast<const char*>(lineEnd); ++s) {
     const char c = *s;
-    if      (c == '.')      outRow.push_back(true);
-    else if (c == 'X')      outRow.push_back(false);
-		else return error("SceneParser", "parseMazeLayoutRow", "Invalid character" + std::string(1, c));
+    if (c == '.')      outRow.push_back(true);
+    else if (c == 'X') outRow.push_back(false);
+    else return error("SceneParser", "parseMazeLayoutRow", "Invalid character" + std::string(1, c));
   }
-	return outRow.empty() ? error("SceneParser", "parseMazeLayoutRow", "Empty row found") : true;
+  return outRow.empty() ? error("SceneParser", "parseMazeLayoutRow", "Empty row found") : true;
 }
-bool parseMazeData(const unsigned char*& p, ParsedMaze& maze) {
+bool parseMazeData(const unsigned char*& p, std::string& mazeName, std::vector<std::vector<bool>>& layout) {
   p = skipWhitespace(p);
-  PARSE_STRING_OR(return false, p, maze.layoutName, 64, "layout name");
-  maze.layout.clear();
+  PARSE_STRING_OR(return false, p, mazeName, 64, "Maze name");
+  layout.clear();
 
-  bool found = false;
   while (*p) {
     const unsigned char* nextLine = skipToNextLine(p);
     const unsigned char* endLine = trimEOL(p, nextLine);
 
-    if (endLine == p) {
+    if (endLine <= p) {
       p = nextLine;
       continue;
     }
@@ -139,18 +137,16 @@ bool parseMazeData(const unsigned char*& p, ParsedMaze& maze) {
     unsigned char token[64]{};
     const unsigned char* peek = p;
     if (parseToken(peek, token, sizeof(token)))
-      if (strcmp(reinterpret_cast<const char*>(token), maze.layoutName.c_str()) == 0)
-        found = true;
-
-    if (!found) {
-      std::vector<bool> row;
-      if (!parseMazeLayoutRow(p, endLine, row)) return false;
-      maze.layout.push_back(row);
-    }
-
+      if (strcmp(reinterpret_cast<const char*>(token), mazeName.c_str()) == 0) {
+        p = nextLine;
+        break;
+      }
+        
+    std::vector<bool> row;
+    if (!parseMazeLayoutRow(p, endLine, row)) return false;
+    layout.push_back(row);
     p = nextLine;
-    if (found) break;
   }
 
-	return maze.layout.empty() ? error("SceneParser", "parseMazeData", "No maze layout data found") : true;
+  return layout.empty() ? error("SceneParser", "parseMazeData", "No maze layout data found") : true;
 }

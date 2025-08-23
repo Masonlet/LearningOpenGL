@@ -3,7 +3,7 @@
 
 #include "core/modelControls.hpp"
 
-static void processObject(InputManager* input, Vec3& pos, Vec3& rot, Vec3& scale, float deltaTime){
+static void processObject(InputManager* input, Vec3& pos, Vec3& rot, Vec3& size, float deltaTime){
   if (input->IsKeyDown(GLFW_KEY_UP))     pos.z += deltaTime;
   if (input->IsKeyDown(GLFW_KEY_DOWN))   pos.z -= deltaTime;
   if (input->IsKeyDown(GLFW_KEY_LEFT))   pos.x += deltaTime;
@@ -12,8 +12,8 @@ static void processObject(InputManager* input, Vec3& pos, Vec3& rot, Vec3& scale
   if (input->IsKeyDown(GLFW_KEY_PERIOD)) pos.y -= deltaTime;
 
   const float scaleDelta = 0.02f;
-  if (input->IsKeyDown(GLFW_KEY_E)) scale *= (1.0f + scaleDelta);
-  if (input->IsKeyDown(GLFW_KEY_Q)) scale *= (1.0f - scaleDelta);
+  if (input->IsKeyDown(GLFW_KEY_E)) size *= (1.0f + scaleDelta);
+  if (input->IsKeyDown(GLFW_KEY_Q)) size *= (1.0f - scaleDelta);
 
   const float rotationSpeed = 45.0f * deltaTime;
   if (input->IsKeyDown(GLFW_KEY_R)) rot.x += rotationSpeed;
@@ -31,12 +31,9 @@ void handleModelInput(InputManager* input, float deltaTime, std::map<std::string
   std::advance(it, currentModel);
 
   ModelData& instance = it->second;
-  processObject(input, instance.pos, instance.rot, instance.scale, deltaTime);
+  processObject(input, instance.pos, instance.rot, instance.size, deltaTime);
 
-  instance.modelMatrix = Mat4::modelMatrix({
-    .pos = {instance.pos, 0.0f},
-    .rot = instance.rot,
-    .scale = instance.scale
+  instance.modelMatrix = Mat4::modelMatrix({.pos = {instance.pos, 0.0f}, .rot = instance.rot, .size = instance.size
   });
 }
 

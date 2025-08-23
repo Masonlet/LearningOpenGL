@@ -3,17 +3,6 @@
 
 #include <cmath>
 
-Camera::Camera() :
-  type{ 0 },
-  moveSpeed{ MOVE_SPEED }, mouseSpeed{ CAMERA_SPEED }, moveDistance{ 0 },
-  pos{ INITIAL_POS }, front{ INITIAL_TARGET }, up{ WORLD_UP }, 
-  yaw{ DEFAULT_YAW }, pitch{ DEFAULT_PITCH }, 
-  lastX{ 0 }, lastY{ 0 }, 
-  fov{ DEFAULT_FOV }, nearPlane{NEAR_PLANE}, farPlane{FAR_PLANE},
-  paused{ false } {
-  front = front.normalized();
-}
-
 Vec3 Camera::GetRight() const {
   Vec3 right = front.cross(WORLD_UP);
   if (right.length() < 0.00001f) return { 1.0f, 0.0f, 0.0f };
@@ -26,25 +15,25 @@ Mat4 Camera::LookAt() const {
   const Vec3 camUp   = right.cross(forward);
 
   Mat4 view{};
-  view.data[0] = right.x;
-  view.data[1] = camUp.x;
-  view.data[2] = -forward.x;
-  view.data[3] = 0.0f;
+  view.models[0] = right.x;
+  view.models[1] = camUp.x;
+  view.models[2] = -forward.x;
+  view.models[3] = 0.0f;
 
-  view.data[4] = right.y;
-  view.data[5] = camUp.y;
-  view.data[6] = -forward.y;
-  view.data[7] = 0.0f;
+  view.models[4] = right.y;
+  view.models[5] = camUp.y;
+  view.models[6] = -forward.y;
+  view.models[7] = 0.0f;
 
-  view.data[8] = right.z;
-  view.data[9] = camUp.z;
-  view.data[10] = -forward.z;
-  view.data[11] = 0.0f;
+  view.models[8] = right.z;
+  view.models[9] = camUp.z;
+  view.models[10] = -forward.z;
+  view.models[11] = 0.0f;
 
-  view.data[12] = -right.dot(pos);
-  view.data[13] = -camUp.dot(pos);
-  view.data[14] = forward.dot(pos);
-  view.data[15] = 1.0f;
+  view.models[12] = -right.dot(pos);
+  view.models[13] = -camUp.dot(pos);
+  view.models[14] = forward.dot(pos);
+  view.models[15] = 1.0f;
   return view;
 }
 
@@ -52,14 +41,20 @@ Mat4 Camera::Perspective(const float aspect) const {
   const float tanHalfFov = tanf(radians(fov) / 2.0f);
 
   Mat4 projection{};
-  projection.data[0]  =   1.0f / (aspect * tanHalfFov);
-  projection.data[5]  =   1.0f / tanHalfFov;
-  projection.data[10] = -(farPlane + nearPlane) / (farPlane - nearPlane);
-  projection.data[11] =  -1.0f;
-  projection.data[14] = -(2.0f * farPlane * nearPlane) / (farPlane - nearPlane);
-  projection.data[15] =   0.0f;
+  projection.models[0]  =   1.0f / (aspect * tanHalfFov);
+  projection.models[5]  =   1.0f / tanHalfFov;
+  projection.models[10] = -(farPlane + nearPlane) / (farPlane - nearPlane);
+  projection.models[11] =  -1.0f;
+  projection.models[14] = -(2.0f * farPlane * nearPlane) / (farPlane - nearPlane);
+  projection.models[15] =   0.0f;
   return projection;
 };
+
+void Camera::print() const {
+  printf("\nPos: %f:%f:%f\n", pos.x, pos.y, pos.z);
+  printf("Front: %f:%f:%f\n", front.x, front.y, front.z);
+  printf("Pitch: %f\n\n", pitch);
+}
 
 void Camera::setFov(const float delta) {
   fov += delta;
@@ -69,10 +64,10 @@ void Camera::setFov(const float delta) {
 
 void Camera::processInputs(InputManager* input, float deltaTime) {
   switch (type) {
-  case 0: 
+  case 0:
     updateFreeCam(input, deltaTime);
     break;
-  case 1: 
+  case 1:
     updateDungeonCam(input, deltaTime);
     break;
   case 2:
@@ -93,7 +88,7 @@ void Camera::updateDungeonCam(InputManager* input, float deltaTime) {
   yaw = std::round(yaw / 90.0f) * 90.0f;
   yaw = fmod(yaw + 360.0f, 360.0f);
 
-  front = Vec3{cos(radians(yaw)), 0.0f, sin(radians(yaw))}.normalized();
+  front = Vec3{ cos(radians(yaw)), 0.0f, sin(radians(yaw)) }.normalized();
   if (input->IsKeyPressed(GLFW_KEY_W)) pos += front * moveDistance;
   if (input->IsKeyPressed(GLFW_KEY_S)) pos -= front * moveDistance;
 
@@ -120,6 +115,7 @@ void Camera::updateModernCam(InputManager* input, float deltaTime) {
     pos += moveDir * moveSpeed * deltaTime;
   }
 }
+
 void Camera::processKeyboard(InputManager* input, const float deltaTime) {
   if (input->IsKeyDown(GLFW_KEY_W)) moveForward(deltaTime);
   if (input->IsKeyDown(GLFW_KEY_A)) moveLeft(deltaTime);
@@ -151,10 +147,5 @@ void Camera::processMouse(InputManager* input) {
   up = right.cross(front).normalized();
 }
 
-void Camera::print() const {
-  printf("\nPos: %f:%f:%f\n", pos.x, pos.y, pos.z);
-  printf("Front: %f:%f:%f\n", front.x, front.y, front.z);
-  printf("Pitch: %f\n\n", pitch);
-}
 
 

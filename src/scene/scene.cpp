@@ -1,22 +1,181 @@
+#include <glad/glad.h>
 #include "scene/scene.hpp"
+#include "utils/log.hpp"
+#include "math/constants.hpp"
 
-Scene::~Scene() {
-  data.clear();
-}
-
-bool Scene::addInstance(const ModelData& modelData) {
-  if (modelData.name.empty()) {
-    printf("[warn] instance name is empty\n");
-    return false;
-	}
+bool Scene::addModel(const ModelData& modelData) {
+	if (modelData.name.empty()) return error("Scene", "addModel", "model name is empty");
 
 	const std::string name = modelData.name;
+	if (models.find(name) != models.end()) return error("Scene", "addModel", "Instance name " + name + " already used.");
 
-  if (data.find(name) != data.end()) {
-    printf("[warn] instance name already used: %s\n", name.c_str());
-    return false;
-  }
-
-	data.emplace(name, modelData);
+	models.emplace(name, modelData);
   return true;
+}
+
+bool Scene::addCamera(const Camera& data) {
+	if (data.name.empty()) return error("Scene", "addCamera", "camera name is empty");
+
+	const std::string name = data.name;
+	if (cameras.find(name) != cameras.end()) return error("Scene", "addCamera", "camera name already used: " + name);
+
+	cameras.emplace(name, data);
+	if (activeCam.empty()) activeCam = name;
+	return true;
+}
+Camera* Scene::getActiveCamera() {
+	std::map<std::string, Camera>::iterator it = cameras.find(activeCam);
+	if (it == cameras.end()) return nullptr;
+	return &it->second;
+}
+void Scene::setActiveCamera(unsigned int camIndex) {
+	if (cameras.empty()) return;
+	if (camIndex >= cameras.size()) camIndex = cameras.size() - 1;
+	std::map<std::string, Camera>::const_iterator cam = cameras.begin();
+	std::advance(cam, camIndex);
+	activeCam = cam->first;
+}
+
+bool Scene::addLight(const Light& data) {
+	if (data.name.empty()) return error("Scene", "addLight", "light name is empty");
+
+	const std::string name = data.name;
+	if (lights.find(name) != lights.end()) return error("Scene", "addLight", "light name already used: " + name);
+
+	lights.emplace(name, data);
+	return true;
+}
+Light* Scene::getLightByName(std::string name) {
+	std::map<std::string, Light>& m = getLights();
+	std::map<std::string, Light>::iterator it = m.find(name);
+	if (it == m.end()) {
+		debugLog("getLightByName", "Light " + name + " not found.");
+		return nullptr; 
+	}
+	return &it->second;
+}
+void Scene::updateLights(int shaderProgram) {
+	std::map<std::string, Light>& lights = getLights();
+
+	unsigned int i{ 0 };
+	for (std::map<std::string, Light>::iterator it = lights.begin(); it != lights.end() && i < NUMBEROFLIGHTS; ++it, ++i) {
+		Light& light = it->second;
+		std::string base = "theLights[" + std::to_string(i) + "].";
+		light.position_UL    = glGetUniformLocation(shaderProgram, (base + "position").c_str());
+		light.diffuse_UL     = glGetUniformLocation(shaderProgram, (base + "diffuse").c_str());
+		light.attenuation_UL = glGetUniformLocation(shaderProgram, (base + "attenuation").c_str());
+		light.direction_UL   = glGetUniformLocation(shaderProgram, (base + "direction").c_str());
+		light.param1_UL      = glGetUniformLocation(shaderProgram, (base + "param1").c_str());
+		light.param2_UL      = glGetUniformLocation(shaderProgram, (base + "param2").c_str());
+	}
+}
+void Scene::updateLightUniforms(int shaderProgram) {
+	std::map<std::string, Light>& lights = getLights();
+
+	for (std::pair<std::string, Light> it: lights) {
+		Light& light = it.second;
+		if (light.position_UL != -1)    glUniform4f(light.position_UL, light.pos.x, light.pos.y, light.pos.z, 1.0f);
+		if (light.diffuse_UL != -1)     glUniform4f(light.diffuse_UL, light.diffuse.r, light.diffuse.g, light.diffuse.b, light.diffuse.a);
+		if (light.attenuation_UL != -1) glUniform4f(light.attenuation_UL, light.attenuation.r, light.attenuation.g, light.attenuation.b, light.attenuation.a);
+		if (light.direction_UL != -1)   glUniform4f(light.direction_UL, light.direction.r, light.direction.g, light.direction.b, light.direction.a);
+		if (light.param1_UL != -1)      glUniform4f(light.param1_UL, static_cast<float>(light.type), light.param1.x, light.param1.y, 0.0f);
+		if (light.param2_UL != -1)      glUniform4f(light.param2_UL, light.enabled, 0.0f, 0.0f, 0.0f);
+	}
+}
+
+bool Scene::addTexture(const BMPTexture& data) {	
+	if (data.name.empty())                    return error("Scene", "addTexture", "texture name is empty");
+	if (data.index == 0)                      return error("Scene", "addTexture", "texture GL id is 0");
+	if (data.slot >= ModelData::NUM_TEXTURES) return error("Scene", "addTexture", "texture slot " + std::to_string(data.slot) + " out of range");
+	
+	const std::string name = data.name;
+ 	if (textures.find(name) != textures.end()) return error("Scene", "addTexture", "texture file already exists: " + name);
+
+	textures.emplace(name, data);
+	return true;	
+}
+
+unsigned int Scene::getTextureIDFromName(const std::string& textureFileName) {
+	std::map<std::string, BMPTexture>::iterator it = textures.find(textureFileName);
+	return (it == textures.end()) ? 0 : static_cast<unsigned>(it->second.index);
+}
+bool Scene::bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix) {
+	if (slot >= ModelData::NUM_TEXTURES) return error("Scene", "bindTextureToModel", "slot out of range: " + std::to_string(slot));
+
+	std::map<std::string, ModelData>::iterator  mIt = models.find(modelName);
+	if (mIt == models.end()) return error("Scene", "bindTextureToModel", "model not found: " + modelName);
+
+	ModelData& data = mIt->second;
+	if (textureName.empty() || mix <= 0.0f) {
+		data.textureNames[slot].clear();
+		data.textureMixRatio[slot] = 0.0f;
+
+		bool any = false;
+		for (unsigned i = 0; i < ModelData::NUM_TEXTURES; ++i)
+			if (!data.textureNames[i].empty()) { 
+				any = true; 
+				break; 
+			}
+		data.useTextures = any;
+
+		debugLog("Scene", "unbind texture: " + modelName + "[slot " + std::to_string(slot) + "]", true);
+		return true;
+	}
+
+	std::map<std::string, BMPTexture>::iterator tIt = textures.find(textureName);
+	if (tIt == textures.end()) return error("Scene", "bindTextureToModel", "texture not found: " + textureName);
+
+	if (mix < 0.0f) mix = 0.0f;
+	if (mix > 1.0f) mix = 1.0f;
+
+	data.useTextures = true;
+	data.textureNames[slot] = textureName;
+	data.textureMixRatio[slot] = mix;
+
+	debugLog("Scene", "bind texture: " + textureName + " to " + modelName +" [slot " + std::to_string(slot) + "], mix=" + std::to_string(mix), true);
+	return true;
+}
+
+bool Scene::addGrid(const Grid& data) {
+	if (data.name.empty()) return error("Scene", "addGrid", "grid name is empty");
+
+	const std::string name = data.name;
+	if (grids.find(name) != grids.end()) return error("Scene", "addGrid", "grid name already used: " + name);
+
+	grids.emplace(name, data);
+	return true;
+}
+
+bool Scene::addTriangle(const Triangle& data) {
+	if (data.name.empty()) return error("Scene", "addTriangle", "triangle name is empty");
+
+	const std::string name = data.name;
+	if (triangles.find(name) != triangles.end()) return error("Scene", "addTriangle", "triangle name already used: " + name);
+
+	triangles.emplace(name, data);
+	return true;
+}
+
+bool Scene::addSquare(const Square& data) {
+	if (data.name.empty()) return error("Scene", "addSquare", "square name is empty");
+
+	const std::string name = data.name;
+	if (squares.find(name) != squares.end()) return error("Scene", "addSquare", "square name already used: " + name);
+
+	squares.emplace(name, data);
+	return true;
+}
+
+bool Scene::addMaze(const ParsedMaze& data) {
+	if (data.name.empty()) return error("Scene", "addMaze", "maze name is empty");
+
+	const std::string name = data.name;
+	if (mazes.find(name) != mazes.end()) return error("Scene", "addMaze", "maze name already used: " + name);
+
+	mazes.emplace(name, data);
+	return true;
+}
+ParsedMaze* Scene::getMazeFromName(const std::string& name) {
+	std::map<std::string, ParsedMaze>::iterator it = mazes.find(name);
+	return (it == mazes.end()) ? nullptr : &it->second;
 }
