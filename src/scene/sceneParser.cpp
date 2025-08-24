@@ -21,8 +21,8 @@ bool parseLight(const unsigned char*& p, Light& out) {
   PARSE_OR(return false, parseVec3, out.pos, "light position");
   PARSE_OR(return false, parseVec4, out.diffuse, "light diffuse");
   PARSE_OR(return false, parseVec4, out.attenuation, "light attenuation");
-  PARSE_OR(return false, parseVec4, out.direction, "light direction");
-  PARSE_OR(return false, parseVec3, out.param1, "light param1");
+  PARSE_OR(return false, parseVec3, out.direction, "light direction");
+  PARSE_OR(return false, parseVec2, out.param1, "light param1");
   return true;
 }
 bool parseCamera(const unsigned char*& p, Camera& out) {

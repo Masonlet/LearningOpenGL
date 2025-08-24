@@ -15,7 +15,9 @@ struct Light {
 };
 
 uniform Light theLights[NUMBEROFLIGHTS];
-uniform vec3 eyeLocation;
+uniform int lightCount;
+
+uniform vec3 eyePos;
 uniform vec4 vertSpecular;
 
 uniform bool bUseTextures; 
@@ -55,10 +57,12 @@ void main() {
 		vec4 tex02RGBA = texture( textSampler2D_02, vertTextCoords.xy );
 		vec4 tex03RGBA = texture( textSampler2D_03, vertTextCoords.xy );
 
-		finalTextRGBA =   tex00RGBA * texMixRatios.x
-						+ tex01RGBA * texMixRatios.y
-						+ tex02RGBA * texMixRatios.z
-						+ tex03RGBA * texMixRatios.w;
+	    vec4 texMix = tex00RGBA * texMixRatios.x
+					+ tex01RGBA * texMixRatios.y
+					+ tex02RGBA * texMixRatios.z
+					+ tex03RGBA * texMixRatios.w;
+
+        finalTextRGBA = vec4(texMix.rgb * finalTextRGBA.rgb, texMix.a * finalTextRGBA.a);
 	}
 
 	if(!bLighted){
@@ -73,9 +77,9 @@ void main() {
 vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular) {
 	vec3 light = vec3(0.0);
 	vec3 n = normalize(vertexNormal);
-	vec3 v = normalize(eyeLocation - vertexWorldPos);
+	vec3 v = normalize(eyePos - vertexWorldPos);
 	
-	for (int i = 0; i < NUMBEROFLIGHTS; i++) {	
+	for (int i = 0; i < lightCount; i++) {	
 		if (theLights[i].param2.x == 0.0) continue;
 	
 		int type = int(theLights[i].param1.x);
@@ -85,8 +89,9 @@ vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 ve
 		// Simulate sunlight. There's ONLY direction, no position -Almost always, there's only 1 of these in a scene, Cheapest light to calculate. 
 		if (type == DIRECTIONAL_LIGHT_TYPE)	{
 			float NdotL = max(0.0, dot(n, -dir));	
+			if(NdotL <= 0.0) continue;
 			if(NdotL > 0.0) { 
-				vec3 lightContrib = theLights[i].diffuse.rgb * NdotL;
+				vec3 lightContrib = theLights[i].diffuse.rgb * theLights[i].diffuse.a * NdotL;
 				light.rgb += ( vertexMaterialColour.rgb * lightContrib /*+ (materialSpecular.rgb * lightSpecularContrib.rgb);*/);
 			}
 
@@ -99,9 +104,9 @@ vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 ve
 		float NdotL = max(0.0, dot(lightVector, n));	 
 
 		// Diffuse
-		vec3 lightDiffuseContrib = NdotL * theLights[i].diffuse.rgb;
+		vec3 lightDiffuseContrib = NdotL * theLights[i].diffuse.rgb * theLights[i].diffuse.a;
 		
-		// Specular -- To simplify, we are NOT using the light specular value, just the object’s.
+		// Specular -- NOT using the light specular value, just the object’s.
 		vec3 reflectVector = reflect(-lightVector, n);
 		float RdotV = max(0.0, dot(v, reflectVector));
 		vec3 lightSpecularContrib = vec3(pow(RdotV, vertexSpecular.w)); //* theLights[lightIndex].Specular.rgb

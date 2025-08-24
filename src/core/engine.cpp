@@ -11,12 +11,13 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
   if (!windowManager.createWindow(width, height, title)) return false;
   glfwSetWindowUserPointer(windowManager.getWindow()->getGLFWwindow(), this);
 
-  debugLog("Engine", "OpenGL Info", true);
-	debugLog("Engine", "Version: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))), true);
-	debugLog("Engine", "Vendor: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR))), true);
-	debugLog("Engine", "Renderer: " + std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER))), true);
-
   setupShaders();
+
+  constexpr float bgR = 0.2f;
+  constexpr float bgG = 0.2f;
+  constexpr float bgB = 0.2f;
+  constexpr float bgA = 1.0f;
+  glClearColor(bgR, bgG, bgB, bgA);
 
   return true;
 }
@@ -34,36 +35,30 @@ bool Engine::setupShaders() {
   if (currentProgram == 0) 
 		return error("Engine", "setupShaders", "Shader program ID is 0 after creation");
   
-  renderer.setProgram(currentProgram);
-
-  constexpr float bgR = 0.2f;
-  constexpr float bgG = 0.2f;
-  constexpr float bgB = 0.2f;
-  constexpr float bgA = 1.0f;
-  glClearColor(bgR, bgG, bgB, bgA);
+  renderer.setProgram(currentProgram); // Should this be set here?
 
 	debugLog("setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);
   return true;
 }
 
-void Engine::tick(const float currenttime) {
+void Engine::tick(const float currentTime) {
   if (lastTime == 0.0f) {
-    lastTime = currenttime;
+    lastTime = currentTime;
     deltaTime = 0.0f;
     return;
   }
 
-  float rawdelta = currenttime - lastTime;
-  constexpr float max_delta = 0.1f;
-  constexpr float smoothing_factor = 0.9f;
+  float rawDelta = currentTime - lastTime;
+  constexpr float maxDelta = 0.1f;
+  constexpr float smoothingFactor = 0.9f;
 
-  if (rawdelta > max_delta) {
-		debugLog("Tick", "deltaTime clamped to " + std::to_string(max_delta) + " (was " + std::to_string(rawdelta) + ")", true);
-    rawdelta = max_delta;
+  if (rawDelta > maxDelta) {
+		debugLog("Tick", "deltaTime clamped to " + std::to_string(maxDelta) + " (was " + std::to_string(rawDelta) + ")", true);
+    rawDelta = maxDelta;
   }
 
-  lastTime = currenttime;
-  deltaTime = smoothing_factor * deltaTime + (2.0f - smoothing_factor) * rawdelta;
+  lastTime = currentTime;
+  deltaTime = smoothingFactor * deltaTime + (2.0f - smoothingFactor) * rawDelta;
 }
   
 bool Engine::loadSceneMeshes() {
@@ -74,18 +69,18 @@ bool Engine::loadSceneMeshes() {
 	debugLog("loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   const unsigned int shaderProgramID = renderer.getProgram();
   if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
+  // Could make this check currentProgram and set it here?
 
 	std::map<std::string, ModelData>& modelData = sceneManager.scene.getModels();
 	std::map<std::string, ModelData>::iterator it = modelData.begin();
   for(; it != modelData.end(); ++it) {
     ModelData& model = it->second;
- 
-    if (!meshManager.findMesh(model.meshPath)) {
-      if(!meshManager.loadMeshFile(model.meshPath, shaderProgramID)) return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + model.meshPath);
-      if(!meshManager.findMesh(model.meshPath)) return error("Engine", "loadSceneMeshes", "Failed to find mesh after creation: " + model.meshPath);
-    }
+    if (!meshManager.findMesh(model.meshPath)) 
+      if(!meshManager.loadMeshFile(model.meshPath, shaderProgramID)) 
+        return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + model.meshPath);
 	}
 
+  glUniform1i(renderer.getLightCountLocation(), sceneManager.scene.getLightCount());
   sceneManager.scene.updateLights(currentProgram);
 	debugLog("loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);
   return true;
@@ -93,10 +88,11 @@ bool Engine::loadSceneMeshes() {
 
 void Engine::run() {
   windowManager.switchActiveWindowVisibiltiy();
+  if(sceneManager.scene.getActiveCamera() == nullptr) sceneManager.scene.setActiveCamera(0);
   while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
     inputManager.Update(windowManager.getWindow()->getGLFWwindow());
-    sceneManager.scene.getActiveCamera()->processInputs(&inputManager, glfwGetTime());
+    sceneManager.scene.getActiveCamera()->processInputs(&inputManager, deltaTime);
     handleModelInput(&inputManager, deltaTime, sceneManager.scene.getModels(), currentModel);
     renderFrame();
 
@@ -117,7 +113,7 @@ void Engine::renderFrame() {
 
   // Draw Frame
   ModelData* skyBox{ nullptr };
-  std::vector<ModelData> transparentInstances;
+  std::vector<ModelData*> transparentInstances;
   std::map<std::string, ModelData>& instances = sceneManager.scene.getModels();
   for (std::map<std::string, ModelData>::iterator it = instances.begin(); it != instances.end(); ++it) {
     ModelData& instance = it->second;
@@ -125,27 +121,27 @@ void Engine::renderFrame() {
     instance.modelMatrix = Mat4::modelMatrix({ { instance.pos, 0.0f }, instance.rot, instance.size });
 
     if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, sceneManager, instance, view, projection);
-    else                           transparentInstances.push_back(instance);
+    else                           transparentInstances.push_back(&instance);
   }
 
   for (size_t i = 0; i < transparentInstances.size(); ++i) {
     for (size_t j = 0; j < transparentInstances.size() - i - 1; ++j) {
-      const Vec3& a = transparentInstances[j].pos;
-      const Vec3& b = transparentInstances[j + 1].pos;
+      const Vec3& a = transparentInstances[j]->pos;
+      const Vec3& b = transparentInstances[j + 1]->pos;
 
       float distA = (a.x - eye.x) * (a.x - eye.x) + (a.y - eye.y) * (a.y - eye.y) + (a.z - eye.z) * (a.z - eye.z);
       float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
 
       if (distA < distB) {
-        ModelData& temp = transparentInstances[j];
+        ModelData* temp = transparentInstances[j];
         transparentInstances[j] = transparentInstances[j + 1];
         transparentInstances[j + 1] = temp;
       }
     }
   }
 
-  for (ModelData& instance : transparentInstances) 
-    renderer.drawModel(meshManager, sceneManager, instance, view, projection);
+  for (ModelData* instance : transparentInstances) 
+    renderer.drawModel(meshManager, sceneManager, *instance, view, projection);
 
   glUniform1i(renderer.getIsSkyboxLocation(), GL_TRUE);
   if (skyBox) {

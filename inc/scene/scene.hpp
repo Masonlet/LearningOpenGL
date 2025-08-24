@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/log.hpp"
 #include "objects/modelData.hpp"
 #include "objects/light.hpp"
 #include "core/camera.hpp"
@@ -13,16 +14,23 @@ public:
   inline void setSceneName(const std::string& sceneName) { name = sceneName; }
   std::string& getSceneName() { return name; }
 
-  bool addModel(const ModelData& data);
+  template <typename T, typename MapT>
+  bool addObject(MapT& map, const T& data, const char* typeName) {
+    if (data.name.empty()) return error("Scene", "addEntity", std::string(typeName) + " name is empty");
+
+    std::pair<typename MapT::iterator, bool> res = map.emplace(data.name, data);
+    if (!res.second) return error("Scene", "addObject", std::string(typeName) + " name already used: " + data.name);
+
+    return true;
+  }
+
   std::map<std::string, ModelData>& getModels() { return models; }
 
-  bool addCamera(const Camera& data);
 	std::map<std::string, Camera>& getCameras() { return cameras; }
 	size_t getCameraCount() { return cameras.size(); }
   Camera* getActiveCamera();
   void setActiveCamera(unsigned int camIndex);
 
-  bool addLight(const Light& data);
   std::map<std::string, Light>& getLights() { return lights; }
   size_t getLightCount() { return lights.size(); }
   Light* getLightByName(std::string name);
@@ -34,16 +42,10 @@ public:
   unsigned int getTextureIDFromName(const std::string& textureFileName);
   bool bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix);
 
-  bool addGrid(const Grid& data);
 	std::map<std::string, Grid>& getGrids() { return grids; }
-
-	bool addTriangle(const Triangle& data);
 	std::map<std::string, Triangle>& getTriangles() { return triangles; }
-
-  bool addSquare(const Square& data);
 	std::map<std::string, Square>& getSquares() { return squares; }
 
-  bool addMaze(const ParsedMaze& data);
   std::map<std::string, ParsedMaze>& getMaze() { return mazes; }
   ParsedMaze* getMazeFromName(const std::string& name);
 

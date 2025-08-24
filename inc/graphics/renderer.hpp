@@ -13,6 +13,7 @@ public:
 	unsigned int getProgram() const { return program; }
 	int getIsSkyboxLocation() const { return modelIsSkyboxLocation; }
 	int getSkyboxTextureLocation() const { return modelSkyboxTextureLocation; }
+	int getLightCountLocation() const { return lightCountLocation; }
 
 	void updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const;
 
@@ -27,5 +28,5 @@ private:
 	int modelLocation{ -1 }, modelViewLocation{ -1 }, modelProjectionLocation{ -1 };
 	int modelInverseTransposeLocation{ -1 };
 	int modelSpecularLocation{ -1 };
-	int modelSkyboxTextureLocation{ -1 };
+	int modelSkyboxTextureLocation{ -1 }, eyeLocation{ -1 }, lightCountLocation{ -1 };
 };

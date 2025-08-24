@@ -15,15 +15,12 @@ int main() {
 #endif
 	
 	Engine engine;
-	if (!engine.initialize(1920, 1200, "Test"))
+	if (!engine.initialize(1920, 1200, "Test")) 
 		return -1;
-
-	if (!engine.setScene("SceneTest"))
+	if (!engine.setScene("SceneTest"))          
 		return -1;
-
-	if (!engine.loadSceneMeshes())
+	if (!engine.loadSceneMeshes())              
 		return -1;
-		
+	
 	engine.run();
-	return 0;
 }

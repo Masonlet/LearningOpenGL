@@ -4,12 +4,17 @@
 #include <cstdio>
 
 Window::Window(const unsigned int width, const unsigned int height, const char* title): width(width), height(height) {
-	debugLog("Window", "Create strat time: " + std::to_string(glfwGetTime()), true);
+	debugLog("Window", "Create start time: " + std::to_string(glfwGetTime()), true);
 
 	if (!createWindow(width, height, title)) return;
 	if (!initGLAD()) return;
+
 	setupGLState();
 
+	debugLog("OpenGL", "OpenGL Info", true);
+	debugLog("OpenGL", "Version: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))), true);
+	debugLog("OpenGL", "Vendor: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR))), true);
+	debugLog("OpenGL", "Renderer: " + std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER))), true);
 	debugLog("Window", "Create finish time: " + std::to_string(glfwGetTime()), true);
 }
 

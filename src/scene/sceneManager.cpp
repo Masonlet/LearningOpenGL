@@ -99,8 +99,8 @@ bool SceneManager::saveTxtScene() {
 			<< light.pos.x << " " << light.pos.y << " " << light.pos.z << ", "
 			<< light.diffuse.x << " " << light.diffuse.y << " " << light.diffuse.z << " " << light.diffuse.w << ", "
 			<< light.attenuation.x << " " << light.attenuation.y << " " << light.attenuation.z << " " << light.attenuation.w << ", "
-			<< light.direction.x << " " << light.direction.y << " " << light.direction.z << " " << light.direction.w << ", "
-			<< light.param1.y << " " << light.param1.z << " " << "\n";
+			<< light.direction.x << " " << light.direction.y << " " << light.direction.z << ", "
+			<< light.param1.y << " " << "\n";
 	}
 
 	return true;
@@ -172,17 +172,17 @@ bool SceneManager::processSceneLine(const unsigned char*& p) {
 bool SceneManager::handleModelLine(const unsigned char*& p) {
 	ModelData model;
 	PARSE_OR(return false, parseModel, model, "parse model");
-	return scene.addModel(model) ? true : error("SceneManager", "handleModelLine", "Unable to add model: " + model.name);
+	return scene.addObject(scene.getModels(), model, "model") ? true : error("SceneManager", "handleModelLine", "Unable to add model: " + model.name);
 }
 bool SceneManager::handleLightLine(const unsigned char*& p) {
 	Light light;
 	PARSE_OR(return false, parseLight, light, "parse light");
-	return scene.addLight(light) ? true : error("SceneManager", "handleLightLine", "Unable to add light: " + light.name);
+	return scene.addObject(scene.getLights(), light, "light") ? true : error("SceneManager", "handleLightLine", "Unable to add light: " + light.name);
 }
 bool SceneManager::handleCameraLine(const unsigned char*& p) {
 	Camera camera;
 	PARSE_OR(return false, parseCamera, camera, "parse camera");
-	return scene.addCamera(camera) ? true : error("SceneManager", "handleCameraLine", "Unable to add camera: " + camera.name);
+	return scene.addObject(scene.getCameras(), camera, "camera") ? true : error("SceneManager", "handleCameraLine", "Unable to add camera: " + camera.name);
 }
 bool SceneManager::handleTextureLine(const unsigned char*& p) {
 	BMPTexture texture;
@@ -204,23 +204,23 @@ bool SceneManager::handleTextureConnectionLine(const unsigned char*& p) {
 bool SceneManager::handleSquareGridLine(const unsigned char*& p) {
 	Grid grid;
 	PARSE_OR(return false, parseGrid, grid, "Failed to parse cubeGrid colour");
-	return scene.addGrid(grid) ? true : error("SceneManager", "handleSquareGridLine", "Could not create grid");
+	return scene.addObject(scene.getGrids(), grid, "squareGrid") ? true : error("SceneManager", "handleSquareGridLine", "Could not create grid");
 }
 bool SceneManager::handleCubeGridLine(const unsigned char*& p) {
 	Grid grid;
 	PARSE_OR(return false, parseGrid, grid, "Failed to parse cubeGrid colour");
-	return scene.addGrid(grid) ? true : error("SceneManager", "handleCubeGridLine", "Could not create grid");
+	return scene.addObject(scene.getGrids(), grid, "cubeGrid") ? true : error("SceneManager", "handleCubeGridLine", "Could not create grid");
 }
 bool SceneManager::handleTriangleLine(const unsigned char*& p) {
 	Triangle triangle{};
 	PARSE_OR(return false, parseTriangle, triangle, "Failed to parse triangle line");
-	return scene.addTriangle(triangle) ? true : error("SceneManager", "handleTriangleLine", "Failed to add triangle instance: " + triangle.name);
+	return scene.addObject(scene.getTriangles(), triangle, "triangle") ? true : error("SceneManager", "handleTriangleLine", "Failed to add triangle instance: " + triangle.name);
 }
 
 bool SceneManager::handleMazeLine(const unsigned char*& p) {
 	ParsedMaze maze;
 	PARSE_OR(return false, parseMaze, maze, "Failed to parse maze");
-	return scene.addMaze(maze);
+	return scene.addObject(scene.getMaze(), maze, "maze");
 }
 bool SceneManager::handleMazeData(const unsigned char*& p) {
 	std::string mazeName;
@@ -249,7 +249,7 @@ static bool addFloor(Scene& scene, const std::string& name, const std::string& m
 	d.isVisible = true;
 	d.isLighted = true;
 	d.useTextures = false;
-	if (!scene.addModel(d)) return error("SceneLoader", "addFloor", ("Failed to add " + name).c_str());
+	if (!scene.addObject(scene.getModels(), d, "model")) return error("SceneLoader", "addFloor", ("Failed to add " + name).c_str());
 	return true;
 }
 static bool addWall(Scene& scene, const ParsedMaze* maze,
@@ -291,7 +291,7 @@ static bool addWall(Scene& scene, const ParsedMaze* maze,
 		d.isLighted = true;
 		d.useTextures = false;
 
-		if (!scene.addModel(d)) return error("SceneLoader", "addWall", ("Failed to add " + instanceName).c_str());
+		if (!scene.addObject(scene.getModels(), d, "model")) return error("SceneLoader", "addWall", ("Failed to add " + instanceName).c_str());
 	}
 
 	return true;

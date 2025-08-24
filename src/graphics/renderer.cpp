@@ -25,10 +25,12 @@ void Renderer::setProgram(unsigned int program) {
 	modelSeedLocation = glGetUniformLocation(program, "seed");
 	modelIsSkyboxLocation = glGetUniformLocation(program, "bIsSkybox");
 	modelSkyboxTextureLocation = glGetUniformLocation(program, "skyboxCubeTexture");
+	eyeLocation = glGetUniformLocation(program, "eyePos");
+	lightCountLocation = glGetUniformLocation(program, "lightCount");
 }
 
 void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const {
-	glUniform3f(glGetUniformLocation(program, "eyeLocation"), eye.x, eye.y, eye.z);
+	glUniform3f(eyeLocation, eye.x, eye.y, eye.z);
 	glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, view.ptr());
 	glUniformMatrix4fv(modelProjectionLocation, 1, GL_FALSE, projection.ptr());
 }
@@ -70,13 +72,8 @@ bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, c
 	if (instance.useTextures) {
 		glUniform1i(modelUseTexturesLocation, GL_TRUE);
 
-		if (GLint mixLoc = glGetUniformLocation(program, "texMixRatios"); mixLoc >= 0) {
-			glUniform4f(mixLoc,
-				instance.textureMixRatio[0],
-				instance.textureMixRatio[1],
-				instance.textureMixRatio[2],
-				instance.textureMixRatio[3]);
-		}
+		int mixLoc = glGetUniformLocation(program, "texMixRatios");
+		if (mixLoc >= 0) glUniform4f(mixLoc, instance.textureMixRatio[0], instance.textureMixRatio[1], instance.textureMixRatio[2], instance.textureMixRatio[3]);
 
 		for (size_t i = 0; i < instance.textureNames->size(); ++i) {
 			const std::string& name = instance.textureNames[i];
@@ -85,7 +82,7 @@ bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, c
 			int textureID = sceneManager.scene.getTextureIDFromName(name);
 			if (textureID == 0) return error("Renderer", "drawModel", "Could not find texture: " + name);
 
-			glActiveTexture(GL_TEXTURE0 + i);
+			glActiveTexture(GL_TEXTURE0 + static_cast<unsigned int>(i));
 			glBindTexture(GL_TEXTURE_2D, textureID);
 		}
 	}

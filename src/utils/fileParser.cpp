@@ -6,14 +6,12 @@ static bool getFileSize(FILE* file, size_t& sizeOut) {
 	if (fseek(file, 0, SEEK_END) != 0) return error("FileParser", "getFileSize", "Failed to seek end of file");
 	
 	long size = ftell(file);
-	if (size == -1L)
-		return error("FileParser", "getFileSize", "Invalid file, ftell failed");
+	if (size == -1L) return error("FileParser", "getFileSize", "Invalid file, ftell failed");
 	
 	if (size <= 0 || static_cast<size_t>(size) > MAX_SIZE) 
 		return error("FileParser", "getFileSize", "Invalid file size");
 	
-	if (fseek(file, 0, SEEK_SET) != 0)
-		return error("FileParser", "getFileSize", "Failed to rewind file");
+	if (fseek(file, 0, SEEK_SET) != 0) return error("FileParser", "getFileSize", "Failed to rewind file");
 
 	sizeOut = static_cast<size_t>(size);
 	return true;
@@ -24,10 +22,7 @@ bool loadFile(std::string& out, const std::string& path) {
 	if (!file) return error("FileParser", "loadFile", "Failed to open file: " + path);
 
 	size_t fileSize;
-	if (!getFileSize(file, fileSize)) {
-		fclose(file); 
-		return error("FileParser", "loadFile", "Failed to get file size");
-	}
+	if (!getFileSize(file, fileSize)) return error("FileParser", "loadFile", "Failed to get file size");
 
 	out.resize(fileSize);
 
