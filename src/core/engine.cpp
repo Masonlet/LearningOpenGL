@@ -109,7 +109,6 @@ void Engine::renderFrame() {
   for (std::map<std::string, Model>::iterator it = instances.begin(); it != instances.end(); ++it) {
     Model& instance = it->second;
     if (instance.name == "skybox") skyBox = &instance;
-    instance.modelMatrix = Mat4::modelMatrix({ { instance.pos, 0.0f }, instance.rot, instance.size });
 
     if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, sceneManager, instance);
     else                           transparentInstances.push_back(&instance);
@@ -117,8 +116,8 @@ void Engine::renderFrame() {
 
   for (size_t i = 0; i < transparentInstances.size(); ++i) {
     for (size_t j = 0; j < transparentInstances.size() - i - 1; ++j) {
-      const Vec3& a = transparentInstances[j]->pos;
-      const Vec3& b = transparentInstances[j + 1]->pos;
+      const Vec4& a = transparentInstances[j]->transform.pos;
+      const Vec4& b = transparentInstances[j + 1]->transform.pos;
 
       const Vec3 eye = cam->pos;
       float distA = (a.x - eye.x) * (a.x - eye.x) + (a.y - eye.y) * (a.y - eye.y) + (a.z - eye.z) * (a.z - eye.z);
@@ -136,8 +135,7 @@ void Engine::renderFrame() {
     renderer.drawModel(meshManager, sceneManager, *instance);
 
   if (skyBox) {
-    skyBox->pos = sceneManager.scene.getActiveCamera()->pos;
-    skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->pos, 0.0f }, skyBox->rot, skyBox->size });
+    skyBox->transform.pos = { sceneManager.scene.getActiveCamera()->pos, 0.0f };
 		renderer.bindSkyboxTexture(sceneManager.scene.getTextureIDFromName(skyBox->name));
 
     renderer.setModelIsSkybox(true);

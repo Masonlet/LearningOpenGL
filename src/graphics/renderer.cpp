@@ -93,8 +93,8 @@ bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, c
 	Mesh* data;
 	if (!meshManager.getMesh(instance.meshPath, data)) return error("Renderer", "drawModel", "Could not find mesh: " + instance.meshPath);
 	 
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.models);
-	glUniformMatrix4fv(modelInverseTransposeLocation, 1, GL_FALSE, instance.modelMatrix.inverse().transpose().models);
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, Mat4::modelMatrix(instance.transform).models);
+	glUniformMatrix4fv(modelInverseTransposeLocation, 1, GL_FALSE, Mat4::modelMatrix(instance.transform).inverse().transpose().models);
 	glUniform4fv(modelSpecularLocation, 1, &instance.specular.x);
 
 	glUniform1i(modelColourModeLocation, static_cast<int>(instance.colourMode));

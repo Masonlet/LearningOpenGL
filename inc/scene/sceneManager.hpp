@@ -3,6 +3,7 @@
 #include "scene/scene.hpp"
 #include "graphics/meshManager.hpp"
 #include "utils/parserObjects.hpp"
+#include "utils/parser.hpp"
 
 struct SceneManager {
   Scene scene;
@@ -13,15 +14,14 @@ struct SceneManager {
 private:
   bool processSceneLine(const unsigned char*& p);
  
-  bool handleModelLine(const unsigned char*& p);
-  bool handleLightLine(const unsigned char*& p);
-  bool handleCameraLine(const unsigned char*& p);
+  template<typename T, typename MapT>
+  bool parseAndAddObject(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, T&), MapT& map, const char* type) {
+    T obj{};
+    if (!parseFN(p, obj)) return false;
+    return scene.addObject(map, obj, type);
+  }
 
-  bool handleTextureLine(const unsigned char*& p);
-  bool handleTextureCubeLine(const unsigned char*& p);
+  bool parseAndAddTexture(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, BMPTexture&), const char* type);
+
   bool handleTextureConnectionLine(const unsigned char*& p);
-
-  bool handleSquareGridLine(const unsigned char*& p);
-  bool handleCubeGridLine(const unsigned char*& p);
-  bool handleTriangleLine(const unsigned char*& p);
 };

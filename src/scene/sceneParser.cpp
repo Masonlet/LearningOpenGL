@@ -7,9 +7,11 @@ bool parseModel(const unsigned char*& p, Model& out) {
   PARSE_OR(return false, parseBool, out.isLighted, "model lighting");
   PARSE_STRING_OR(return false, p, out.name, 64, "model name");
   PARSE_STRING_OR(return false, p, out.meshPath, 128, "model path");
-  PARSE_OR(return false, parseVec3, out.pos, "model position");
-  PARSE_OR(return false, parseVec3, out.rot, "model rotation");
-  PARSE_OR(return false, parseVec3, out.size, "model scale");
+  Vec3 temp;
+  PARSE_OR(return false, parseVec3, temp, "model position");
+  out.transform.pos = { temp, 1.0f };
+  PARSE_OR(return false, parseVec3, out.transform.rot, "model rotation");
+  PARSE_OR(return false, parseVec3, out.transform.size, "model scale");
   if (!parseColour(p, out.colour, out.colourMode)) return false;
   PARSE_OR(return false, parseVec4, out.specular, "model specular");
   return true;
@@ -67,18 +69,22 @@ bool parseTextureConnection(const unsigned char*& p, std::string& model, unsigne
   PARSE_OR(return false, parseFloat, mix, "texture connection mix");
   return true;
 }
-bool parseTriangle(const unsigned char*& p, Triangle& out) {
+bool parseTriangle(const unsigned char*& p, Model& out) {
   PARSE_STRING_OR(return false, p, out.name, 64, "triangle name");
-  PARSE_OR(return false, parseVec3, out.pos, "triangle position");
-  PARSE_OR(return false, parseVec3, out.rot, "triangle rotation");
-  PARSE_OR(return false, parseVec3, out.size, "triangle size");
+  Vec3 temp;
+  PARSE_OR(return false, parseVec3, temp, "triangle position");
+	out.transform.pos = { temp, 1.0f };
+  PARSE_OR(return false, parseVec3, out.transform.rot, "triangle rotation");
+  PARSE_OR(return false, parseVec3, out.transform.size, "triangle size");
   return parseColour(p, out.colour, out.colourMode);
 }
 bool parseGrid(const unsigned char*& p, Grid& out) {
   PARSE_OR(return false, parseUInt, out.count, "cubeGrid count");
   PARSE_OR(return false, parseFloat, out.spacing, "cubeGrid spacing");
-  PARSE_OR(return false, parseVec3, out.start, "cubeGrid start position");
-  PARSE_OR(return false, parseVec3, out.rot, "cubeGrid rotation");
-  PARSE_OR(return false, parseVec3, out.size, "cubeGrid scale");
+  Vec3 temp;
+  PARSE_OR(return false, parseVec3, temp, "cubeGrid start position");
+  out.transform.pos = { temp, 1.0f };
+  PARSE_OR(return false, parseVec3, out.transform.rot, "cubeGrid rotation");
+  PARSE_OR(return false, parseVec3, out.transform.size, "cubeGrid scale");
   return parseColour(p, out.colour, out.colourMode);
 } 

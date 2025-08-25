@@ -15,7 +15,7 @@ void Scene::setActiveCamera(unsigned int camIndex) {
 	activeCam = cam->first;
 }
 
-Light* Scene::getLightByName(std::string name) {
+Light* Scene::getLightByName(const std::string& name) {
 	std::map<std::string, Light>& m = getLights();
 	std::map<std::string, Light>::iterator it = m.find(name);
 	if (it == m.end()) {
@@ -56,12 +56,13 @@ void Scene::updateLightUniforms(int shaderProgram) {
 bool Scene::addTexture(const BMPTexture& data) {	
 	if (data.name.empty())                    return error("Scene", "addTexture", "texture name is empty");
 	if (data.index == 0)                      return error("Scene", "addTexture", "texture GL id is 0");
-	if (data.slot >= Model::NUM_TEXTURES) return error("Scene", "addTexture", "texture slot " + std::to_string(data.slot) + " out of range");
+	if (data.slot >= Model::NUM_TEXTURES) return error("Scene", "addTexture", "Texture slot " + std::to_string(data.slot) + " out of range");
 	
 	const std::string name = data.name;
- 	if (textures.find(name) != textures.end()) return error("Scene", "addTexture", "texture file already exists: " + name);
+ 	if (textures.find(name) != textures.end()) return error("Scene", "addTexture", "Texture file already exists: " + name);
 
-	textures.emplace(name, data);
+	auto res = textures.emplace(name, data);
+	if (!res.second) return error("Scene", "addTexture", "Name already used: " + data.name);
 	return true;	
 }
 

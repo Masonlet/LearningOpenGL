@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <cstring>
 
 bool SceneManager::saveTxtScene() {
 	const std::string scenePath = std::string(ASSET_DIR) + "/scenes/" + scene.getSceneName() + ".txt";
@@ -55,9 +56,9 @@ bool SceneManager::saveTxtScene() {
 		file << "model, " 
 			<< name << ", "
 			<< instance.meshPath << ", "
-		  << instance.pos.x << " " << instance.pos.y << " " << instance.pos.z << ", "
-		  << instance.rot.x << " " << instance.rot.y << " " << instance.rot.z << ", "
-			<< instance.size.x << " " << instance.size.y << " " << instance.size.z << ", ";
+		  << instance.transform.pos.x << " " << instance.transform.pos.y << " " << instance.transform.pos.z << ", "
+		  << instance.transform.rot.x << " " << instance.transform.rot.y << " " << instance.transform.rot.z << ", "
+			<< instance.transform.size.x << " " << instance.transform.size.y << " " << instance.transform.size.z << ", ";
 
 		switch (instance.colourMode) {
 		case ColourMode::Solid: {
@@ -84,8 +85,8 @@ bool SceneManager::saveTxtScene() {
 
 	file << "\ncomment, name, type, pos (xyz), diffuse (rgba), attention (xyzw), direction, param1 (spotlight inner, spotlight outer), param2 (on/off)\n";
 	std::map<std::string, Light>& lights = scene.getLights();
-	for (std::pair<std::string, Light> it : lights) {
-		Light& light = it.second;
+	for (std::map<std::string, Light>::iterator it = lights.begin(); it != lights.end(); ++it) {
+		Light& light = it->second;
 		if (!light.enabled) continue;
 
 		const std::string camType = 
@@ -153,62 +154,27 @@ bool SceneManager::processSceneLine(const unsigned char*& p) {
 	}
 
 	bool handled{ false };
-	if      (strcmp(nameStr, "model") == 0)       handled = handleModelLine(p);
-	else if (strcmp(nameStr, "light") == 0)       handled = handleLightLine(p);
-	else if (strcmp(nameStr, "camera") == 0)      handled = handleCameraLine(p);
-	else if (strcmp(nameStr, "texture") == 0)     handled = handleTextureLine(p);
-	else if (strcmp(nameStr, "textureCube") == 0) handled = handleTextureCubeLine(p);
+	if      (strcmp(nameStr, "model") == 0)       handled = parseAndAddObject<Model>(p, &parseModel, scene.getModels(), "model");
+	else if (strcmp(nameStr, "light") == 0)       handled = parseAndAddObject<Light>(p, &parseLight, scene.getLights(), "light");
+	else if (strcmp(nameStr, "camera") == 0)      handled = parseAndAddObject<Camera>(p, &parseCamera, scene.getCameras(), "camera");
+	else if (strcmp(nameStr, "texture") == 0)     handled = parseAndAddTexture(p, &parseTexture, "texture");
+	else if (strcmp(nameStr, "textureCube") == 0) handled = parseAndAddTexture(p, &parseCubeTexture, "cube texture");
 	else if (strcmp(nameStr, "textureAdd") == 0)  handled = handleTextureConnectionLine(p);
-	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = handleCubeGridLine(p);
-	else if (strcmp(nameStr, "squareGrid") == 0)  handled = handleSquareGridLine(p);
-	else if (strcmp(nameStr, "triangle") == 0)    handled = handleTriangleLine(p);
-	return handled ? debugLog("SceneManager", "processSceneLine", "Added: " + std::string(nameStr), true) 
-		             : error("SceneManager", "processSceneLine", "Failed to handle: " + std::string(nameStr));
+	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = parseAndAddObject<Grid>(p, &parseGrid, scene.getGrids(), "cubeGrid");
+	else if (strcmp(nameStr, "squareGrid") == 0)  handled = parseAndAddObject<Grid>(p, &parseGrid, scene.getGrids(), "squareGrid");
+	else if (strcmp(nameStr, "triangle") == 0)    handled = parseAndAddObject<Model>(p, &parseTriangle, scene.getModels(), "triangle");
+	return handled ? true : error("SceneManager", "processSceneLine", "Failed to handle: " + std::string(nameStr));
 }
-bool SceneManager::handleModelLine(const unsigned char*& p) {
-	Model model;
-	PARSE_OR(return false, parseModel, model, "parse model");
-	return scene.addObject(scene.getModels(), model, "model") ? true : error("SceneManager", "handleModelLine", "Unable to add model: " + model.name);
+bool SceneManager::parseAndAddTexture(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, BMPTexture&), const char* type) {
+	BMPTexture t;
+	if (!parseFN(p, t)) return false;
+	return scene.addTexture(t);
 }
-bool SceneManager::handleLightLine(const unsigned char*& p) {
-	Light light;
-	PARSE_OR(return false, parseLight, light, "parse light");
-	return scene.addObject(scene.getLights(), light, "light") ? true : error("SceneManager", "handleLightLine", "Unable to add light: " + light.name);
-}
-bool SceneManager::handleCameraLine(const unsigned char*& p) {
-	Camera camera;
-	PARSE_OR(return false, parseCamera, camera, "parse camera");
-	return scene.addObject(scene.getCameras(), camera, "camera") ? true : error("SceneManager", "handleCameraLine", "Unable to add camera: " + camera.name);
-}
-bool SceneManager::handleTextureLine(const unsigned char*& p) {
-	BMPTexture texture;
-	PARSE_OR(return false, parseTexture, texture, "texture line");
-	return scene.addTexture(texture) ? true : error("SceneManager", "handleTextureLine", "Unable to add texture: " + texture.name);
-}	
-bool SceneManager::handleTextureCubeLine(const unsigned char*& p) {
-	BMPTexture texture;
-	PARSE_OR(return false, parseCubeTexture, texture, "Failed to parse cube texture line");
-	return scene.addTexture(texture) ? true : error("SceneManager", "handleTextureLine", "Could not create cube texture");
-}
+
 bool SceneManager::handleTextureConnectionLine(const unsigned char*& p) {
 	std::string modelName, textureName;
 	unsigned slot = 0;
 	float mix = 1.0f;
 	if (!parseTextureConnection(p, modelName, slot, textureName, mix)) return error("SceneManager", "handleTextureConnectionLine", "Failed to parse texture connection");
 	return scene.bindTextureToModel(modelName, slot, textureName, mix) ? true : error("SceneManager", "handleTextureConnectionLine", "Failed to bind " + textureName + " to " + modelName);
-}
-bool SceneManager::handleSquareGridLine(const unsigned char*& p) {
-	Grid grid;
-	PARSE_OR(return false, parseGrid, grid, "Failed to parse cubeGrid colour");
-	return scene.addObject(scene.getGrids(), grid, "squareGrid") ? true : error("SceneManager", "handleSquareGridLine", "Could not create grid");
-}
-bool SceneManager::handleCubeGridLine(const unsigned char*& p) {
-	Grid grid;
-	PARSE_OR(return false, parseGrid, grid, "Failed to parse cubeGrid colour");
-	return scene.addObject(scene.getGrids(), grid, "cubeGrid") ? true : error("SceneManager", "handleCubeGridLine", "Could not create grid");
-}
-bool SceneManager::handleTriangleLine(const unsigned char*& p) {
-	Triangle triangle{};
-	PARSE_OR(return false, parseTriangle, triangle, "Failed to parse triangle line");
-	return scene.addObject(scene.getTriangles(), triangle, "triangle") ? true : error("SceneManager", "handleTriangleLine", "Failed to add triangle instance: " + triangle.name);
 }
