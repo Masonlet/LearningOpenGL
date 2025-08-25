@@ -5,10 +5,10 @@
 
 bool BMPTexture::createBMPTexture(std::string path, bool generateMIPMap) {
 	BMP temp;
-  if (!parseBMP((std::string(ASSET_DIR) + "/textures/" + path).c_str(), temp)) return error("BMPTexture", "createBMPTexture", "Failed to parse " + path);
-  else if (temp.pixels.empty())      return error("BMPTexture", "createBMPTexture", "No pixel data in: " + path);
+  if (!parseBMP((std::string(ASSET_DIR) + "/textures/" + path).c_str(), temp)) 
+    return error("BMPTexture", "createBMPTexture", "Failed to parse " + path);
 
-	GLuint tex = 0;
+  unsigned int tex = 0;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
 
@@ -22,10 +22,9 @@ bool BMPTexture::createBMPTexture(std::string path, bool generateMIPMap) {
 
   if (generateMIPMap) glGenerateMipmap(GL_TEXTURE_2D);
 
-	this->index  = static_cast<unsigned int>(tex);
-  this->width = temp.infoHeader.width;
-  this->height = temp.infoHeader.height;
-  this->isCube = false;
+	index  = tex;
+  width  = temp.infoHeader.width;
+  height = temp.infoHeader.height;
 	return true;
 }
 
@@ -34,15 +33,13 @@ bool BMPTexture::createBMPCubeTexture(std::string posFileNameX, std::string negF
 	                                    std::string posFileNameZ, std::string negFileNameZ, 
                                       bool isSeamless, bool generateMIPMap) {
   BMP faces[6]; 
-  std::string basePath = std::string(ASSET_DIR) + "/textures/";
+  const std::string basePath = std::string(ASSET_DIR) + "/textures/";
   const std::string paths[6] = { basePath + posFileNameX, basePath + negFileNameX, basePath + posFileNameY, basePath + negFileNameY, basePath + posFileNameZ, basePath + negFileNameZ };
   for (int i = 0; i < 6; ++i) {
     if (!parseBMP(paths[i].c_str(), faces[i])) 
       return error("BMPTexture", "createCubeBMPTexture", "Failed to parse " + paths[i]);
-    if (faces[i].infoHeader.width != faces[0].infoHeader.width || faces[i].infoHeader.height != faces[0].infoHeader.height) 
+    if (i != 0 && (faces[i].infoHeader.width != faces[0].infoHeader.width || faces[i].infoHeader.height != faces[0].infoHeader.height))
       return error("BMPTexture", "createCubeBMPTexture", "Cube faces must have identical dimensions");
-    if (faces[i].pixels.empty())
-      return error("BMPTexture", "createBMPCubeTexture", "No pixel data in " + paths[i]);
   }
 
   unsigned int tex = 0;
@@ -67,9 +64,9 @@ bool BMPTexture::createBMPCubeTexture(std::string posFileNameX, std::string negF
   for (int i = 0; i < 6; ++i) glTexImage2D(targets[i], 0, GL_RGB8, faces[i].infoHeader.width, faces[i].infoHeader.height, 0, GL_RGB, GL_UNSIGNED_BYTE, faces[i].pixels.data());   
   if (generateMIPMap) glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-  this->index = tex;
-  this->width = faces[0].infoHeader.width;
-  this->height = faces[0].infoHeader.height;
-  this->isCube = true;
+  index = tex;
+  width = faces[0].infoHeader.width;
+  height = faces[0].infoHeader.height;
+  isCube = true;
   return true;
 }

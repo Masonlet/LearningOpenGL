@@ -16,41 +16,31 @@ bool createSquareGrid(MeshManager* meshManager, unsigned int shaderProgramID, co
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	std::string sharedName = baseName + "_sharedSquare";
 
-	if (!meshManager->findMesh(sharedName)) {
-		MeshData temp;
-		if (!createSquare(meshManager, sharedName, shaderProgramID, size)) return false;
-		if (!meshManager->findMesh(sharedName)) return error("Grids", "createSquareGrid", "Mesh not found after creation");
-	}
+	if (!meshManager->findMesh(sharedName)) 
+		if (!createSquare(meshManager, sharedName, shaderProgramID, size)) 
+			return error("Grids", "createSquareGrid", "Failed to create square mesh");
 
-	return true;
+	return debugLog("Grids", "createSquareGrid", "Created with " + std::to_string(count) + " squares.");
 }
 
 bool createCubeGrid(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, int startIndex, int count, const Vec2& spacing, const Vec3& rot, const Vec3& size) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
-
 	const std::string sharedName = baseName + "_sharedCube";
 
-	if (!meshManager->findMesh(sharedName)) {
-		MeshData temp;
-		temp.path = sharedName;
-
-		fillCubeMeshData(temp, sharedName, size);
-
-		if (!meshManager->loadMeshPrimitive(temp, shaderProgramID)) return error("Grids", "createCubeGrid", "Failed to load mesh");
-		if (!meshManager->findMesh(sharedName)) return error("Grids", "createCubeGrid", "Mesh not found after creation");
-	}
-
-	return true;
+	if (!meshManager->findMesh(sharedName)) 
+		if (!createCube(meshManager, sharedName, size)) 
+			return error("Grids", "createCubeGrid", "Failed to create cube mesh");
+	
+	return debugLog("Grids", "createCubeGrid", "Created with " + std::to_string(count) + " cubes.");
 }
 
 bool createMeshGridFromPath(MeshManager* meshManager, unsigned int shaderProgramID, const std::string& baseName, const std::string& path, int startIndex, int count, const Vec2& spacing, const Vec3& rot, const Vec3& size, bool hasNormals) {
 	int gridSize = static_cast<int>(std::ceil(std::sqrt(count)));
 	std::string sharedName = baseName + "_sharedMesh";
 
-	if (!meshManager->findMesh(sharedName)) {
-		if (!meshManager->loadMeshFile(path, shaderProgramID)) return error("Grids", "createMeshGrid", "Failed to load mesh");
-		if(!meshManager->findMesh(path)) return error("Grids", "createMeshGrid", "Mesh not found after creation");
-	}
+	if (!meshManager->findMesh(sharedName)) 
+		if (!meshManager->UploadPathToGPU(path, shaderProgramID)) 
+			return error("Grids", "createMeshGrid", "Failed to load mesh");
 
 	return true;
 }

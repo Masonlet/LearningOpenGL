@@ -5,7 +5,7 @@
 #include "math/constants.hpp"
 #include <string>
 
-bool parsePlyMesh(const std::string& path, MeshData& drawInfo) {
+bool parsePlyMesh(const std::string& path, Mesh& drawInfo) {
 	const unsigned char* p{ nullptr };
 	size_t size;
 	if (!loadBinaryFile(p, size, std::string(ASSET_DIR) + "/models/" + path))
@@ -143,7 +143,7 @@ bool parsePlyHeader(const unsigned char*& p, unsigned int& numVerticesOut, unsig
 	return false;
 }
 
-bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
+bool parseVertices(const unsigned char*& p, Mesh& drawInfo) {
 	if (!p) return error("PlyParser", "parseVertices", "Input pointer is null\n");
 	if (!drawInfo.numVertices) return error("PlyParser", "parseVertices", "No vertices declared in header\n");
 
@@ -251,7 +251,7 @@ bool parseVertices(const unsigned char*& p, MeshData& drawInfo) {
 	return true;
 }
 
-bool parseIndices(const unsigned char*& p, MeshData& drawInfo) {
+bool parseIndices(const unsigned char*& p, Mesh& drawInfo) {
 	if (!p) return error("PlyParser", "parseIndices", "Input pointer is null");
 	if (!drawInfo.indices || drawInfo.numIndices == 0) return error("PlyParser", "parseIndices", "Index buffer not allocated");
 

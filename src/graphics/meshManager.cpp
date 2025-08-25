@@ -5,8 +5,8 @@
 #include "objects/plyParser.hpp"
 
 MeshManager::~MeshManager() {
-  for (std::map<std::string, MeshData>::iterator it = nameToMeshes.begin(); it != nameToMeshes.end(); ++it) {
-    MeshData& mesh = it->second;
+  for (std::map<std::string, Mesh>::iterator it = nameToMeshes.begin(); it != nameToMeshes.end(); ++it) {
+    Mesh& mesh = it->second;
 
     if (glIsVertexArray(mesh.VAOID))     glDeleteVertexArrays(1, &mesh.VAOID);
     if (glIsBuffer(mesh.VertexBufferID)) glDeleteBuffers(1, &mesh.VertexBufferID);
@@ -15,35 +15,30 @@ MeshManager::~MeshManager() {
 
   nameToMeshes.clear();
 }
-bool MeshManager::loadMeshFile(const std::string& path, unsigned int shaderID) {
-  MeshData mesh;
+bool MeshManager::UploadPathToGPU(const std::string& path, unsigned int shaderID) {
+  Mesh mesh;
   if (!parsePlyMesh(path, mesh))
     return false;
 
-  if (!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) 
-		return error("MeshManager", "LoadMeshFromFile", "Invalid mesh data: " + path);
-
-	return UploadMeshToGPU(mesh, shaderID);
-}
-bool MeshManager::loadMeshPrimitive(MeshData& mesh, unsigned int shaderID) {
-  if(!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0) 
-    return error("MeshManager", "loadMeshPrimitive", "Invalid primitive mesh data");
 	return UploadMeshToGPU(mesh, shaderID);
 }
 
 bool MeshManager::findMesh(const std::string& path) const {
-	std::map<std::string, MeshData>::const_iterator it = nameToMeshes.find(path);
+	std::map<std::string, Mesh>::const_iterator it = nameToMeshes.find(path);
 	if (it == nameToMeshes.end()) return false;
 	return true;
 }
-bool MeshManager::getMesh(const std::string& name, MeshData*& data) {
-  std::map<std::string, MeshData>::iterator it = nameToMeshes.find(name);
+bool MeshManager::getMesh(const std::string& name, Mesh*& data) {
+  std::map<std::string, Mesh>::iterator it = nameToMeshes.find(name);
   if (it == nameToMeshes.end()) return false;
   data = &it->second;
   return true;
 }
 
-bool MeshManager::UploadMeshToGPU(MeshData& mesh, unsigned int shaderID) {
+bool MeshManager::UploadMeshToGPU(Mesh& mesh, unsigned int shaderID) {
+  if (!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0)
+    return error("MeshManager", "loadMeshPrimitive", "Invalid primitive mesh data");
+
   //Create a VAO (Vertex Array Object), which will keep track of all the 'state' needed to draw from this buffer
   glGenVertexArrays(1, &(mesh.VAOID)); //Ask OpenGL for a new buffer ID
   glBindVertexArray(mesh.VAOID);       //Bind the buffer: aka "make this the 'current' VAO buffer

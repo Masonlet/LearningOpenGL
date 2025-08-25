@@ -24,8 +24,4 @@ private:
   bool handleSquareGridLine(const unsigned char*& p);
   bool handleCubeGridLine(const unsigned char*& p);
   bool handleTriangleLine(const unsigned char*& p);
-
-  bool handleMazeLine(const unsigned char*& p);
-  bool handleMazeData(const unsigned char*& p);
-  bool buildMaze(const ParsedMaze* maze);
 };

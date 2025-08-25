@@ -21,12 +21,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			glPolygonMode(GL_FRONT_AND_BACK, engine->wireframe ? GL_LINE : GL_FILL);
 		}
 
-		if (key == GLFW_KEY_C) {
-			if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			else 
-				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		}
+		if (key == GLFW_KEY_C) 
+			glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED 
+				? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL)
+				: glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     //if(key == GLFW_KEY_L)
 		//	engine->getSceneManager().saveTxtScene();
@@ -55,7 +53,5 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
-	if (!engine) return;
-
-	engine->sceneManager.scene.getActiveCamera()->setFov(static_cast<float>(-yoffset * 2.0f));
+	if (engine) engine->sceneManager.scene.getActiveCamera()->setFov(static_cast<float>(-yoffset * 2.0f));
 }

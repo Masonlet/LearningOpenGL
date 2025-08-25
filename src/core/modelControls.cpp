@@ -24,13 +24,13 @@ static void processObject(InputManager* input, Vec3& pos, Vec3& rot, Vec3& size,
   if (input->IsKeyDown(GLFW_KEY_H)) rot.z -= rotationSpeed;
 }
 
-void handleModelInput(InputManager* input, float deltaTime, std::map<std::string, ModelData>& instances, int currentModel) {
+void handleModelInput(InputManager* input, float deltaTime, std::map<std::string, Model>& instances, int currentModel) {
   if(instances.empty()) return;
 
-  std::map<std::string, ModelData>::iterator it = instances.begin();
+  std::map<std::string, Model>::iterator it = instances.begin();
   std::advance(it, currentModel);
 
-  ModelData& instance = it->second;
+  Model& instance = it->second;
   processObject(input, instance.pos, instance.rot, instance.size, deltaTime);
 
   instance.modelMatrix = Mat4::modelMatrix({.pos = {instance.pos, 0.0f}, .rot = instance.rot, .size = instance.size

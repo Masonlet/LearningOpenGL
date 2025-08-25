@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils/log.hpp"
-#include "objects/modelData.hpp"
+#include "objects/model.hpp"
 #include "objects/light.hpp"
 #include "core/camera.hpp"
 #include "utils/parserObjects.hpp"
@@ -24,14 +24,13 @@ public:
     return true;
   }
 
-  std::map<std::string, ModelData>& getModels() { return models; }
+  std::map<std::string, Model>& getModels() { return models; }
 	std::map<std::string, Camera>& getCameras() { return cameras; }
   std::map<std::string, Light>& getLights() { return lights; }
   std::map<std::string, BMPTexture>& getTextures() { return textures; }
   std::map<std::string, Grid>& getGrids() { return grids; }
   std::map<std::string, Triangle>& getTriangles() { return triangles; }
   std::map<std::string, Square>& getSquares() { return squares; }
-  std::map<std::string, ParsedMaze>& getMaze() { return mazes; }
 
 	size_t getCameraCount() { return cameras.size(); }
   size_t getLightCount() { return lights.size(); }
@@ -47,18 +46,15 @@ public:
   unsigned int getTextureIDFromName(const std::string& textureFileName);
   bool bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix);
 
-  ParsedMaze* getMazeFromName(const std::string& name);
-
 private:
   std::string name;
   std::string activeCam;
 
-  std::map<std::string, ModelData> models;
+  std::map<std::string, Model> models;
   std::map<std::string, Camera> cameras;
   std::map<std::string, Light> lights;
 	std::map<std::string, BMPTexture> textures;
   std::map<std::string, Grid> grids;
   std::map<std::string, Triangle> triangles;
   std::map<std::string, Square> squares;
-  std::map<std::string, ParsedMaze> mazes;
 };

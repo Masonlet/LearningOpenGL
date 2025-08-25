@@ -64,15 +64,9 @@ void Camera::setFov(const float delta) {
 
 void Camera::processInputs(InputManager* input, float deltaTime) {
   switch (type) {
-  case 0:
-    updateFreeCam(input, deltaTime);
-    break;
-  case 1:
-    updateDungeonCam(input, deltaTime);
-    break;
-  case 2:
-    updateModernCam(input, deltaTime);
-    break;
+  case 0: updateFreeCam(input, deltaTime);    break;
+  case 1: updateDungeonCam(input, deltaTime); break;
+  case 2: updateModernCam(input, deltaTime);  break;
   }
 }
 

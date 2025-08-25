@@ -23,7 +23,7 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 }
 
 bool Engine::setupShaders() {
-	debugLog("setupShaders", "Shader setup start time: " + std::to_string(glfwGetTime()), true);
+	debugLog("Engine", "setupShaders", "Shader setup start time: " + std::to_string(glfwGetTime()), true);
 
   ShaderManager::Shader vert_shader{ "vertex_shader.glsl" };
   ShaderManager::Shader frag_shader{ "fragment_shader.glsl" };
@@ -34,7 +34,7 @@ bool Engine::setupShaders() {
   if (!renderer.setProgram(shaderManager.getIDFromFriendlyName("shader1")))
     return error("Engine", "setupShaders", "");
   
-  return debugLog("setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);;
+  return debugLog("Engine", "setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);;
 }
 
 void Engine::tick(const float currentTime) {
@@ -49,7 +49,7 @@ void Engine::tick(const float currentTime) {
   constexpr float smoothingFactor = 0.9f;
 
   if (rawDelta > maxDelta) {
-		debugLog("Tick", "deltaTime clamped to " + std::to_string(maxDelta) + " (was " + std::to_string(rawDelta) + ")", true);
+		debugLog("Engine", "Tick", "deltaTime clamped to " + std::to_string(maxDelta) + " (was " + std::to_string(rawDelta) + ")", true);
     rawDelta = maxDelta;
   }
 
@@ -62,22 +62,22 @@ bool Engine::loadSceneMeshes() {
     if (!sceneManager.loadTxtScene("Default"))
       return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
 
-	debugLog("loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
+	debugLog("Engine", "loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   const unsigned int shaderProgramID = renderer.getProgram();
   if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
 
-	std::map<std::string, ModelData>& modelData = sceneManager.scene.getModels();
-	std::map<std::string, ModelData>::iterator it = modelData.begin();
+	std::map<std::string, Model>& modelData = sceneManager.scene.getModels();
+	std::map<std::string, Model>::iterator it = modelData.begin();
   for(; it != modelData.end(); ++it) {
-    ModelData& model = it->second;
+    Model& model = it->second;
     if (!meshManager.findMesh(model.meshPath)) 
-      if(!meshManager.loadMeshFile(model.meshPath, shaderProgramID)) 
+      if(!meshManager.UploadPathToGPU(model.meshPath, shaderProgramID)) 
         return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + model.meshPath);
 	}
 
 	renderer.updateLightCount(sceneManager.scene.getLightCount());
   sceneManager.scene.updateLights(shaderProgramID);
-  return debugLog("loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);;
+  return debugLog("Engine", "loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);;
 }
 
 void Engine::run() {
@@ -103,11 +103,11 @@ void Engine::renderFrame() {
 
   sceneManager.scene.updateLightUniforms(renderer.getProgram());
 
-  ModelData* skyBox{ nullptr };
-  std::vector<ModelData*> transparentInstances;
-  std::map<std::string, ModelData>& instances = sceneManager.scene.getModels();
-  for (std::map<std::string, ModelData>::iterator it = instances.begin(); it != instances.end(); ++it) {
-    ModelData& instance = it->second;
+  Model* skyBox{ nullptr };
+  std::vector<Model*> transparentInstances;
+  std::map<std::string, Model>& instances = sceneManager.scene.getModels();
+  for (std::map<std::string, Model>::iterator it = instances.begin(); it != instances.end(); ++it) {
+    Model& instance = it->second;
     if (instance.name == "skybox") skyBox = &instance;
     instance.modelMatrix = Mat4::modelMatrix({ { instance.pos, 0.0f }, instance.rot, instance.size });
 
@@ -125,31 +125,29 @@ void Engine::renderFrame() {
       float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
 
       if (distA < distB) {
-        ModelData* temp = transparentInstances[j];
+        Model* temp = transparentInstances[j];
         transparentInstances[j] = transparentInstances[j + 1];
         transparentInstances[j + 1] = temp;
       }
     }
   }
 
-  for (ModelData* instance : transparentInstances) 
+  for (Model* instance : transparentInstances) 
     renderer.drawModel(meshManager, sceneManager, *instance);
 
   if (skyBox) {
-    renderer.setModelIsSkybox(true);
-    skyBox->isVisible = true;
     skyBox->pos = sceneManager.scene.getActiveCamera()->pos;
     skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->pos, 0.0f }, skyBox->rot, skyBox->size });
-    
 		renderer.bindSkyboxTexture(sceneManager.scene.getTextureIDFromName(skyBox->name));
 
+    renderer.setModelIsSkybox(true);
+    skyBox->isVisible = true;
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);     
     glDepthMask(GL_FALSE);
     renderer.drawModel(meshManager, sceneManager, *skyBox);
     glDepthMask(GL_TRUE);
     glCullFace(GL_BACK);
-
     skyBox->isVisible = false;
     renderer.setModelIsSkybox(false);
   }

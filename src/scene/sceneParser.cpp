@@ -2,7 +2,7 @@
 #include "utils/parser.hpp"
 #include "utils/log.hpp"
 
-bool parseModel(const unsigned char*& p, ModelData& out) {
+bool parseModel(const unsigned char*& p, Model& out) {
   PARSE_OR(return false, parseBool, out.isVisible, "model enabled");
   PARSE_OR(return false, parseBool, out.isLighted, "model lighting");
   PARSE_STRING_OR(return false, p, out.name, 64, "model name");
@@ -82,71 +82,3 @@ bool parseGrid(const unsigned char*& p, Grid& out) {
   PARSE_OR(return false, parseVec3, out.size, "cubeGrid scale");
   return parseColour(p, out.colour, out.colourMode);
 } 
-
-bool parseMaze(const unsigned char*& p, ParsedMaze& out) {
-  out.layout.clear();
-  PARSE_STRING_OR(return false, p, out.name, 64, "maze name");
-  PARSE_OR(return false, parseFloat, out.spacing, "maze spacing");
-  PARSE_OR(return false, parseVec3, out.pos, "maze position");
-  PARSE_OR(return false, parseVec3, out.rot, "maze rotation");
-  PARSE_OR(return false, parseUInt, out.wallHeight, "maze wall height");
-  PARSE_OR(return false, parseBool, out.hasRoof, "maze ceiling flag");
-  PARSE_STRING_OR(return false, p, out.floorType1, 64, "floor mesh 1");
-  PARSE_STRING_OR(return false, p, out.floorType2, 64, "floor mesh 2");
-  PARSE_STRING_OR(return false, p, out.floorType3, 64, "floor mesh 3");
-  PARSE_STRING_OR(return false, p, out.floorType4, 64, "floor mesh 4");
-  PARSE_STRING_OR(return false, p, out.floorType5, 64, "floor mesh 5");
-  PARSE_STRING_OR(return false, p, out.floorType6, 64, "floor mesh 6");
-  PARSE_STRING_OR(return false, p, out.floorWallType, 64, "floor wall mesh");
-  PARSE_STRING_OR(return false, p, out.wallType1, 64, "wall mesh 1");
-  PARSE_STRING_OR(return false, p, out.wallType2, 64, "wall mesh 2");
-  PARSE_STRING_OR(return false, p, out.wallType3, 64, "wall mesh 3");
-  PARSE_STRING_OR(return false, p, out.wallType4, 64, "wall mesh 4");
-  PARSE_STRING_OR(return false, p, out.wallType5, 64, "wall mesh 5");
-  PARSE_STRING_OR(return false, p, out.wallType6, 64, "wall mesh 6");
-  PARSE_STRING_OR(return false, p, out.entranceType, 64, "entrance mesh");
-  PARSE_STRING_OR(return false, p, out.exitType, 64, "exit mesh");
-  PARSE_STRING_OR(return false, p, out.exteriorWallType, 64, "exterior wall mesh");
-  PARSE_OR(return false, parseVec3, out.baseRot, "maze base wall rotation");
-  return true;
-}
-static bool parseMazeLayoutRow(const unsigned char* p, const unsigned char* lineEnd, std::vector<bool>& outRow) {
-  outRow.clear();
-  for (const char* s = reinterpret_cast<const char*>(p); s < reinterpret_cast<const char*>(lineEnd); ++s) {
-    const char c = *s;
-    if (c == '.')      outRow.push_back(true);
-    else if (c == 'X') outRow.push_back(false);
-    else return error("SceneParser", "parseMazeLayoutRow", "Invalid character" + std::string(1, c));
-  }
-  return outRow.empty() ? error("SceneParser", "parseMazeLayoutRow", "Empty row found") : true;
-}
-bool parseMazeData(const unsigned char*& p, std::string& mazeName, std::vector<std::vector<bool>>& layout) {
-  p = skipWhitespace(p);
-  PARSE_STRING_OR(return false, p, mazeName, 64, "Maze name");
-  layout.clear();
-
-  while (*p) {
-    const unsigned char* nextLine = skipToNextLine(p);
-    const unsigned char* endLine = trimEOL(p, nextLine);
-
-    if (endLine <= p) {
-      p = nextLine;
-      continue;
-    }
-
-    unsigned char token[64]{};
-    const unsigned char* peek = p;
-    if (parseToken(peek, token, sizeof(token)))
-      if (strcmp(reinterpret_cast<const char*>(token), mazeName.c_str()) == 0) {
-        p = nextLine;
-        break;
-      }
-        
-    std::vector<bool> row;
-    if (!parseMazeLayoutRow(p, endLine, row)) return false;
-    layout.push_back(row);
-    p = nextLine;
-  }
-
-  return layout.empty() ? error("SceneParser", "parseMazeData", "No maze layout data found") : true;
-}

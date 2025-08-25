@@ -7,7 +7,7 @@ constexpr int GL_MAJOR{ 3 };
 constexpr int GL_MINOR{ 3 };
 
 WindowManager::WindowManager() : window(nullptr) {
-  if (!glfwInit()) debugLog("WindowManager", "Failed to initialize GLFW\n");
+  if (!glfwInit()) debugLog("WindowManager", "Constructor", "Failed to initialize GLFW\n");
 }
 
 WindowManager::~WindowManager() {
@@ -16,7 +16,7 @@ WindowManager::~WindowManager() {
 }
 
 bool WindowManager::createWindow(const unsigned int width, const unsigned int height, const char* title) {
-	debugLog("WindowManager", "Create start time: " + std::to_string(glfwGetTime()), true);
+	debugLog("WindowManager", "createWindow", "Start time : " + std::to_string(glfwGetTime()), true);
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_MAJOR);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_MINOR);
@@ -37,7 +37,7 @@ bool WindowManager::createWindow(const unsigned int width, const unsigned int he
   glfwSetInputMode(window->getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSwapInterval(1);
 
-  return debugLog("WindowManager", "Create finish time: " + std::to_string(glfwGetTime()), true);
+  return debugLog("WindowManager", "createWindow", "Finish time: " + std::to_string(glfwGetTime()), true);
 }
 void WindowManager::destroyWindow() {
   delete window;
@@ -45,10 +45,8 @@ void WindowManager::destroyWindow() {
 }
 
 void WindowManager::switchActiveWindowVisibiltiy() {
-  if (window) 
-    glfwGetWindowAttrib(getWindow()->getGLFWwindow(), GLFW_VISIBLE)
-      ? glfwHideWindow(getWindow()->getGLFWwindow())
-      : glfwShowWindow(getWindow()->getGLFWwindow());
-  
-  else debugLog("WindowManager", "No active window to switch visibility.");
+  if (window) glfwGetWindowAttrib(getWindow()->getGLFWwindow(), GLFW_VISIBLE) 
+              ? glfwHideWindow(getWindow()->getGLFWwindow()) 
+              : glfwShowWindow(getWindow()->getGLFWwindow());
+  else debugLog("WindowManager", "switchActiveWindowVsibility", "No active window to switch visibility.");
 }

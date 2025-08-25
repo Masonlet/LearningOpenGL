@@ -1,6 +1,6 @@
 #pragma once
 
-#include "objects/modelData.hpp"
+#include "objects/model.hpp"
 #include "graphics/renderer.hpp"
 #include "core/windowManager.hpp"
 #include "core/inputManager.hpp"

@@ -187,7 +187,6 @@
 		else if (strcmp(name, "Rainbow") == 0) modeOut = ColourMode::VerticalGradient;
 		else if (strcmp(name, "PLY")     == 0) modeOut = ColourMode::PLYColour;
 		else return false;
-
 		return true;
 	}
 	static bool parseNamedColour(const unsigned char*& p, Vec4& colour, ColourMode& mode) {
@@ -203,7 +202,6 @@
 		else if (strcmp(name, "Gray") == 0
 					|| strcmp(name, "Grey") == 0)   colour = { 0.5f, 0.5f, 0.5f, 1.0f };
 		else return (parseSpecialColour(name, mode));
-
 		return true;
 	}
 	bool parseColour(const unsigned char*& p, Vec4& colourOut, ColourMode& modeOut) {
@@ -237,7 +235,6 @@
 		else return error("Parser", "parseLightType", "Unknown light type");
 		return true;
 	}
-
 	bool parseCameraType(const unsigned char*& p, unsigned int& typeOut) {
 		p = skipWhitespace(p);
 		if (!p || *p == '\0') return false;
@@ -255,9 +252,6 @@
 		if      (strcmp((char*)typeName, "FreeCam") == 0)    typeOut = 0;
 		else if (strcmp((char*)typeName, "DungeonCam") == 0) typeOut = 1;
 		else if (strcmp((char*)typeName, "ModernCam") == 0)  typeOut = 2;
-		else {
-			p = original;
-			return error("Parser", "parseCameraType", "Unknown camera type");
-		}
+		else return error("Parser", "parseCameraType", "Unknown camera type");
 		return true;
 	}

@@ -19,7 +19,7 @@ Light* Scene::getLightByName(std::string name) {
 	std::map<std::string, Light>& m = getLights();
 	std::map<std::string, Light>::iterator it = m.find(name);
 	if (it == m.end()) {
-		debugLog("getLightByName", "Light " + name + " not found.");
+		debugLog("Scene", "getLightByName", "Light " + name + " not found.");
 		return nullptr; 
 	}
 	return &it->second;
@@ -56,7 +56,7 @@ void Scene::updateLightUniforms(int shaderProgram) {
 bool Scene::addTexture(const BMPTexture& data) {	
 	if (data.name.empty())                    return error("Scene", "addTexture", "texture name is empty");
 	if (data.index == 0)                      return error("Scene", "addTexture", "texture GL id is 0");
-	if (data.slot >= ModelData::NUM_TEXTURES) return error("Scene", "addTexture", "texture slot " + std::to_string(data.slot) + " out of range");
+	if (data.slot >= Model::NUM_TEXTURES) return error("Scene", "addTexture", "texture slot " + std::to_string(data.slot) + " out of range");
 	
 	const std::string name = data.name;
  	if (textures.find(name) != textures.end()) return error("Scene", "addTexture", "texture file already exists: " + name);
@@ -70,24 +70,24 @@ unsigned int Scene::getTextureIDFromName(const std::string& textureFileName) {
 	return (it == textures.end()) ? 0 : static_cast<unsigned>(it->second.index);
 }
 bool Scene::bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix) {
-	if (slot >= ModelData::NUM_TEXTURES) return error("Scene", "bindTextureToModel", "slot out of range: " + std::to_string(slot));
+	if (slot >= Model::NUM_TEXTURES) return error("Scene", "bindTextureToModel", "slot out of range: " + std::to_string(slot));
 
-	std::map<std::string, ModelData>::iterator  mIt = models.find(modelName);
+	std::map<std::string, Model>::iterator  mIt = models.find(modelName);
 	if (mIt == models.end()) return error("Scene", "bindTextureToModel", "model not found: " + modelName);
 
-	ModelData& data = mIt->second;
+	Model& data = mIt->second;
 	if (textureName.empty() || mix <= 0.0f) {
 		data.textureNames[slot].clear();
 		data.textureMixRatio[slot] = 0.0f;
 
 		bool any = false;
-		for (unsigned i = 0; i < ModelData::NUM_TEXTURES; ++i)
+		for (unsigned i = 0; i < Model::NUM_TEXTURES; ++i)
 			if (!data.textureNames[i].empty()) { 
 				any = true; 
 				break; 
 			}
 		data.useTextures = any;
-		return debugLog("Scene", "unbind texture: " + modelName + "[slot " + std::to_string(slot) + "]", true);;
+		return debugLog("Scene", "bindTextureToModel", "unbind: " + modelName + "[slot " + std::to_string(slot) + "]", true);;
 	}
 
 	std::map<std::string, BMPTexture>::iterator tIt = textures.find(textureName);
@@ -100,10 +100,5 @@ bool Scene::bindTextureToModel(const std::string& modelName, unsigned int slot, 
 	data.textureNames[slot] = textureName;
 	data.textureMixRatio[slot] = mix;
 
-	return debugLog("Scene", "bind texture: " + textureName + " to " + modelName + " [slot " + std::to_string(slot) + "], mix=" + std::to_string(mix), true);
-}
-
-ParsedMaze* Scene::getMazeFromName(const std::string& name) {
-	std::map<std::string, ParsedMaze>::iterator it = mazes.find(name);
-	return (it == mazes.end()) ? nullptr : &it->second;
+	return debugLog("Scene", "bindTextureToModel", "bind: " + textureName + " to " + modelName + " [slot " + std::to_string(slot) + "], mix=" + std::to_string(mix), true);
 }

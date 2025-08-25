@@ -64,7 +64,7 @@ bool Renderer::setProgram(unsigned int program) {
 	modelTexMixRatiosLocation = glGetUniformLocation(program, "texMixRatios");
 	if (modelTexMixRatiosLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: texMixRatios");
 
-	return debugLog("setProgram", "Successfully set shader program and located uniforms", true);
+	return debugLog("Renderer", "setProgram", "Successfully set shader program and located uniforms", true);
 }
 
 void Renderer::updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const {
@@ -87,10 +87,10 @@ static Vec3 seedFromName(const std::string& s) {
 	b = fmod(b / 255.0f, 1.0f);
 	return { r, g, b };
 }
-bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, const ModelData& instance) const {
+bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, const Model& instance) const {
 	if (!instance.isVisible) return true;
 
-	MeshData* data;
+	Mesh* data;
 	if (!meshManager.getMesh(instance.meshPath, data)) return error("Renderer", "drawModel", "Could not find mesh: " + instance.meshPath);
 	 
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, instance.modelMatrix.models);

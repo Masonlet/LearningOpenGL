@@ -7,7 +7,7 @@
 #include "core/colour.hpp"
 #include <string>
 
-struct ModelData {
+struct Model {
 	std::string name;
 	std::string meshPath;
 

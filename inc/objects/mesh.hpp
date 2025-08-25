@@ -11,7 +11,7 @@ ModelDrawInfo
 * Its layout is set up to match how the GPU sees the mesh, not how the file was, etc
 * Its also storing the information we need to tell the GPU which model we want to draw.
 */
-struct MeshData {
+struct Mesh {
 	std::string path{};
 
 	unsigned int VAOID{ 0 }, VertexBufferID{ 0 }, IndexBufferID{ 0 };
@@ -24,8 +24,8 @@ struct MeshData {
 	bool hasNormals{ false }, hasColours{ false }, hasTexCoords{ false };
 	float minY{ 0.0f }, maxY{ 0.0 };
 
-	MeshData() = default;
-  ~MeshData() {
+	Mesh() = default;
+  ~Mesh() {
     if (vertices) {
       delete[] vertices;
       vertices = nullptr;
@@ -36,11 +36,11 @@ struct MeshData {
     }
   }
 
-	MeshData(const MeshData&) = delete;
-	MeshData& operator=(const MeshData&) = delete;
+	Mesh(const Mesh&) = delete;
+	Mesh& operator=(const Mesh&) = delete;
 
-  MeshData(MeshData&& other) noexcept { *this = static_cast<MeshData&&>(other); }
-  MeshData& operator=(MeshData&& other) noexcept {
+  Mesh(Mesh&& other) noexcept { *this = static_cast<Mesh&&>(other); }
+  Mesh& operator=(Mesh&& other) noexcept {
     if (this != &other) {
       delete[] vertices;
       delete[] indices;

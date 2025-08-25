@@ -13,7 +13,7 @@ bool Window::createWindow(const unsigned int width, const unsigned int height, c
 Window::Window(const unsigned int width, const unsigned int height, const char* title): width(width), height(height) {
 	// Should the constructor be responsible for creating the window? ~~~
 	// Should the window just be a data holder and the window manager handle everything? ~~~
-	debugLog("Window", "Create start time: " + std::to_string(glfwGetTime()), true);
+	debugLog("Window", "createWindow", "Start time: " + std::to_string(glfwGetTime()), true);
 
 	if (!createWindow(width, height, title)) return; // Constructor should not create window ~~~
 	if (!initGLAD()) return; // Constructor should not initialize GLAD ~~~
@@ -21,11 +21,11 @@ Window::Window(const unsigned int width, const unsigned int height, const char* 
 	setupGLState(); // Constructor should not setup GL state ~~~
 
 	// Needs to be extracted out of window constructor to a more appropriate place ~~~
-	debugLog("OpenGL", "OpenGL Info", true); 
-	debugLog("OpenGL", "Version: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))), true);
-	debugLog("OpenGL", "Vendor: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR))), true);
-	debugLog("OpenGL", "Renderer: " + std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER))), true);
-	debugLog("Window", "Create finish time: " + std::to_string(glfwGetTime()), true);
+	debugLog("Window", "OpenGL", "OpenGL Info", true); 
+	debugLog("Window", "OpenGL", "Version: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))), true);
+	debugLog("Window", "OpenGL", "Vendor: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR))), true);
+	debugLog("Window", "OpenGL", "Renderer: " + std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER))), true);
+	debugLog("Window", "Window", "Create finish time: " + std::to_string(glfwGetTime()), true);
 }
 
 Window::~Window() {

@@ -152,6 +152,10 @@ bool parseBMP(const char* filename, BMP& bmpOut) {
 	bmpOut.infoHeader.colorsUsed      = colorsUsed;
 	bmpOut.infoHeader.colorsImportant = colorsImportant;
 	bmpOut.pixels.resize(static_cast<size_t>(width) * static_cast<size_t>(height) * 3);
+	if(bmpOut.pixels.empty()) {
+		delete[] buffer;
+		return error("BMPParser", "parseBMP", "Failed to allocate memory for pixel data");
+	}
 
 	const unsigned char* srcPixels = buffer + dataOffset;
 	for (int row = 0; row < height; ++row) {
