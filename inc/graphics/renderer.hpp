@@ -6,27 +6,32 @@
 #include "scene/sceneManager.hpp"
 #include "math/mat4.hpp"
 
+constexpr int SKYBOX_TU{ 20 };
+
 class Renderer {
 public:
-	void setProgram(unsigned int program);
-
+	bool setProgram(unsigned int program);
 	unsigned int getProgram() const { return program; }
-	int getIsSkyboxLocation() const { return modelIsSkyboxLocation; }
-	int getSkyboxTextureLocation() const { return modelSkyboxTextureLocation; }
-	int getLightCountLocation() const { return lightCountLocation; }
 
 	void updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const;
+	void updateLightCount(int count) const;
 
-	bool drawModel(MeshManager&, SceneManager& sceneManager, const ModelData& instance, const Mat4& view, const Mat4& projection) const;
+	bool drawModel(MeshManager&, SceneManager& sceneManager, const ModelData& instance) const;
+	void setModelIsSkybox(bool isSkybox) const; 
+
+	void bindSkyboxTexture(unsigned int texture) const;
 
 private:
 	unsigned int program{ 0 };
 
-	int modelLightedLocation{ -1 }, modelUseTexturesLocation{ -1 }, modelIsSkyboxLocation{ -1 };
-	int modelColourModeLocation{ -1 }, modelColourOverrideLocation{ -1 };
-	int modelHasVertColourLocation{ -1 }, modelMinYMaxYLocation{ -1 }, modelSeedLocation{ -1 };
-	int modelLocation{ -1 }, modelViewLocation{ -1 }, modelProjectionLocation{ -1 };
+	int modelLocation{ -1 };
+	int modelViewLocation{ -1 }, modelProjectionLocation{ -1 };
 	int modelInverseTransposeLocation{ -1 };
-	int modelSpecularLocation{ -1 };
-	int modelSkyboxTextureLocation{ -1 }, eyeLocation{ -1 }, lightCountLocation{ -1 };
+	int eyeLocation{ -1 };
+	int modelColourModeLocation{ -1 }, modelColourOverrideLocation{ -1 }, modelSpecularLocation{ -1 };
+	int modelLightedLocation{ -1 }, modelHasVertColourLocation{ -1 };
+	int modelMinYMaxYLocation{ -1 }, modelSeedLocation{ -1 };
+	int modelUseTexturesLocation{ -1 }, modelTexMixRatiosLocation{ -1 };
+	int modelIsSkyboxLocation{ -1 }, skyboxTextureLocation{ -1 };
+	int lightCountLocation{ -1 };
 };

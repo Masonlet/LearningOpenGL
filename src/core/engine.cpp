@@ -31,14 +31,10 @@ bool Engine::setupShaders() {
   if (!shaderManager.createProgramFromFile("shader1", vert_shader, frag_shader)) 
     return error("Engine", "setupShaders", "Failed to create shader program from file");
 
-  currentProgram = shaderManager.getIDFromFriendlyName("shader1");
-  if (currentProgram == 0) 
-		return error("Engine", "setupShaders", "Shader program ID is 0 after creation");
+  if (!renderer.setProgram(shaderManager.getIDFromFriendlyName("shader1")))
+    return error("Engine", "setupShaders", "");
   
-  renderer.setProgram(currentProgram); // Should this be set here?
-
-	debugLog("setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);
-  return true;
+  return debugLog("setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);;
 }
 
 void Engine::tick(const float currentTime) {
@@ -58,7 +54,7 @@ void Engine::tick(const float currentTime) {
   }
 
   lastTime = currentTime;
-  deltaTime = smoothingFactor * deltaTime + (2.0f - smoothingFactor) * rawDelta;
+  deltaTime = smoothingFactor * deltaTime + (1.0f - smoothingFactor) * rawDelta;
 }
   
 bool Engine::loadSceneMeshes() {
@@ -69,7 +65,6 @@ bool Engine::loadSceneMeshes() {
 	debugLog("loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   const unsigned int shaderProgramID = renderer.getProgram();
   if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
-  // Could make this check currentProgram and set it here?
 
 	std::map<std::string, ModelData>& modelData = sceneManager.scene.getModels();
 	std::map<std::string, ModelData>::iterator it = modelData.begin();
@@ -80,10 +75,9 @@ bool Engine::loadSceneMeshes() {
         return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + model.meshPath);
 	}
 
-  glUniform1i(renderer.getLightCountLocation(), sceneManager.scene.getLightCount());
-  sceneManager.scene.updateLights(currentProgram);
-	debugLog("loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);
-  return true;
+	renderer.updateLightCount(sceneManager.scene.getLightCount());
+  sceneManager.scene.updateLights(shaderProgramID);
+  return debugLog("loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);;
 }
 
 void Engine::run() {
@@ -102,16 +96,13 @@ void Engine::run() {
 }
 
 void Engine::renderFrame() {
-  // Begin Frame
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  const Mat4 view = sceneManager.scene.getActiveCamera()->LookAt();
-  const Mat4 projection = sceneManager.scene.getActiveCamera()->Perspective(windowManager.getWindow()->getAspect());
-  const Vec3 eye = sceneManager.scene.getActiveCamera()->pos;
-  renderer.updateCameraUniforms(eye, view, projection);
-  sceneManager.scene.updateLightUniforms(currentProgram);
+	const Camera* cam = sceneManager.scene.getActiveCamera();
+  renderer.updateCameraUniforms(cam->pos, cam->LookAt(), cam->Perspective(windowManager.getWindow()->getAspect()));
 
-  // Draw Frame
+  sceneManager.scene.updateLightUniforms(renderer.getProgram());
+
   ModelData* skyBox{ nullptr };
   std::vector<ModelData*> transparentInstances;
   std::map<std::string, ModelData>& instances = sceneManager.scene.getModels();
@@ -120,7 +111,7 @@ void Engine::renderFrame() {
     if (instance.name == "skybox") skyBox = &instance;
     instance.modelMatrix = Mat4::modelMatrix({ { instance.pos, 0.0f }, instance.rot, instance.size });
 
-    if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, sceneManager, instance, view, projection);
+    if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, sceneManager, instance);
     else                           transparentInstances.push_back(&instance);
   }
 
@@ -129,6 +120,7 @@ void Engine::renderFrame() {
       const Vec3& a = transparentInstances[j]->pos;
       const Vec3& b = transparentInstances[j + 1]->pos;
 
+      const Vec3 eye = cam->pos;
       float distA = (a.x - eye.x) * (a.x - eye.x) + (a.y - eye.y) * (a.y - eye.y) + (a.z - eye.z) * (a.z - eye.z);
       float distB = (b.x - eye.x) * (b.x - eye.x) + (b.y - eye.y) * (b.y - eye.y) + (b.z - eye.z) * (b.z - eye.z);
 
@@ -141,33 +133,27 @@ void Engine::renderFrame() {
   }
 
   for (ModelData* instance : transparentInstances) 
-    renderer.drawModel(meshManager, sceneManager, *instance, view, projection);
+    renderer.drawModel(meshManager, sceneManager, *instance);
 
-  glUniform1i(renderer.getIsSkyboxLocation(), GL_TRUE);
   if (skyBox) {
+    renderer.setModelIsSkybox(true);
     skyBox->isVisible = true;
     skyBox->pos = sceneManager.scene.getActiveCamera()->pos;
     skyBox->modelMatrix = Mat4::modelMatrix({ { skyBox->pos, 0.0f }, skyBox->rot, skyBox->size });
     
-    int skyboxTextureID = sceneManager.scene.getTextureIDFromName(skyBox->name);
-
-    glActiveTexture(GL_TEXTURE20);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureID);
-    
-    const int skyboxTextureLocation = renderer.getSkyboxTextureLocation();
-    glUniform1i(skyboxTextureLocation, 20);
+		renderer.bindSkyboxTexture(sceneManager.scene.getTextureIDFromName(skyBox->name));
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);     
     glDepthMask(GL_FALSE);
-    renderer.drawModel(meshManager, sceneManager, *skyBox, view, projection);
-    skyBox->isVisible = false;
+    renderer.drawModel(meshManager, sceneManager, *skyBox);
     glDepthMask(GL_TRUE);
     glCullFace(GL_BACK);
-  }
-  glUniform1i(renderer.getIsSkyboxLocation(), GL_FALSE);
 
-  // End Frame
+    skyBox->isVisible = false;
+    renderer.setModelIsSkybox(false);
+  }
+
   glBindVertexArray(0);
 }
 

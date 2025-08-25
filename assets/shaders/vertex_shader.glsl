@@ -3,7 +3,7 @@
 uniform mat4 mProj;
 uniform mat4 mView;
 uniform mat4 mModel;
-uniform mat4 mModel_InverseTranpose;
+uniform mat4 mModel_InverseTranspose;
 
 uniform int colourMode;
 uniform vec4 colourOverride;
@@ -39,7 +39,7 @@ void main() {
     gl_Position = (mProj * mView * mModel) * vec4(vPos.xyz, 1.0);
 
 	vertWorldPosition = mModel * vec4(vPos.xyz, 1.0);
-	vertNormal        = mModel_InverseTranpose * vec4(vNorm.xyz, 0.0);
+	vertNormal        = mModel_InverseTranspose * vec4(vNorm.xyz, 0.0);
 	vertNormal.xyz    = normalize(vertNormal.xyz);
 	vertTextCoords    = vTextCoords;
 

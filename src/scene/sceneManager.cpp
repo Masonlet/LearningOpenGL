@@ -137,8 +137,7 @@ bool SceneManager::loadTxtScene(const std::string& sceneIn) {
 	}
 
 	scene.setSceneName(sceneIn);
-	debugLog("SceneManager", "Scene load finish time:" + std::to_string(glfwGetTime()), true);
-	return true;
+	return debugLog("SceneManager", "Scene load finish time:" + std::to_string(glfwGetTime()), true);;
 }
 bool SceneManager::processSceneLine(const unsigned char*& p) {
 	if (!p || *p == '\0') return true;
@@ -165,9 +164,8 @@ bool SceneManager::processSceneLine(const unsigned char*& p) {
 	else if (strcmp(nameStr, "triangle") == 0)    handled = handleTriangleLine(p);
 	else if (strcmp(nameStr, "maze") == 0)        handled = handleMazeLine(p);
 	else if (strcmp(nameStr, "mazeData") == 0)    handled = handleMazeData(p);
-	if (handled) debugLog("SceneManager", "Added " + std::string(reinterpret_cast<const char*>(token)), true);
-	else         debugLog("SceneManager", "Failed to add " + std::string(nameStr), true);
-	return handled;
+	return handled ? debugLog("SceneManager", "Added: " + std::string(nameStr), true) 
+		             : error("SceneManager", "processSceneLine", "Failed to handle: " + std::string(nameStr));
 }
 bool SceneManager::handleModelLine(const unsigned char*& p) {
 	ModelData model;

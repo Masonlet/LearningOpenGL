@@ -47,7 +47,7 @@ void Scene::updateLightUniforms(int shaderProgram) {
 		if (light.position_UL != -1)    glUniform4f(light.position_UL, light.pos.x, light.pos.y, light.pos.z, 1.0f);
 		if (light.diffuse_UL != -1)     glUniform4f(light.diffuse_UL, light.diffuse.r, light.diffuse.g, light.diffuse.b, light.diffuse.a);
 		if (light.attenuation_UL != -1) glUniform4f(light.attenuation_UL, light.attenuation.r, light.attenuation.g, light.attenuation.b, light.attenuation.a);
-		if (light.direction_UL != -1)   glUniform4f(light.direction_UL, light.direction.r, light.direction.g, light.direction.b, { 1.0f });
+		if (light.direction_UL != -1)   glUniform4f(light.direction_UL, light.direction.r, light.direction.g, light.direction.b, 1.0f);
 		if (light.param1_UL != -1)      glUniform4f(light.param1_UL, static_cast<float>(light.type), light.param1.x, light.param1.y, 0.0f);
 		if (light.param2_UL != -1)      glUniform4f(light.param2_UL, light.enabled, 0.0f, 0.0f, 0.0f);
 	}
@@ -87,9 +87,7 @@ bool Scene::bindTextureToModel(const std::string& modelName, unsigned int slot, 
 				break; 
 			}
 		data.useTextures = any;
-
-		debugLog("Scene", "unbind texture: " + modelName + "[slot " + std::to_string(slot) + "]", true);
-		return true;
+		return debugLog("Scene", "unbind texture: " + modelName + "[slot " + std::to_string(slot) + "]", true);;
 	}
 
 	std::map<std::string, BMPTexture>::iterator tIt = textures.find(textureName);
@@ -102,8 +100,7 @@ bool Scene::bindTextureToModel(const std::string& modelName, unsigned int slot, 
 	data.textureNames[slot] = textureName;
 	data.textureMixRatio[slot] = mix;
 
-	debugLog("Scene", "bind texture: " + textureName + " to " + modelName +" [slot " + std::to_string(slot) + "], mix=" + std::to_string(mix), true);
-	return true;
+	return debugLog("Scene", "bind texture: " + textureName + " to " + modelName + " [slot " + std::to_string(slot) + "], mix=" + std::to_string(mix), true);
 }
 
 ParsedMaze* Scene::getMazeFromName(const std::string& name) {

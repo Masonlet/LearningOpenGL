@@ -17,7 +17,7 @@ struct Engine {
 	SceneManager sceneManager;
 
 	bool wireframe{ false };
-	unsigned int currentProgram{ 0 }, currentModel{ 0 };
+	unsigned int currentModel{ 0 };
 	float deltaTime{ 0.0f }, lastTime{ 0.0f };
 
 	bool initialize(const unsigned int width, const unsigned int height, const char* title);

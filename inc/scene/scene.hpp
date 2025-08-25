@@ -25,28 +25,28 @@ public:
   }
 
   std::map<std::string, ModelData>& getModels() { return models; }
-
 	std::map<std::string, Camera>& getCameras() { return cameras; }
+  std::map<std::string, Light>& getLights() { return lights; }
+  std::map<std::string, BMPTexture>& getTextures() { return textures; }
+  std::map<std::string, Grid>& getGrids() { return grids; }
+  std::map<std::string, Triangle>& getTriangles() { return triangles; }
+  std::map<std::string, Square>& getSquares() { return squares; }
+  std::map<std::string, ParsedMaze>& getMaze() { return mazes; }
+
 	size_t getCameraCount() { return cameras.size(); }
+  size_t getLightCount() { return lights.size(); }
+
   Camera* getActiveCamera();
   void setActiveCamera(unsigned int camIndex);
 
-  std::map<std::string, Light>& getLights() { return lights; }
-  size_t getLightCount() { return lights.size(); }
   Light* getLightByName(std::string name);
   void updateLights(int shaderProgram);
   void updateLightUniforms(int shaderProgram);
 
 	bool addTexture(const BMPTexture& data);
-	std::map<std::string, BMPTexture>& getTextures() { return textures; }
   unsigned int getTextureIDFromName(const std::string& textureFileName);
   bool bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix);
 
-	std::map<std::string, Grid>& getGrids() { return grids; }
-	std::map<std::string, Triangle>& getTriangles() { return triangles; }
-	std::map<std::string, Square>& getSquares() { return squares; }
-
-  std::map<std::string, ParsedMaze>& getMaze() { return mazes; }
   ParsedMaze* getMazeFromName(const std::string& name);
 
 private:

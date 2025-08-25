@@ -37,8 +37,7 @@ bool WindowManager::createWindow(const unsigned int width, const unsigned int he
   glfwSetInputMode(window->getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSwapInterval(1);
 
-	debugLog("WindowManager", "Create finish time: " + std::to_string(glfwGetTime()), true);
-  return true;
+  return debugLog("WindowManager", "Create finish time: " + std::to_string(glfwGetTime()), true);
 }
 void WindowManager::destroyWindow() {
   delete window;
