@@ -1,8 +1,6 @@
 #include <glad/glad.h>
 #include "graphics/meshManager.hpp"
-#include "utils/fileParser.hpp"
 #include "utils/log.hpp"
-#include "objects/plyParser.hpp"
 
 MeshManager::~MeshManager() {
   for (std::map<std::string, Mesh>::iterator it = nameToMeshes.begin(); it != nameToMeshes.end(); ++it) {
@@ -15,18 +13,9 @@ MeshManager::~MeshManager() {
 
   nameToMeshes.clear();
 }
-bool MeshManager::UploadPathToGPU(const std::string& path, unsigned int shaderID) {
-  Mesh mesh;
-  if (!parsePlyMesh(path, mesh))
-    return false;
-
-	return UploadMeshToGPU(mesh, shaderID);
-}
 
 bool MeshManager::findMesh(const std::string& path) const {
-	std::map<std::string, Mesh>::const_iterator it = nameToMeshes.find(path);
-	if (it == nameToMeshes.end()) return false;
-	return true;
+	return nameToMeshes.find(path) != nameToMeshes.end();
 }
 bool MeshManager::getMesh(const std::string& name, Mesh*& data) {
   std::map<std::string, Mesh>::iterator it = nameToMeshes.find(name);
@@ -35,9 +24,9 @@ bool MeshManager::getMesh(const std::string& name, Mesh*& data) {
   return true;
 }
 
-bool MeshManager::UploadMeshToGPU(Mesh& mesh, unsigned int shaderID) {
-  if (!mesh.vertices || !mesh.indices || mesh.numVertices == 0 || mesh.numIndices == 0)
-    return error("MeshManager", "loadMeshPrimitive", "Invalid primitive mesh data");
+bool MeshManager::uploadMeshToGPU(const std::string& path, Mesh& mesh, unsigned int shaderID) {
+  if (mesh.empty())   return error("MeshManager", "uploadMeshToGPU", "Invalid mesh data");
+  if (findMesh(path)) return error("MeshManager", "uploadMeshToGPU", "Mesh data exists already");
 
   //Create a VAO (Vertex Array Object), which will keep track of all the 'state' needed to draw from this buffer
   glGenVertexArrays(1, &(mesh.VAOID)); //Ask OpenGL for a new buffer ID
@@ -53,7 +42,6 @@ bool MeshManager::UploadMeshToGPU(Mesh& mesh, unsigned int shaderID) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IndexBufferID);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh.numIndices, mesh.indices, GL_STATIC_DRAW);
 
-  //Set the vertex attributes
   int vpos_location = glGetAttribLocation(shaderID, "vPos");
   if (vpos_location != -1) {
     glEnableVertexAttribArray(vpos_location);
@@ -75,20 +63,19 @@ bool MeshManager::UploadMeshToGPU(Mesh& mesh, unsigned int shaderID) {
     glEnableVertexAttribArray(vTextCoords_location);
     glVertexAttribPointer(vTextCoords_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
   }
-
-  // Now that all the parts are set up, set the VAO to zero
+    
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   GLenum err = glGetError();
-	if (err != GL_NO_ERROR) return error("MeshManager", "UploadToGPU", "OpenGL error " + std::to_string(err) + "after uploading mesh " + mesh.path);
+	if (err != GL_NO_ERROR) return error("MeshManager", "UploadToGPU", "OpenGL error " + std::to_string(err) + "after uploading mesh " + path);
 
   delete[] mesh.vertices;
   mesh.vertices = nullptr;
   delete[] mesh.indices;
   mesh.indices = nullptr;
 
-  this->nameToMeshes[mesh.path] = std::move(mesh);
+  this->nameToMeshes[path] = std::move(mesh);
   return true;
 }

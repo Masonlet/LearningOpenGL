@@ -4,15 +4,17 @@
 #include "graphics/renderer.hpp"
 #include "core/windowManager.hpp"
 #include "core/inputManager.hpp"
-#include "scene/sceneManager.hpp"
+#include "core/sceneManager.hpp"
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
+#include "graphics/textureManager.hpp"
 
 struct Engine {
 	WindowManager windowManager;
 	Renderer renderer;
 	ShaderManager shaderManager;
 	MeshManager meshManager;
+	TextureManager textureManager;
 	InputManager inputManager;
 	SceneManager sceneManager;
 
@@ -22,7 +24,7 @@ struct Engine {
 
 	bool initialize(const unsigned int width, const unsigned int height, const char* title);
 	bool setScene(const std::string& sceneIn = "default") { return sceneManager.loadTxtScene(sceneIn); }
-	bool loadSceneMeshes();
+	bool loadSceneAssets();
 
 	void run();
 
@@ -30,7 +32,10 @@ struct Engine {
 	void decrementModel();
 
 private:
-	bool setupShaders();	
+	bool setupShaders();
+	bool loadSceneMeshes();
+	bool loadSceneTextures();
+
 	void tick(const float currentTime);
 	void renderFrame();
 };

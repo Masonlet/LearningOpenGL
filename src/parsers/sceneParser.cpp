@@ -1,5 +1,5 @@
-#include "scene/sceneParser.hpp"
-#include "utils/parser.hpp"
+#include "parsers/sceneParser.hpp"
+#include "parsers/parserFunctions.hpp"
 #include "utils/log.hpp"
 
 bool parseModel(const unsigned char*& p, Model& out) {
@@ -41,39 +41,12 @@ bool parseCamera(const unsigned char*& p, Camera& out) {
   if (out.type != 0) PARSE_OR(return false, parseFloat, out.moveDistance, "camera move distance");
   return true;
 }
-bool parseTexture(const unsigned char*& p, BMPTexture& out) {
-  PARSE_STRING_OR(return false, p, out.name, 128, "texture name");
-  std::string path;
-  PARSE_STRING_OR(return false, p, path, 128, "texture file");
-  PARSE_OR(return false, parseFloat, out.mix, "texture mix");
-  PARSE_OR(return false, parseVec2, out.tiling, "texture tiling");
-  return out.createBMPTexture(path, true);
-}
-bool parseCubeTexture(const unsigned char*& p, BMPTexture& out) {
-  PARSE_STRING_OR(return false, p, out.name, 128, "texture name");
-  std::string path1, path2, path3, path4, path5, path6;
-  PARSE_STRING_OR(return false, p, path1, 128, "texture file");
-  PARSE_STRING_OR(return false, p, path2, 128, "texture file");
-  PARSE_STRING_OR(return false, p, path3, 128, "texture file");
-  PARSE_STRING_OR(return false, p, path4, 128, "texture file");
-  PARSE_STRING_OR(return false, p, path5, 128, "texture file");
-  PARSE_STRING_OR(return false, p, path6, 128, "texture file");
-  PARSE_OR(return false, parseFloat, out.mix, "texture mix");
-  PARSE_OR(return false, parseVec2, out.tiling, "texture tiling");
-	return out.createBMPCubeTexture(path1, path2, path3, path4, path5, path6, true, true);
-}
-bool parseTextureConnection(const unsigned char*& p, std::string& model, unsigned int& slot, std::string& texture, float& mix) {
-  PARSE_STRING_OR(return false, p, model, 64, "texture connection model name");
-  PARSE_OR(return false, parseUInt, slot, "texture connection slot");
-  PARSE_STRING_OR(return false, p, texture, 128, "texture connection name");
-  PARSE_OR(return false, parseFloat, mix, "texture connection mix");
-  return true;
-}
+
 bool parseTriangle(const unsigned char*& p, Model& out) {
   PARSE_STRING_OR(return false, p, out.name, 64, "triangle name");
   Vec3 temp;
   PARSE_OR(return false, parseVec3, temp, "triangle position");
-	out.transform.pos = { temp, 1.0f };
+  out.transform.pos = { temp, 1.0f };
   PARSE_OR(return false, parseVec3, out.transform.rot, "triangle rotation");
   PARSE_OR(return false, parseVec3, out.transform.size, "triangle size");
   return parseColour(p, out.colour, out.colourMode);
@@ -87,4 +60,28 @@ bool parseGrid(const unsigned char*& p, Grid& out) {
   PARSE_OR(return false, parseVec3, out.transform.rot, "cubeGrid rotation");
   PARSE_OR(return false, parseVec3, out.transform.size, "cubeGrid scale");
   return parseColour(p, out.colour, out.colourMode);
-} 
+}
+
+bool parseTexture(const unsigned char*& p, TextureData& out) {
+  PARSE_STRING_OR(return false, p, out.name, 128, "texture name");
+  PARSE_STRING_OR(return false, p, out.faces[0], 256, "texture file");
+  PARSE_OR(return false, parseFloat, out.mix, "texture mix");
+  PARSE_OR(return false, parseVec2, out.tiling, "texture tiling");
+  out.isCube = false;
+  return true;
+}
+bool parseCubeTexture(const unsigned char*& p, TextureData& out) {
+  PARSE_STRING_OR(return false, p, out.name, 128, "cubemap name");
+  for (int i = 0; i < 6; ++i) PARSE_STRING_OR(return false, p, out.faces[i], 256, "cubemap face");
+  PARSE_OR(return false, parseFloat, out.mix, "cubemap mix");
+  PARSE_OR(return false, parseVec2, out.tiling, "cubemap tiling");
+  out.isCube = true;
+  return true;
+}
+bool parseTextureConnection(const unsigned char*& p, std::string& model, unsigned int& slot, std::string& texture, float& mix) {
+  PARSE_STRING_OR(return false, p, model, 64, "texture connection model name");
+  PARSE_OR(return false, parseUInt, slot, "texture connection slot");
+  PARSE_STRING_OR(return false, p, texture, 128, "texture connection name");
+  PARSE_OR(return false, parseFloat, mix, "texture connection mix");
+  return true;
+}

@@ -3,7 +3,7 @@
 #include "math/vec2.hpp"
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
-#include "core/colour.hpp"
+#include "objects/colour.hpp"
 
 #ifndef PARSE_OR 
 #define PARSE_OR(onFail, parser, target, errorMsg) \

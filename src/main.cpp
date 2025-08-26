@@ -5,8 +5,6 @@
 #endif
 
 #include "core/engine.hpp"
-#include "textures/bmpParser.hpp"
-#include "textures/bmp.hpp"
 
 int main() {
 #ifdef NDEBUG
@@ -19,7 +17,7 @@ int main() {
 		return -1;
 	if (!engine.setScene("SceneTest"))          
 		return -1;
-	if (!engine.loadSceneMeshes())              
+	if (!engine.loadSceneAssets())              
 		return -1;
 	
 	engine.run();

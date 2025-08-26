@@ -1,5 +1,5 @@
 #include <glad/glad.h>
-#include "scene/scene.hpp"
+#include "core/scene.hpp"
 #include "math/constants.hpp"
 
 Camera* Scene::getActiveCamera() {
@@ -15,18 +15,7 @@ void Scene::setActiveCamera(unsigned int camIndex) {
 	activeCam = cam->first;
 }
 
-Light* Scene::getLightByName(const std::string& name) {
-	std::map<std::string, Light>& m = getLights();
-	std::map<std::string, Light>::iterator it = m.find(name);
-	if (it == m.end()) {
-		debugLog("Scene", "getLightByName", "Light " + name + " not found.");
-		return nullptr; 
-	}
-	return &it->second;
-}
 void Scene::updateLights(int shaderProgram) {
-	std::map<std::string, Light>& lights = getLights();
-
 	unsigned int i{ 0 };
 	for (std::map<std::string, Light>::iterator it = lights.begin(); it != lights.end() && i < NUMBEROFLIGHTS; ++it, ++i) {
 		Light& light = it->second;
@@ -53,23 +42,6 @@ void Scene::updateLightUniforms(int shaderProgram) {
 	}
 }
 
-bool Scene::addTexture(const BMPTexture& data) {	
-	if (data.name.empty())                    return error("Scene", "addTexture", "texture name is empty");
-	if (data.index == 0)                      return error("Scene", "addTexture", "texture GL id is 0");
-	if (data.slot >= Model::NUM_TEXTURES) return error("Scene", "addTexture", "Texture slot " + std::to_string(data.slot) + " out of range");
-	
-	const std::string name = data.name;
- 	if (textures.find(name) != textures.end()) return error("Scene", "addTexture", "Texture file already exists: " + name);
-
-	auto res = textures.emplace(name, data);
-	if (!res.second) return error("Scene", "addTexture", "Name already used: " + data.name);
-	return true;	
-}
-
-unsigned int Scene::getTextureIDFromName(const std::string& textureFileName) {
-	std::map<std::string, BMPTexture>::iterator it = textures.find(textureFileName);
-	return (it == textures.end()) ? 0 : static_cast<unsigned>(it->second.index);
-}
 bool Scene::bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix) {
 	if (slot >= Model::NUM_TEXTURES) return error("Scene", "bindTextureToModel", "slot out of range: " + std::to_string(slot));
 
@@ -91,15 +63,8 @@ bool Scene::bindTextureToModel(const std::string& modelName, unsigned int slot, 
 		return debugLog("Scene", "bindTextureToModel", "unbind: " + modelName + "[slot " + std::to_string(slot) + "]", true);;
 	}
 
-	std::map<std::string, BMPTexture>::iterator tIt = textures.find(textureName);
-	if (tIt == textures.end()) return error("Scene", "bindTextureToModel", "texture not found: " + textureName);
-
-	if (mix < 0.0f) mix = 0.0f;
-	if (mix > 1.0f) mix = 1.0f;
-
 	data.useTextures = true;
 	data.textureNames[slot] = textureName;
-	data.textureMixRatio[slot] = mix;
-
+	data.textureMixRatio[slot] = (mix < 0.0f) ? 0.0f : (mix > 1.0f ? 1.0f : mix);
 	return debugLog("Scene", "bindTextureToModel", "bind: " + textureName + " to " + modelName + " [slot " + std::to_string(slot) + "], mix=" + std::to_string(mix), true);
 }

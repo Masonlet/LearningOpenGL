@@ -1,9 +1,8 @@
 #pragma once
 
-#include "scene/scene.hpp"
+#include "core/scene.hpp"
 #include "graphics/meshManager.hpp"
-#include "utils/parserObjects.hpp"
-#include "utils/parser.hpp"
+#include "parsers/parserFunctions.hpp"
 
 struct SceneManager {
   Scene scene;
@@ -20,8 +19,6 @@ private:
     if (!parseFN(p, obj)) return false;
     return scene.addObject(map, obj, type);
   }
-
-  bool parseAndAddTexture(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, BMPTexture&), const char* type);
 
   bool handleTextureConnectionLine(const unsigned char*& p);
 };

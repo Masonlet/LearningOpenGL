@@ -1,8 +1,9 @@
 #pragma once
 
-#include "vec2.hpp"
-#include "vec3.hpp"
-#include "vec4.hpp"
+#include "math/vec4.hpp"
+#include "math/transform.hpp"
+#include "objects/colour.hpp"
+#include <string>
 
 struct Grid {
 	std::string name;

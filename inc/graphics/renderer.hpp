@@ -2,8 +2,9 @@
 
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
+#include "graphics/textureManager.hpp"
 #include "objects/model.hpp"
-#include "scene/sceneManager.hpp"
+#include "core/sceneManager.hpp"
 #include "math/mat4.hpp"
 
 constexpr int SKYBOX_TU{ 20 };
@@ -16,7 +17,7 @@ public:
 	void updateCameraUniforms(const Vec3& eye, const Mat4& view, const Mat4& projection) const;
 	void updateLightCount(int count) const;
 
-	bool drawModel(MeshManager&, SceneManager& sceneManager, const Model& instance) const;
+	bool drawModel(MeshManager& meshManager, TextureManager& textureManager, SceneManager& sceneManager, const Model& instance) const;
 	void setModelIsSkybox(bool isSkybox) const; 
 
 	void bindSkyboxTexture(unsigned int texture) const;

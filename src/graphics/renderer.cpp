@@ -87,7 +87,7 @@ static Vec3 seedFromName(const std::string& s) {
 	b = fmod(b / 255.0f, 1.0f);
 	return { r, g, b };
 }
-bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, const Model& instance) const {
+bool Renderer::drawModel(MeshManager& meshManager, TextureManager& textureManager, SceneManager& sceneManager, const Model& instance) const {
 	if (!instance.isVisible) return true;
 
 	Mesh* data;
@@ -113,7 +113,7 @@ bool Renderer::drawModel(MeshManager& meshManager, SceneManager& sceneManager, c
 			const std::string& name = instance.textureNames[i];
 			if (name.empty()) continue;
 
-			int textureID = sceneManager.scene.getTextureIDFromName(name);
+			unsigned int textureID = textureManager.getTextureID(name);
 			if (textureID == 0) return error("Renderer", "drawModel", "Could not find texture: " + name);
 
 			glActiveTexture(GL_TEXTURE0 + static_cast<unsigned int>(i));

@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 
 #include "graphics/shaderManager.hpp"
-#include "utils/fileParser.hpp"
+#include "parsers/fileParser.hpp"
 
 #include <sstream>
 

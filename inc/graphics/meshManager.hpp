@@ -1,6 +1,6 @@
 #pragma once
 
-#include "objects/mesh.hpp"
+#include "graphics/mesh.hpp"
 #include <string>
 #include <map>
 
@@ -9,9 +9,8 @@ public:
 	MeshManager() = default;
 	~MeshManager();
 
-	bool UploadPathToGPU(const std::string& path, unsigned int shaderID);
-	bool UploadMeshToGPU(Mesh& mesh, unsigned int shaderID);
-
+	bool uploadMeshToGPU(const std::string& path, Mesh& mesh, unsigned int shaderID);
+	
 	bool findMesh(const std::string& name) const;
 	bool getMesh(const std::string& name, Mesh*& dataOut);
 

@@ -1,14 +1,16 @@
 #include <glad/glad.h>
 
-#include "scene/sceneManager.hpp"
-#include "scene/sceneParser.hpp"
+#include "core/sceneManager.hpp"
 
-#include "utils/fileParser.hpp"
-#include "utils/parser.hpp"
-#include "utils/log.hpp"
+#include "parsers/sceneParser.hpp"
+#include "parsers/fileParser.hpp"
+#include "parsers/parserFunctions.hpp"
 
-#include "objects/grids.hpp"
+#include "objects/grid.hpp"
 #include "objects/primitives.hpp"
+#include "objects/textureData.hpp"
+
+#include "utils/log.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -157,18 +159,13 @@ bool SceneManager::processSceneLine(const unsigned char*& p) {
 	if      (strcmp(nameStr, "model") == 0)       handled = parseAndAddObject<Model>(p, &parseModel, scene.getModels(), "model");
 	else if (strcmp(nameStr, "light") == 0)       handled = parseAndAddObject<Light>(p, &parseLight, scene.getLights(), "light");
 	else if (strcmp(nameStr, "camera") == 0)      handled = parseAndAddObject<Camera>(p, &parseCamera, scene.getCameras(), "camera");
-	else if (strcmp(nameStr, "texture") == 0)     handled = parseAndAddTexture(p, &parseTexture, "texture");
-	else if (strcmp(nameStr, "textureCube") == 0) handled = parseAndAddTexture(p, &parseCubeTexture, "cube texture");
-	else if (strcmp(nameStr, "textureAdd") == 0)  handled = handleTextureConnectionLine(p);
 	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = parseAndAddObject<Grid>(p, &parseGrid, scene.getGrids(), "cubeGrid");
 	else if (strcmp(nameStr, "squareGrid") == 0)  handled = parseAndAddObject<Grid>(p, &parseGrid, scene.getGrids(), "squareGrid");
 	else if (strcmp(nameStr, "triangle") == 0)    handled = parseAndAddObject<Model>(p, &parseTriangle, scene.getModels(), "triangle");
+	else if (strcmp(nameStr, "texture") == 0)     handled = parseAndAddObject<TextureData>(p, &parseTexture, scene.getTextures(), "texture");
+	else if (strcmp(nameStr, "textureCube") == 0) handled = parseAndAddObject<TextureData>(p, &parseCubeTexture, scene.getTextures(), "cube texture");
+	else if (strcmp(nameStr, "textureAdd") == 0)  handled = handleTextureConnectionLine(p);
 	return handled ? true : error("SceneManager", "processSceneLine", "Failed to handle: " + std::string(nameStr));
-}
-bool SceneManager::parseAndAddTexture(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, BMPTexture&), const char* type) {
-	BMPTexture t;
-	if (!parseFN(p, t)) return false;
-	return scene.addTexture(t);
 }
 
 bool SceneManager::handleTextureConnectionLine(const unsigned char*& p) {

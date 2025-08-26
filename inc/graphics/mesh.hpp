@@ -2,7 +2,7 @@
 
 #include "math/Vec4.hpp"
 #include "math/vertex.hpp"
-#include "core/colour.hpp"
+#include "objects/colour.hpp"
 #include <string>
 
 /*
@@ -12,28 +12,22 @@ ModelDrawInfo
 * Its also storing the information we need to tell the GPU which model we want to draw.
 */
 struct Mesh {
-	std::string path{};
+  Vertex* vertices{ nullptr };
+  unsigned int* indices{ nullptr };
+  unsigned int numVertices{ 0 }, numIndices{ 0 }, numTriangles{ 0 };
+
+  bool hasNormals{ false }, hasColours{ false }, hasTexCoords{ false };
+  float minY{ 0.0f }, maxY{ 0.0 };
 
 	unsigned int VAOID{ 0 }, VertexBufferID{ 0 }, IndexBufferID{ 0 };
 	unsigned int VertexBuffer_Start_Index{ 0 }, IndexBuffer_Start_Index{ 0 };
-	unsigned int numVertices{ 0 }, numIndices{ 0 }, numTriangles{ 0 };
 
-	Vertex* vertices { nullptr };
-	unsigned int* indices{ nullptr };
-
-	bool hasNormals{ false }, hasColours{ false }, hasTexCoords{ false };
-	float minY{ 0.0f }, maxY{ 0.0 };
+  inline bool empty() const { return !vertices || !indices || numVertices == 0 || numIndices == 0; }
 
 	Mesh() = default;
   ~Mesh() {
-    if (vertices) {
-      delete[] vertices;
-      vertices = nullptr;
-    }
-    if (indices) {
-      delete[] indices;
-      indices = nullptr;
-    }
+    if (vertices) { delete[] vertices; vertices = nullptr; }
+    if (indices)  { delete[] indices;  indices  = nullptr; }
   }
 
 	Mesh(const Mesh&) = delete;
@@ -44,8 +38,6 @@ struct Mesh {
     if (this != &other) {
       delete[] vertices;
       delete[] indices;
-
-      path = other.path;
 
       VAOID = other.VAOID;
       VertexBufferID = other.VertexBufferID;

@@ -3,9 +3,9 @@
 #include "utils/log.hpp"
 #include "objects/model.hpp"
 #include "objects/light.hpp"
-#include "core/camera.hpp"
-#include "utils/parserObjects.hpp"
-#include "textures/bmp.hpp"
+#include "objects/camera.hpp"
+#include "objects/grid.hpp"
+#include "objects/textureData.hpp"
 #include <map>
 #include <string>
 
@@ -24,11 +24,19 @@ public:
     return true;
   }
 
+  template <typename T, typename MapT>
+  bool getObjectByName(MapT& map, const std::string& name, T*& obj, const char* type) {
+    typename MapT::iterator it = map.find(name);
+    if (it == map.end()) return error("Scene", "getObjectByName", std::string(type) + " not found: " + name);
+    obj = &it->second;
+    return true;
+	}
+
   std::map<std::string, Model>& getModels() { return models; }
 	std::map<std::string, Camera>& getCameras() { return cameras; }
   std::map<std::string, Light>& getLights() { return lights; }
-  std::map<std::string, BMPTexture>& getTextures() { return textures; }
   std::map<std::string, Grid>& getGrids() { return grids; }
+  std::map<std::string, TextureData>& getTextures() { return textures; }
 
 	size_t getCameraCount() { return cameras.size(); }
   size_t getLightCount() { return lights.size(); }
@@ -36,12 +44,9 @@ public:
   Camera* getActiveCamera();
   void setActiveCamera(unsigned int camIndex);
 
-  Light* getLightByName(const std::string& name);
   void updateLights(int shaderProgram);
   void updateLightUniforms(int shaderProgram);
 
-	bool addTexture(const BMPTexture& data);
-  unsigned int getTextureIDFromName(const std::string& textureFileName);
   bool bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix);
 
 private:
@@ -51,6 +56,6 @@ private:
   std::map<std::string, Model> models;
   std::map<std::string, Camera> cameras;
   std::map<std::string, Light> lights;
-	std::map<std::string, BMPTexture> textures;
   std::map<std::string, Grid> grids;
+  std::map<std::string, TextureData> textures;
 };

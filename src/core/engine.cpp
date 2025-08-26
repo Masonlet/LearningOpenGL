@@ -3,6 +3,8 @@
 #include "core/engine.hpp"
 #include "core/modelControls.hpp"
 #include "utils/log.hpp"
+#include "parsers/plyParser.hpp"
+#include "parsers/bmpParser.hpp"
 
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };
@@ -56,28 +58,64 @@ void Engine::tick(const float currentTime) {
   lastTime = currentTime;
   deltaTime = smoothingFactor * deltaTime + (1.0f - smoothingFactor) * rawDelta;
 }
-  
+bool Engine::loadSceneAssets() {
+  return loadSceneMeshes() && loadSceneTextures();
+}
 bool Engine::loadSceneMeshes() {
+  debugLog("Engine", "loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   if (sceneManager.scene.getSceneName().empty())
     if (!sceneManager.loadTxtScene("Default"))
       return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
 
-	debugLog("Engine", "loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   const unsigned int shaderProgramID = renderer.getProgram();
   if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
 
 	std::map<std::string, Model>& modelData = sceneManager.scene.getModels();
 	std::map<std::string, Model>::iterator it = modelData.begin();
   for(; it != modelData.end(); ++it) {
-    Model& model = it->second;
-    if (!meshManager.findMesh(model.meshPath)) 
-      if(!meshManager.UploadPathToGPU(model.meshPath, shaderProgramID)) 
-        return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + model.meshPath);
+    const std::string& path = it->second.meshPath;
+    if (meshManager.findMesh(path)) continue;
+
+    Mesh mesh;
+    if (!parsePlyMesh(path, mesh))
+      return false;
+
+    if (!meshManager.uploadMeshToGPU(path, mesh, shaderProgramID))
+      return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + path);
 	}
 
 	renderer.updateLightCount(sceneManager.scene.getLightCount());
   sceneManager.scene.updateLights(shaderProgramID);
-  return debugLog("Engine", "loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);;
+  return debugLog("Engine", "loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);
+}
+bool Engine::loadSceneTextures() {
+  debugLog("Engine", "loadSceneTextures", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
+  if (sceneManager.scene.getSceneName().empty())
+    if (!sceneManager.loadTxtScene("Default"))
+      return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
+
+  std::map<std::string, TextureData>& textureData = sceneManager.scene.getTextures();
+  std::map<std::string, TextureData>::iterator it = textureData.begin();
+  for (; it != textureData.end(); ++it) {
+    const TextureData& texture = it->second;
+    if (textureManager.findTexture(texture.name)) continue;
+
+    if(!texture.isCube){
+        Texture face;
+        if (!parseBMP(texture.faces[0].c_str(), face)) return false;
+
+        if (!textureManager.uploadTextureToGPU(texture.name, face, true))
+          return error("Engine", "loadSceneMeshes", "Failed to load texture: " + texture.name);
+    } else {
+      Texture faces[6];
+      for (int i = 0; i < 6; ++i)
+        if (!parseBMP(texture.faces[i].c_str(), faces[i])) return false;
+
+      if (!textureManager.uploadCubeTextureToGPU(texture.name, faces, true))
+        return error("Engine", "loadSceneTextures", "Failed to upload cubemap: " + texture.name);
+    }
+  }
+  return debugLog("Engine", "loadSceneTextures", "Load finish time: " + std::to_string(glfwGetTime()), true);
 }
 
 void Engine::run() {
@@ -110,7 +148,7 @@ void Engine::renderFrame() {
     Model& instance = it->second;
     if (instance.name == "skybox") skyBox = &instance;
 
-    if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, sceneManager, instance);
+    if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, textureManager, sceneManager, instance);
     else                           transparentInstances.push_back(&instance);
   }
 
@@ -132,18 +170,18 @@ void Engine::renderFrame() {
   }
 
   for (Model* instance : transparentInstances) 
-    renderer.drawModel(meshManager, sceneManager, *instance);
+    renderer.drawModel(meshManager, textureManager, sceneManager, *instance);
 
   if (skyBox) {
     skyBox->transform.pos = { sceneManager.scene.getActiveCamera()->pos, 0.0f };
-		renderer.bindSkyboxTexture(sceneManager.scene.getTextureIDFromName(skyBox->name));
+		renderer.bindSkyboxTexture(textureManager.getTextureID(skyBox->name));
 
     renderer.setModelIsSkybox(true);
     skyBox->isVisible = true;
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);     
     glDepthMask(GL_FALSE);
-    renderer.drawModel(meshManager, sceneManager, *skyBox);
+    renderer.drawModel(meshManager, textureManager, sceneManager, *skyBox);
     glDepthMask(GL_TRUE);
     glCullFace(GL_BACK);
     skyBox->isVisible = false;

@@ -3,7 +3,6 @@
 
 bool createTriangle(MeshManager* meshManager, const std::string& name, unsigned int shaderID, const Vec2& size, const Vec4& vertexColour) {
 	Mesh info;
-	info.path = name;
 
 	info.numVertices = 3;
 	info.vertices = new Vertex[3];
@@ -19,11 +18,10 @@ bool createTriangle(MeshManager* meshManager, const std::string& name, unsigned 
 	info.indices[1] = 1;
 	info.indices[2] = 2;
 
-	return meshManager->UploadMeshToGPU(info, 0) ? true : error("Primitive", "createTriangle", "Failed to create triangle " + name);
+	return meshManager->uploadMeshToGPU(name, info, 0) ? true : error("Primitive", "createTriangle", "Failed to create triangle " + name);
 }
 bool createSquare(MeshManager* meshManager, const std::string& name, unsigned int shaderID, const Vec2& size) {
 	Mesh info;
-	info.path = name;
 	info.numVertices = 6;
 	info.numIndices = 6;
 	info.numTriangles = 2;
@@ -49,14 +47,12 @@ bool createSquare(MeshManager* meshManager, const std::string& name, unsigned in
 		info.indices[i] = i;
 	}
 
-	return meshManager->UploadMeshToGPU(info, 0) ? true : error("Primitive", "createSquare", "Failed to create square " + name);
+	return meshManager->uploadMeshToGPU(name, info, 0) ? true : error("Primitive", "createSquare", "Failed to create square " + name);
 }
 bool createCube(MeshManager* meshManager, const std::string& name, const Vec3& size) {
 	Mesh info;
-	info.path = name;
 	constexpr int vertexCount = 36;
 
-	info.path = name;
 	info.numVertices = vertexCount;
 	info.numIndices = vertexCount;
 	info.numTriangles = 12;
@@ -92,5 +88,5 @@ bool createCube(MeshManager* meshManager, const std::string& name, const Vec3& s
 		}
 	}
 
-	return meshManager->UploadMeshToGPU(info, 0) ? true : error("Primitive", "createCube", "Failed to create cube " + name);
+	return meshManager->uploadMeshToGPU(name, info, 0) ? true : error("Primitive", "createCube", "Failed to create cube " + name);
 }
