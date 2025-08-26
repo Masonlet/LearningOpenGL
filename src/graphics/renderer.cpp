@@ -66,7 +66,7 @@ bool Renderer::setProgram(unsigned int program) {
 
 	ambientLightLocation = glGetUniformLocation(program, "ambientLight");
 	if (ambientLightLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: ambientLight");
-	glUniform4f(ambientLightLocation, 0.25, 0.25, 0.25, 2.0);
+	glUniform4f(ambientLightLocation, 1.0, 1.0, 1.0, 0.5);
 
 	return debugLog("Renderer", "setProgram", "Successfully set shader program and located uniforms", true);
 }

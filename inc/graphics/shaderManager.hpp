@@ -1,58 +1,27 @@
 #pragma once
 
+#include "graphics/shader.hpp"
 #include <vector>
 #include <map>
 #include <string>
 
 class ShaderManager {
-public:
-	class Shader {
-	public:
-		unsigned int ID;
-		std::vector<std::string> vecSource;
-		bool sourceIsMultiLine;
-		std::string fileName;
+public:		
+	ShaderManager() = default;
+	~ShaderManager();
 
-		enum ShaderType { VERTEX_SHADER, FRAGMENT_SHADER, UNKNOWN };
-		ShaderType type;
+	bool useProgram(const std::string& name) const;
+	unsigned int getProgramID(const std::string& name) const;
 
-		Shader() : ID{ 0 }, type{ Shader::UNKNOWN }, sourceIsMultiLine{ false } {};
-		Shader(std::string fileName) : ID{ 0 }, type{ Shader::UNKNOWN }, sourceIsMultiLine{ false }, fileName{ fileName } {};
+	bool createProgramFromPaths(const std::string& name, const std::string& vertPath, const std::string& fragPath);
 
-		~Shader() {};
-
-		std::string getType();
-	};
-
-	class ShaderProgram {
-	public:
-		ShaderProgram() : ID(0) {};
-		~ShaderProgram() {};
-
-		unsigned int ID;
-		std::string friendlyName;
-	};
-
-	ShaderManager() {};
-	~ShaderManager() {};
-
-	bool useShaderProgram(unsigned int ID);
-	bool useShaderProgram(std::string friendlyName);
-	bool createProgramFromFile(std::string friendlyName, Shader& vertexShader, Shader& fragShader);
-
-	int getIDFromFriendlyName(std::string friendlyName);
-	ShaderProgram* getShaderProgramFromFriendlyName(std::string friendlyName);
-
-	std::string getLastError();
+	bool findShader(const std::string& name) const;
+	bool getShader(const std::string& name, Shader*& dataOut);
 
 private:
-	bool loadSourceFromFile(Shader& shader) const;
-	bool compileShaderFromSource(ShaderManager::Shader& shader, std::string& error);
-	bool wasThereACompileError(unsigned int shaderID, std::string& error);
-	bool wasThereALinkError(unsigned int progID, std::string& error);
+	bool compileShader(unsigned int& outShaderID, int glShaderType, const std::string& source);
 
-	std::string lastError;
+	bool linkProgram(unsigned int& outProgramID, unsigned int vertID, unsigned int fragID);
 
-	std::map<unsigned int, ShaderProgram> id_to_shader;
-	std::map<std::string, unsigned int> name_to_id;
+	std::map<std::string, Shader> nameToShaders;
 };

@@ -15,7 +15,7 @@ bool TextureManager::findTexture(const std::string& path) const {
 }
 bool TextureManager::getTexture(const std::string& name, Texture*& data) {
   std::map<std::string, Texture>::iterator it = nameToTextures.find(name);
-  if (it == nameToTextures.end()) return false;
+  if (it == nameToTextures.end()) return error("TextureManager", "getTexture", "Texture not found: " + name);
   data = &it->second;
   return true;
 }
@@ -75,7 +75,7 @@ bool TextureManager::uploadCubeTextureToGPU(const std::string& name, const Textu
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   const GLenum srcFormat = (bpp == 4) ? GL_RGBA : GL_RGB;
-  const GLint  internal = (bpp == 4) ? GL_RGBA8 : GL_RGB8;
+  const GLint  internal  = (bpp == 4) ? GL_RGBA8 : GL_RGB8;
 
   for (int i = 0; i < 6; ++i) glTexImage2D(targets[i], 0, internal, w, h, 0, srcFormat, GL_UNSIGNED_BYTE, faces[i].pixels);
  

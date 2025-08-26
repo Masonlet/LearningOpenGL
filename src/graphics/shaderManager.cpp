@@ -2,186 +2,151 @@
 
 #include "graphics/shaderManager.hpp"
 #include "parsers/fileParser.hpp"
+#include "utils/log.hpp"
 
 #include <sstream>
 
-std::string ShaderManager::Shader::getType() {
-	switch (this->type) {
-	case Shader::VERTEX_SHADER:
-		return "VERTEX_SHADER";
-	case Shader::FRAGMENT_SHADER:
-		return "FRAGMENT_SHADER";
-	default:
-		break;
+ShaderManager::~ShaderManager() {
+	for (std::map<std::string, Shader>::iterator it = nameToShaders.begin(); it != nameToShaders.end(); ++it) {
+		if (it->second.programID  && glIsProgram(it->second.programID)) glDeleteProgram(it->second.programID);
+		if (it->second.vertexID   && glIsShader(it->second.vertexID))   glDeleteShader(it->second.vertexID);
+		if (it->second.fragmentID && glIsShader(it->second.fragmentID)) glDeleteShader(it->second.fragmentID);
 	}
-
-	return "UNKNOWN_SHADER_TYPE";
 }
 
-bool ShaderManager::useShaderProgram(unsigned int ID) {
-	glUseProgram(ID); 
-	return true;
-}
-bool ShaderManager::useShaderProgram(std::string friendlyName) {
-	std::map<std::string, unsigned int>::iterator itShad = this->name_to_id.find(friendlyName);
-	if (itShad == this->name_to_id.end()) return false;
+bool ShaderManager::useProgram(const std::string& name) const {
+	std::map<std::string, Shader>::const_iterator it = nameToShaders.find(name);
+	if (it == nameToShaders.end()) 
+		return error("ShaderManager", "useProgram", "Shader not found: " + name);
+	if (!it->second.linked || it->second.programID == 0) 
+		return error("ShaderManager", "useProgram", "Shader not linked, or has invalid id: " + name);
 
-	glUseProgram(itShad->second);
+	glUseProgram(it->second.programID);
 	return true;
 }
 
-int ShaderManager::getIDFromFriendlyName(std::string friendlyName) {
-	std::map<std::string, unsigned int>::iterator itShad = this->name_to_id.find(friendlyName);
-	if (itShad == this->name_to_id.end())	return 0;
-	else																	return itShad->second;
+unsigned int ShaderManager::getProgramID(const std::string& name) const {
+	std::map<std::string, Shader>::const_iterator it = nameToShaders.find(name);
+	return (it == nameToShaders.end()) ? 0u : it->second.programID;
 }
 
-ShaderManager::ShaderProgram* ShaderManager::getShaderProgramFromFriendlyName(std::string friendlyName) {
-	std::map<unsigned int, ShaderProgram>::iterator itShad = this->id_to_shader.find(this->getIDFromFriendlyName(friendlyName));
-	if (itShad == this->id_to_shader.end())	return nullptr;
-	else																		return &(itShad->second);
-}
+bool ShaderManager::createProgramFromPaths(const std::string& name, const std::string& vertPath, const std::string& fragPath) {
+	std::string vertSource, fragSource;
+	if (!loadFile(vertSource, std::string(ASSET_DIR) + "/shaders/" + vertPath)) return false;
+	if (!loadFile(fragSource, std::string(ASSET_DIR) + "/shaders/" + fragPath)) return false;
 
-const unsigned int MAXLINELENGTH = 65536; //16x1024
-bool ShaderManager::loadSourceFromFile(Shader& shader) const {
-	std::string path = std::string(ASSET_DIR) + "/shaders/" + shader.fileName;
-  
-	std::string src{};
-	if (!loadFile(src, path)) {
-		fprintf(stderr, "[loadSourceFromFile ERROR] Failed to load file: %s\n", path.c_str());
+	unsigned int vertID = 0;
+	if (!compileShader(vertID, GL_VERTEX_SHADER, vertSource)) return false;
+		
+	unsigned int fragID = 0;
+	if (!compileShader(fragID, GL_FRAGMENT_SHADER, fragSource)) {
+		glDeleteShader(vertID);
 		return false;
 	}
 
-	shader.vecSource.clear();
-	std::istringstream iss(src);
-	std::string line;
+	unsigned int programID = 0;
+	if (!linkProgram(programID, vertID, fragID)) {
+		glDeleteShader(vertID);
+		glDeleteShader(fragID);
+		return false;
+	}
 
-	while (std::getline(iss, line)) shader.vecSource.push_back(line);
+	std::map<std::string, Shader>::iterator it = nameToShaders.find(name);
+	if (it != nameToShaders.end()) {
+		if (it->second.programID)  glDeleteProgram(it->second.programID);
+		if (it->second.vertexID)   glDeleteShader(it->second.vertexID);
+		if (it->second.fragmentID) glDeleteShader(it->second.fragmentID);
+	}
+
+	Shader sh;
+	sh.programID = programID;
+	sh.vertexID = vertID;
+	sh.fragmentID = fragID;
+	sh.linked = true;
+
+	nameToShaders[name] = std::move(sh);
 	return true;
 }
 
-bool ShaderManager::wasThereACompileError(unsigned int shaderID, std::string& errorText) {
-	errorText = "";
 
-	int isCompiled = 0;
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &isCompiled);
-	if (isCompiled == 0) {
-		GLint maxLength = 0;
-		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &maxLength);
-
-		char* pLogText = new char[maxLength];
-		glGetShaderInfoLog(shaderID, maxLength, &maxLength, pLogText);
-		errorText.append(pLogText);
-		this->lastError.append("\n");
-		this->lastError.append( errorText );
-
-		delete [] pLogText;	
-		return true;	
-	}
-	return false; 
+bool ShaderManager::findShader(const std::string& name) const {
+	return nameToShaders.find(name) != nameToShaders.end();
 }
-bool ShaderManager::wasThereALinkError(unsigned int programID, std::string& errorText) {
-	errorText = "";	
-
-	int wasError = 0;
-	glGetProgramiv(programID, GL_LINK_STATUS, &wasError);
-	if(wasError == GL_FALSE) {
-		int maxLength = 0;
-		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
-
-		char* pLogText = new char[maxLength];
-		glGetProgramInfoLog(programID, maxLength, &maxLength, pLogText);
-		errorText.append(pLogText);
-		this->lastError.append("\n");
-		this->lastError.append( errorText );
-
-		delete [] pLogText;	
-		return true;
-	}
-	return false;
-}
-
-std::string ShaderManager::getLastError() {
-	std::string lastErrorTemp = this->lastError;
-	this->lastError = "";
-	return lastErrorTemp;
-}
-
-bool ShaderManager::compileShaderFromSource(ShaderManager::Shader& shader, std::string& error) {
-	error = "";
-	const unsigned int MAXLINESIZE = 8 * 1024;	// About 8K PER LINE, which seems excessive
-	unsigned int numberOfLines = static_cast<unsigned int>(shader.vecSource.size());
-
-	char** arraySource = new char*[numberOfLines];
-	memset(arraySource, 0, numberOfLines);	
-
-	for (unsigned int indexLine = 0; indexLine != numberOfLines; indexLine++) {
-		unsigned int numCharacters = (unsigned int)shader.vecSource[indexLine].length();
-		arraySource[indexLine] = new char[numCharacters + 2]; // For the '\n' and '\0' at end
-		memset(arraySource[indexLine], 0, static_cast<size_t>(numCharacters + 2));
-
-		for (unsigned int indexChar = 0; indexChar != shader.vecSource[indexLine].length(); indexChar++) 
-			arraySource[indexLine][indexChar] = shader.vecSource[indexLine][indexChar];
-
-		arraySource[indexLine][numCharacters + 0] = '\n';
-		arraySource[indexLine][numCharacters + 1] = '\0';
-	}
-
-	glShaderSource(shader.ID, numberOfLines, arraySource, NULL);
-	glCompileShader(shader.ID);
-
-	for (unsigned int indexLine = 0; indexLine != numberOfLines; indexLine++) 
-		delete[] arraySource[indexLine];
-	delete[] arraySource;
-
-	std::string errorText = "";
-	if (this->wasThereACompileError(shader.ID, errorText)) {
-		std::stringstream ssError;
-		ssError << shader.getType();
-		ssError << " compile error: ";
-		ssError << errorText;
-		error = ssError.str();
-		return false;
-	}
+bool ShaderManager::getShader(const std::string& name, Shader*& dataOut) {
+	std::map<std::string, Shader>::iterator it = nameToShaders.find(name);
+	if (it == nameToShaders.end()) return error("ShaderManager", "getShader", "Shader not found: " + name);
+	dataOut = &it->second;
 	return true;
 }
 
-bool ShaderManager::createProgramFromFile(std::string friendlyName, Shader & vertexShader, Shader & fragShader) {
-	std::string errorText = "";
-	vertexShader.ID = glCreateShader(GL_VERTEX_SHADER);
-	vertexShader.type = Shader::VERTEX_SHADER;
-	if (!this->loadSourceFromFile(vertexShader)) return false;
-	if (!this->compileShaderFromSource(vertexShader, errorText)) {
-		this->lastError = errorText;
-		return false;
+bool ShaderManager::compileShader(unsigned int& outShaderID, int glShaderType, const std::string& source) {
+	outShaderID = glCreateShader(static_cast<GLenum>(glShaderType));
+	if (!outShaderID) return error("ShaderManager", "compileShader", "glCreateShader failed.");
+
+	const char* src = source.c_str();
+	glShaderSource(outShaderID, 1, &src, nullptr);
+	glCompileShader(outShaderID);
+
+	int status = GL_FALSE;
+	glGetShaderiv(outShaderID, GL_COMPILE_STATUS, &status);
+
+	if (status != GL_TRUE) {
+		int logLen = 0;
+		glGetShaderiv(outShaderID, GL_INFO_LOG_LENGTH, &logLen);
+
+		std::string log;
+		if (logLen > 1) {
+			log.resize(static_cast<size_t>(logLen));
+			int written = 0;
+			glGetShaderInfoLog(outShaderID, logLen, &written, log.data());
+			if (written > 0 && static_cast<size_t>(written) < log.size())
+				log.resize(static_cast<size_t>(written));
+		}
+
+		glDeleteShader(outShaderID);
+		outShaderID = 0;
+
+		const std::string shaderType = (glShaderType == GL_VERTEX_SHADER   ? "VERTEX" 
+			                            : glShaderType == GL_FRAGMENT_SHADER ? "FRAGMENT" 
+			                                                                 : "UNKNOWN");
+		 
+		return error("ShaderManager", "compileShader", "Shader compilation failed (type=" + shaderType + "):\n" + log);
 	}
 
-	errorText = "";
-  fragShader.ID = glCreateShader(GL_FRAGMENT_SHADER);
-	fragShader.type = Shader::FRAGMENT_SHADER;
-	if (!this->loadSourceFromFile(fragShader)) return false;
-	if (!this->compileShaderFromSource(fragShader, errorText)){
-		this->lastError = errorText;
-		return false;
+	return true;
+}
+
+bool ShaderManager::linkProgram(unsigned int& outProgramID, unsigned int vertID, unsigned int fragID){
+	outProgramID = glCreateProgram();
+	if (!outProgramID) return error("ShaderManager", "linkProgram", "glCreateProgram failed.");
+
+	glAttachShader(outProgramID, vertID);
+	glAttachShader(outProgramID, fragID);
+	glLinkProgram(outProgramID);
+
+	int status = GL_FALSE;
+	glGetProgramiv(outProgramID, GL_LINK_STATUS, &status);
+
+	glDetachShader(outProgramID, vertID);
+	glDetachShader(outProgramID, fragID);
+
+	if (status != GL_TRUE) {
+		int logLen = 0;
+		glGetProgramiv(outProgramID, GL_INFO_LOG_LENGTH, &logLen);
+
+		std::string log;
+		if (logLen > 1) {
+			log.resize(static_cast<size_t>(logLen));
+			int written = 0;
+			glGetProgramInfoLog(outProgramID, logLen, &written, log.data());
+			if (written > 0 && static_cast<size_t>(written) < log.size())
+				log.resize(static_cast<size_t>(written));
+		}
+
+		glDeleteProgram(outProgramID);
+		outProgramID = 0;
+		return error("ShaderManager", "linkProgram", std::string("Program link failed:\n") + log);
 	}
 
-	ShaderProgram curProgram;
-  curProgram.ID = glCreateProgram();
-  glAttachShader(curProgram.ID, vertexShader.ID);
-  glAttachShader(curProgram.ID, fragShader.ID);
-  glLinkProgram(curProgram.ID);
-
-	errorText = "";
-	if (this->wasThereALinkError(curProgram.ID, errorText)) {
-		std::stringstream ssError;
-		ssError << "Shader program link error: ";
-		ssError << errorText;
-		this->lastError = ssError.str();
-		return false;
-	}
-
-	curProgram.friendlyName = friendlyName;
-	this->id_to_shader[curProgram.ID] = curProgram;
-	this->name_to_id[curProgram.friendlyName] = curProgram.ID;
 	return true;
 }

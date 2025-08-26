@@ -13,7 +13,7 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
   if (!windowManager.createWindow(width, height, title)) return false;
   glfwSetWindowUserPointer(windowManager.getWindow()->getGLFWwindow(), this);
 
-  setupShaders();
+  if (!setupShaders()) return false;
 
   constexpr float bgR = 0.2f;
   constexpr float bgG = 0.2f;
@@ -27,13 +27,10 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 bool Engine::setupShaders() {
 	debugLog("Engine", "setupShaders", "Shader setup start time: " + std::to_string(glfwGetTime()), true);
 
-  ShaderManager::Shader vert_shader{ "vertex_shader.glsl" };
-  ShaderManager::Shader frag_shader{ "fragment_shader.glsl" };
-
-  if (!shaderManager.createProgramFromFile("shader1", vert_shader, frag_shader)) 
+  if (!shaderManager.createProgramFromPaths("shader1", "vertex_shader.glsl", "fragment_shader.glsl"))
     return error("Engine", "setupShaders", "Failed to create shader program from file");
 
-  if (!renderer.setProgram(shaderManager.getIDFromFriendlyName("shader1")))
+  if (!renderer.setProgram(shaderManager.getProgramID("shader1")))
     return error("Engine", "setupShaders", "");
   
   return debugLog("Engine", "setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);;
