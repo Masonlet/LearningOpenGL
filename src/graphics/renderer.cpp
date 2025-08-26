@@ -12,8 +12,8 @@ bool Renderer::setProgram(unsigned int program) {
 	glUniform1i(glGetUniformLocation(program, "textSampler2D_02"), 2);
 	glUniform1i(glGetUniformLocation(program, "textSampler2D_03"), 3);
 
-	modelLightedLocation = glGetUniformLocation(program, "bLighted");
-	if (modelLightedLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: bLighted");
+	eyeLocation = glGetUniformLocation(program, "eyePos");
+	if (eyeLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: eyePos");
 
 	modelLocation = glGetUniformLocation(program, "mModel");
 	if (modelLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: mModel");
@@ -27,26 +27,32 @@ bool Renderer::setProgram(unsigned int program) {
 	modelInverseTransposeLocation = glGetUniformLocation(program, "mModel_InverseTranspose");
 	if (modelInverseTransposeLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: mModel_InverseTranspose");
 
-	modelSpecularLocation = glGetUniformLocation(program, "vertSpecular");
-	if (modelSpecularLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: vertSpecular");
-
-	modelUseTexturesLocation = glGetUniformLocation(program, "bUseTextures");
-	if (modelUseTexturesLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: bUseTextures");
-
 	modelColourModeLocation = glGetUniformLocation(program, "colourMode");
 	if (modelColourModeLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: colourMode");
+
+	modelHasVertColourLocation = glGetUniformLocation(program, "hasVertexColour");
+	if (modelHasVertColourLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: hasVertexColour");
 
 	modelColourOverrideLocation = glGetUniformLocation(program, "colourOverride");
 	if (modelColourOverrideLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: colourOverride");
 
-	modelHasVertColourLocation = glGetUniformLocation(program, "hasVertexColour");
-	if (modelHasVertColourLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: hasVertexColour");
+	modelSpecularLocation = glGetUniformLocation(program, "vertSpecular");
+	if (modelSpecularLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: vertSpecular");
 
 	modelMinYMaxYLocation = glGetUniformLocation(program, "yMin_yMax");
 	if (modelMinYMaxYLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: yMin_yMax");
 
 	modelSeedLocation = glGetUniformLocation(program, "seed");
 	if (modelSeedLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: seed");
+
+	modelLightedLocation = glGetUniformLocation(program, "bLighted");
+	if (modelLightedLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: bLighted");
+
+	modelUseTexturesLocation = glGetUniformLocation(program, "bUseTextures");
+	if (modelUseTexturesLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: bUseTextures");
+
+	modelTexMixRatiosLocation = glGetUniformLocation(program, "texMixRatios");
+	if (modelTexMixRatiosLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: texMixRatios");
 
 	modelIsSkyboxLocation = glGetUniformLocation(program, "bIsSkybox");
 	if (modelIsSkyboxLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: bIsSkybox");
@@ -55,14 +61,12 @@ bool Renderer::setProgram(unsigned int program) {
 	if (skyboxTextureLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: skyboxCubeTexture");
 	glUniform1i(skyboxTextureLocation, SKYBOX_TU);
 
-	eyeLocation = glGetUniformLocation(program, "eyePos");
-	if (eyeLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: eyePos");
-
 	lightCountLocation = glGetUniformLocation(program, "lightCount");
 	if (lightCountLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: lightCount");
 
-	modelTexMixRatiosLocation = glGetUniformLocation(program, "texMixRatios");
-	if (modelTexMixRatiosLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: texMixRatios");
+	ambientLightLocation = glGetUniformLocation(program, "ambientLight");
+	if (ambientLightLocation < 0) return error("Renderer", "setProgram", "Could not find uniform: ambientLight");
+	glUniform4f(ambientLightLocation, 0.25, 0.25, 0.25, 2.0);
 
 	return debugLog("Renderer", "setProgram", "Successfully set shader program and located uniforms", true);
 }

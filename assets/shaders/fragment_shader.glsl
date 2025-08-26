@@ -23,6 +23,8 @@ uniform vec4 vertSpecular;
 uniform bool bUseTextures; 
 uniform bool bLighted;
 
+uniform vec4 ambientLight;
+
 // Textures (Can have up to 32+ of these, not the "total number of textures", max texture PER pixelColour
 uniform sampler2D textSampler2D_00;
 uniform sampler2D textSampler2D_01;
@@ -71,7 +73,8 @@ void main() {
 	}
 
 	vec4 lightContrib = calculateLightContrib(finalTextRGBA, vertNormal.xyz, vertWorldPosition.xyz, vertSpecular);
-	pixelColour = vec4(lightContrib.rgb, finalTextRGBA.a);
+	vec3 colour = lightContrib.rgb + finalTextRGBA.rgb * ambientLight.rgb * ambientLight.a;
+	pixelColour = vec4(colour, finalTextRGBA.a);
 };
 
 vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular) {

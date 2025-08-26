@@ -34,5 +34,5 @@ private:
 	int modelMinYMaxYLocation{ -1 }, modelSeedLocation{ -1 };
 	int modelUseTexturesLocation{ -1 }, modelTexMixRatiosLocation{ -1 };
 	int modelIsSkyboxLocation{ -1 }, skyboxTextureLocation{ -1 };
-	int lightCountLocation{ -1 };
+	int lightCountLocation{ -1 }, ambientLightLocation{ -1 };
 };
