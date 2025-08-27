@@ -1,17 +1,10 @@
-#include <glad/glad.h>
-
 #include "core/sceneManager.hpp"
-
 #include "parsers/sceneParser.hpp"
 #include "parsers/fileParser.hpp"
-#include "parsers/parserFunctions.hpp"
-
 #include "objects/grid.hpp"
 #include "objects/primitives.hpp"
 #include "objects/textureData.hpp"
-
 #include "utils/log.hpp"
-
 #include <fstream>
 #include <iomanip>
 #include <vector>
@@ -25,7 +18,7 @@ bool SceneManager::saveTxtScene() {
 	file << std::fixed << std::setprecision(3);
 
 	file << "comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed\n";
-	const std::map<std::string, Camera>& cameras = scene.getCameras();
+	const std::map<std::string, Camera>& cameras = scene.getObjects<Camera>();
 	for (std::map<std::string, Camera>::const_iterator camIt = cameras.begin(); camIt != cameras.end(); ++camIt) {
 		const std::string& name = camIt->first;
 		const Camera& cam = camIt->second;
@@ -47,7 +40,7 @@ bool SceneManager::saveTxtScene() {
 	}
 
 	file << "\ncomment, name, meshPath, pos(xyz), rot(xyz), scale(xyz), colour(Int, Named Coloured, Random, Rainbow, PLY), specular(rgb, power)\n";
-	const std::map<std::string, Model>& modelData = scene.getModels();
+	const std::map<std::string, Model>& modelData = scene.getObjects<Model>();
 	for (const std::pair<const std::string, Model>& entry : modelData) {
 		const std::string& name = entry.first;
 		const Model& instance = entry.second;
@@ -86,7 +79,7 @@ bool SceneManager::saveTxtScene() {
 
 
 	file << "\ncomment, name, type, pos (xyz), diffuse (rgba), attention (xyzw), direction, param1 (spotlight inner, spotlight outer), param2 (on/off)\n";
-	std::map<std::string, Light>& lights = scene.getLights();
+	std::map<std::string, Light>& lights = scene.getObjects<Light>();
 	for (std::map<std::string, Light>::iterator it = lights.begin(); it != lights.end(); ++it) {
 		Light& light = it->second;
 		if (!light.enabled) continue;
@@ -156,14 +149,14 @@ bool SceneManager::processSceneLine(const unsigned char*& p) {
 	}
 
 	bool handled{ false };
-	if      (strcmp(nameStr, "model") == 0)       handled = parseAndAddObject<Model>(p, &parseModel, scene.getModels(), "model");
-	else if (strcmp(nameStr, "light") == 0)       handled = parseAndAddObject<Light>(p, &parseLight, scene.getLights(), "light");
-	else if (strcmp(nameStr, "camera") == 0)      handled = parseAndAddObject<Camera>(p, &parseCamera, scene.getCameras(), "camera");
-	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = parseAndAddObject<Grid>(p, &parseGrid, scene.getGrids(), "cubeGrid");
-	else if (strcmp(nameStr, "squareGrid") == 0)  handled = parseAndAddObject<Grid>(p, &parseGrid, scene.getGrids(), "squareGrid");
-	else if (strcmp(nameStr, "triangle") == 0)    handled = parseAndAddObject<Model>(p, &parseTriangle, scene.getModels(), "triangle");
-	else if (strcmp(nameStr, "texture") == 0)     handled = parseAndAddObject<TextureData>(p, &parseTexture, scene.getTextures(), "texture");
-	else if (strcmp(nameStr, "textureCube") == 0) handled = parseAndAddObject<TextureData>(p, &parseCubeTexture, scene.getTextures(), "cube texture");
+	if      (strcmp(nameStr, "model") == 0)       handled = parseAndAddObject<Model>(p, &parseModel, "model");
+	else if (strcmp(nameStr, "light") == 0)       handled = parseAndAddObject<Light>(p, &parseLight, "light");
+	else if (strcmp(nameStr, "camera") == 0)      handled = parseAndAddObject<Camera>(p, &parseCamera, "camera");
+	else if (strcmp(nameStr, "cubeGrid") == 0)    handled = parseAndAddObject<Grid>(p, &parseGrid, "cubeGrid");
+	else if (strcmp(nameStr, "squareGrid") == 0)  handled = parseAndAddObject<Grid>(p, &parseGrid, "squareGrid");
+	else if (strcmp(nameStr, "triangle") == 0)    handled = parseAndAddObject<Model>(p, &parseTriangle, "triangle");
+	else if (strcmp(nameStr, "texture") == 0)     handled = parseAndAddObject<TextureData>(p, &parseTexture, "texture");
+	else if (strcmp(nameStr, "textureCube") == 0) handled = parseAndAddObject<TextureData>(p, &parseCubeTexture, "cube texture");
 	else if (strcmp(nameStr, "textureAdd") == 0)  handled = handleTextureConnectionLine(p);
 	return handled ? true : error("SceneManager", "processSceneLine", "Failed to handle: " + std::string(nameStr));
 }

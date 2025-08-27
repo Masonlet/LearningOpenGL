@@ -2,19 +2,6 @@
 #include "core/scene.hpp"
 #include "math/constants.hpp"
 
-Camera* Scene::getActiveCamera() {
-	std::map<std::string, Camera>::iterator it = cameras.find(activeCam);
-	if (it == cameras.end()) return nullptr;
-	return &it->second;
-}
-void Scene::setActiveCamera(unsigned int camIndex) {
-	if (cameras.empty()) return;
-	if (camIndex >= cameras.size()) camIndex = cameras.size() - 1;
-	std::map<std::string, Camera>::const_iterator cam = cameras.begin();
-	std::advance(cam, camIndex);
-	activeCam = cam->first;
-}
-
 void Scene::updateLights(int shaderProgram) {
 	unsigned int i{ 0 };
 	for (std::map<std::string, Light>::iterator it = lights.begin(); it != lights.end() && i < NUMBEROFLIGHTS; ++it, ++i) {
@@ -29,8 +16,6 @@ void Scene::updateLights(int shaderProgram) {
 	}
 }
 void Scene::updateLightUniforms(int shaderProgram) {
-	std::map<std::string, Light>& lights = getLights();
-
 	for (std::pair<std::string, Light> it: lights) {
 		Light& light = it.second;
 		if (light.position_UL != -1)    glUniform4f(light.position_UL, light.pos.x, light.pos.y, light.pos.z, 1.0f);

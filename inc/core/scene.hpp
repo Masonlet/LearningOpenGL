@@ -6,52 +6,84 @@
 #include "objects/camera.hpp"
 #include "objects/grid.hpp"
 #include "objects/textureData.hpp"
+#include "controllers/cameraController.hpp"
+#include "controllers/modelController.hpp"
 #include <map>
 #include <string>
+#include <iterator>
 
 class Scene {
 public:
   inline void setSceneName(const std::string& sceneName) { name = sceneName; }
-  std::string& getSceneName() { return name; }
+  const std::string& getSceneName() const { return name; }
+
+  template<typename T>
+  static constexpr const char* typeName() noexcept {
+    return typeName(static_cast<T*>(nullptr));
+  }
 
   template <typename T, typename MapT>
   bool addObject(MapT& map, const T& data, const char* type) {
     if (data.name.empty()) return error("Scene", "addEntity", std::string(type) + " name is empty");
-
     std::pair<typename MapT::iterator, bool> res = map.emplace(data.name, data);
     if (!res.second) return error("Scene", "addObject", std::string(type) + " name already used: " + data.name);
-
     return true;
   }
 
-  template <typename T, typename MapT>
-  bool getObjectByName(MapT& map, const std::string& name, T*& obj, const char* type) {
-    typename MapT::iterator it = map.find(name);
-    if (it == map.end()) return error("Scene", "getObjectByName", std::string(type) + " not found: " + name);
-    obj = &it->second;
+  template <typename T>
+  std::map<std::string, T>& getObjects() { return getObjects(static_cast<T*>(nullptr)); }
+  template <typename T>
+  const std::map<std::string, T>& getObjects() const { return getObjects(static_cast<T*>(nullptr)); }
+
+  template <typename T>
+  bool getObjectByName(const std::string& objName, T*& out) {
+    std::map<std::string, T>& map = getObjects<T>();
+    typename std::map<std::string, T>::iterator it = map.find(objName);
+    if (it == map.end()) return error("Scene", "getObjectByName", std::string(typeName<T>()) + " not found: " + objName);
+    out = &it->second;
     return true;
-	}
+  }
 
-  std::map<std::string, Model>& getModels() { return models; }
-	std::map<std::string, Camera>& getCameras() { return cameras; }
-  std::map<std::string, Light>& getLights() { return lights; }
-  std::map<std::string, Grid>& getGrids() { return grids; }
-  std::map<std::string, TextureData>& getTextures() { return textures; }
+  template <typename T>
+  bool getObjectByIndex(size_t index, T*& out) {
+    std::map<std::string, T>& map = getObjects<T>();
+    if (index >= map.size()) return error("Scene", "getObjectByIndex", std::string(typeName<T>()) + " not found: " + std::to_string(index));
+    typename std::map<std::string, T>::iterator it = std::next(map.begin(), index);
+    out = &it->second;
+    return true;
+  }
 
-	size_t getCameraCount() { return cameras.size(); }
-  size_t getLightCount() { return lights.size(); }
+  template <typename T>
+  size_t getObjectCount() const { return getObjects<T>().size(); }
 
-  Camera* getActiveCamera();
-  void setActiveCamera(unsigned int camIndex);
-
-  void updateLights(int shaderProgram);
-  void updateLightUniforms(int shaderProgram);
-
-  bool bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix);
+  FreeCameraController cameraController;
+  ModelController modelController;
+  void updateLights(int shaderProgram); // Need to remove, replace with a LightController ~~~
+  void updateLightUniforms(int shaderProgram); // Need to remove, replace with a LightController ~~~
+  //LightController lightController; 
+  bool bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix); // Need to remove, replace with a TextureController ~~~
+  //TextureController textureController;
 
 private:
   std::string name;
-  std::string activeCam;
+
+  static constexpr const char* typeName(void*) { return "Object"; }
+  static constexpr const char* typeName(Model*) { return "Model"; }
+  static constexpr const char* typeName(Camera*) { return "Camera"; }
+  static constexpr const char* typeName(Light*) { return "Light"; }
+  static constexpr const char* typeName(Grid*) { return "Grid"; }
+  static constexpr const char* typeName(TextureData*) { return "Texture"; }
+
+  std::map<std::string, Model>& getObjects(Model*) { return models; }
+  const std::map<std::string, Model>& getObjects(Model*) const { return models; }
+  std::map<std::string, Camera>& getObjects(Camera*) { return cameras; }
+  const std::map<std::string, Camera>& getObjects(Camera*) const { return cameras; }
+  std::map<std::string, Light>& getObjects(Light*) { return lights; }
+  const std::map<std::string, Light>& getObjects(Light*) const { return lights; }
+  std::map<std::string, Grid>& getObjects(Grid*) { return grids; }
+  const std::map<std::string, Grid>& getObjects(Grid*) const { return grids; }
+  std::map<std::string, TextureData>& getObjects(TextureData*) { return textures; }
+  const std::map<std::string, TextureData>& getObjects(TextureData*) const { return textures; }
 
   std::map<std::string, Model> models;
   std::map<std::string, Camera> cameras;

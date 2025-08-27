@@ -1,8 +1,6 @@
 #include <glad/glad.h> 
-
 #include "core/callbacks.hpp"
 #include "core/engine.hpp"
-
 #include <stdio.h>
 
 void error_callback(const int error, const char* description) {
@@ -21,20 +19,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			glPolygonMode(GL_FRONT_AND_BACK, engine->wireframe ? GL_LINE : GL_FILL);
 		}
 
-		if (key == GLFW_KEY_C) 
-			glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED 
-				? glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL)
-				: glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		if (key == GLFW_KEY_C) {
+			bool locked = glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED;
+			glfwSetInputMode(window, GLFW_CURSOR, locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+			engine->inputManager.SetCursorLocked(locked);
+		}
 
     //if(key == GLFW_KEY_L)
 		//	engine->getSceneManager().saveTxtScene();
 
 		if (key == GLFW_KEY_N) {
-			if (mods & GLFW_MOD_SHIFT) engine->incrementModel();
-			else										   engine->decrementModel();
+			if (mods & GLFW_MOD_SHIFT) engine->sceneManager.scene.modelController.incrementModel(engine->sceneManager.scene.getObjectCount<Model>());
+			else										   engine->sceneManager.scene.modelController.decrementModel();
 		}
 
-		if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) engine->sceneManager.scene.setActiveCamera(key - GLFW_KEY_0);
+		if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) 
+			engine->sceneManager.scene.cameraController.setCamera(key - GLFW_KEY_0, engine->sceneManager.scene.getObjectCount<Camera>());
 	}
 }
 
@@ -53,5 +53,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
-	if (engine) engine->sceneManager.scene.getActiveCamera()->setFov(static_cast<float>(-yoffset * 2.0f));
+	Camera* cam{ nullptr };
+	if (!engine->sceneManager.scene.getObjectByIndex<Camera>(engine->sceneManager.scene.cameraController.currentCamera, cam)) {
+		error("Engine", "Callbacks", "Failed to find active camera");
+		return;
+	}
+
+	cam->setFov(cam->fov + static_cast<float>(-yoffset * 2.0f));
 }

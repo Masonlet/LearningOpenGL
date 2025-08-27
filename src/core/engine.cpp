@@ -1,7 +1,7 @@
 #include <glad/glad.h> 
 
 #include "core/engine.hpp"
-#include "core/modelControls.hpp"
+#include "controllers/modelController.hpp"
 #include "utils/log.hpp"
 #include "parsers/plyParser.hpp"
 #include "parsers/bmpParser.hpp"
@@ -67,7 +67,7 @@ bool Engine::loadSceneMeshes() {
   const unsigned int shaderProgramID = renderer.getProgram();
   if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
 
-	std::map<std::string, Model>& modelData = sceneManager.scene.getModels();
+	std::map<std::string, Model>& modelData = sceneManager.scene.getObjects<Model>();
 	std::map<std::string, Model>::iterator it = modelData.begin();
   for(; it != modelData.end(); ++it) {
     const std::string& path = it->second.meshPath;
@@ -81,7 +81,7 @@ bool Engine::loadSceneMeshes() {
       return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + path);
 	}
 
-	renderer.updateLightCount(sceneManager.scene.getLightCount());
+	renderer.updateLightCount(sceneManager.scene.getObjectCount<Light>());
   sceneManager.scene.updateLights(shaderProgramID);
   return debugLog("Engine", "loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);
 }
@@ -91,7 +91,7 @@ bool Engine::loadSceneTextures() {
     if (!sceneManager.loadTxtScene("Default"))
       return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
 
-  std::map<std::string, TextureData>& textureData = sceneManager.scene.getTextures();
+  std::map<std::string, TextureData>& textureData = sceneManager.scene.getObjects<TextureData>();
   std::map<std::string, TextureData>::iterator it = textureData.begin();
   for (; it != textureData.end(); ++it) {
     const TextureData& texture = it->second;
@@ -117,14 +117,17 @@ bool Engine::loadSceneTextures() {
 
 void Engine::run() {
   windowManager.switchActiveWindowVisibiltiy();
-  if(sceneManager.scene.getActiveCamera() == nullptr) sceneManager.scene.setActiveCamera(0);
+
   while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
     inputManager.Update(windowManager.getWindow()->getGLFWwindow());
-    sceneManager.scene.getActiveCamera()->processInputs(&inputManager, deltaTime);
-    handleModelInput(&inputManager, deltaTime, sceneManager.scene.getModels(), currentModel);
-    renderFrame();
 
+    Model* model{ nullptr };
+    if (!sceneManager.scene.getObjectByIndex<Model>(sceneManager.scene.modelController.currentModel, model))
+      error("Engine", "run", "No active model found for selected model");
+    else sceneManager.scene.modelController.update(*model, inputManager, deltaTime);
+
+    renderFrame();
     windowManager.getWindow()->swapBuffers();
     windowManager.getWindow()->pollEvents();
   }
@@ -133,14 +136,17 @@ void Engine::run() {
 void Engine::renderFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	const Camera* cam = sceneManager.scene.getActiveCamera();
+  Camera* cam{ nullptr };
+  if (!sceneManager.scene.getObjectByIndex<Camera>(sceneManager.scene.cameraController.currentCamera, cam))
+    error("Engine", "run", "No active camera found for selected camera");
   renderer.updateCameraUniforms(cam->pos, cam->LookAt(), cam->Perspective(windowManager.getWindow()->getAspect()));
+  sceneManager.scene.cameraController.update(*cam, inputManager, deltaTime);
 
   sceneManager.scene.updateLightUniforms(renderer.getProgram());
 
   Model* skyBox{ nullptr };
   std::vector<Model*> transparentInstances;
-  std::map<std::string, Model>& instances = sceneManager.scene.getModels();
+  std::map<std::string, Model>& instances = sceneManager.scene.getObjects<Model>();
   for (std::map<std::string, Model>::iterator it = instances.begin(); it != instances.end(); ++it) {
     Model& instance = it->second;
     if (instance.name == "skybox") skyBox = &instance;
@@ -170,7 +176,7 @@ void Engine::renderFrame() {
     renderer.drawModel(meshManager, textureManager, sceneManager, *instance);
 
   if (skyBox) {
-    skyBox->transform.pos = { sceneManager.scene.getActiveCamera()->pos, 0.0f };
+    skyBox->transform.pos = { cam->pos, 0.0f };
 		renderer.bindSkyboxTexture(textureManager.getTextureID(skyBox->name));
 
     renderer.setModelIsSkybox(true);
@@ -188,13 +194,3 @@ void Engine::renderFrame() {
   glBindVertexArray(0);
 }
 
-void Engine::incrementModel() {
-  if (sceneManager.scene.getModels().empty()) return;
-  currentModel = (currentModel + 1) % static_cast<unsigned int>(sceneManager.scene.getModels().size());
-}
-
-void Engine::decrementModel() {
-  if (sceneManager.scene.getModels().empty()) return;
-  currentModel = (currentModel == 0) ? static_cast<unsigned int>(sceneManager.scene.getModels().size() - 1)
-                                     : currentModel - 1;
-}

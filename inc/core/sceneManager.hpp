@@ -13,11 +13,11 @@ struct SceneManager {
 private:
   bool processSceneLine(const unsigned char*& p);
  
-  template<typename T, typename MapT>
-  bool parseAndAddObject(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, T&), MapT& map, const char* type) {
+  template<typename T>
+  bool parseAndAddObject(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, T&), const char* type) {
     T obj{};
     if (!parseFN(p, obj)) return false;
-    return scene.addObject(map, obj, type);
+    return scene.addObject(scene.getObjects<T>(), obj, type);
   }
 
   bool handleTextureConnectionLine(const unsigned char*& p);

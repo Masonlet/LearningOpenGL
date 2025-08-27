@@ -62,84 +62,13 @@ void Camera::setFov(const float delta) {
   if (fov > 120.0f) fov = 120.0f;
 }
 
-void Camera::processInputs(InputManager* input, float deltaTime) {
-  switch (type) {
-  case 0: updateFreeCam(input, deltaTime);    break;
-  case 1: updateDungeonCam(input, deltaTime); break;
-  case 2: updateModernCam(input, deltaTime);  break;
-  }
-}
 
-void Camera::updateFreeCam(InputManager* input, float deltaTime) {
-  processKeyboard(input, deltaTime);
-  processMouse(input);
-}
-void Camera::updateDungeonCam(InputManager* input, float deltaTime) {
-  pitch = 0.0f;
 
-  if (input->IsKeyPressed(GLFW_KEY_A)) yaw -= 90.0f;
-  if (input->IsKeyPressed(GLFW_KEY_D)) yaw += 90.0f;
-  yaw = std::round(yaw / 90.0f) * 90.0f;
-  yaw = fmod(yaw + 360.0f, 360.0f);
 
-  front = Vec3{ cos(radians(yaw)), 0.0f, sin(radians(yaw)) }.normalized();
-  if (input->IsKeyPressed(GLFW_KEY_W)) pos += front * moveDistance;
-  if (input->IsKeyPressed(GLFW_KEY_S)) pos -= front * moveDistance;
 
-  Vec3 right = GetRight();
-  up = right.cross(front).normalized();
-}
-void Camera::updateModernCam(InputManager* input, float deltaTime) {
-  processMouse(input);
 
-  Vec3 flatFront = front;
-  flatFront.y = 0.0f;
-  flatFront = flatFront.normalized();
 
-  Vec3 right = flatFront.cross(WORLD_UP).normalized();
 
-  Vec3 moveDir{ 0.0f };
-  if (input->IsKeyDown(GLFW_KEY_W)) moveDir += flatFront;
-  if (input->IsKeyDown(GLFW_KEY_S)) moveDir -= flatFront;
-  if (input->IsKeyDown(GLFW_KEY_D)) moveDir += right;
-  if (input->IsKeyDown(GLFW_KEY_A)) moveDir -= right;
-
-  if (moveDir.length() > 0.0f) {
-    moveDir = moveDir.normalized();
-    pos += moveDir * moveSpeed * deltaTime;
-  }
-}
-
-void Camera::processKeyboard(InputManager* input, const float deltaTime) {
-  if (input->IsKeyDown(GLFW_KEY_W)) moveForward(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_A)) moveLeft(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_S)) moveBackward(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_D)) moveRight(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_SPACE))        moveUp(deltaTime);
-  if (input->IsKeyDown(GLFW_KEY_LEFT_CONTROL)) moveDown(deltaTime);
-}
-
-void Camera::processMouse(InputManager* input) {
-  if (!input->IsCursorLocked()) return;
-
-  Vec2 delta = input->GetMouseDelta();
-  float xoffset = delta.x * mouseSpeed;
-  float yoffset = delta.y * mouseSpeed;
-
-  yaw += xoffset;
-  pitch += yoffset;
-
-  if (pitch > 89.0f)  pitch = 89.0f;
-  if (pitch < -89.0f) pitch = -89.0f;
-
-  front.x = cos(radians(yaw)) * cos(radians(pitch));
-  front.y = sin(radians(pitch));
-  front.z = sin(radians(yaw)) * cos(radians(pitch));
-  front = front.normalized();
-
-  Vec3 right = GetRight();
-  up = right.cross(front).normalized();
-}
 
 
 
