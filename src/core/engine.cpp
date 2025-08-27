@@ -123,7 +123,7 @@ bool Engine::loadSceneTextureConnections() {
     if (!sceneManager.scene.getObjectByName<Model>(connection.modelName, model))
       return error("Engine", "loadSceneTextureConnection", "Model " + connection.modelName + " not found for connection " + connection.name);
 
-    if (connection.textureName.empty()) {
+    if (connection.textureName.empty() || connection.mix <= 0.0f) {
       model->textureNames[connection.slot].clear();
       model->textureMixRatio[connection.slot] = 0.0f;
 
@@ -136,7 +136,7 @@ bool Engine::loadSceneTextureConnections() {
       }
 
       model->useTextures = any;
-      return debugLog("Scene", "bindTextureToModel", "unbind: " + connection.modelName + "[slot " + std::to_string(connection.slot) + "]", true);
+      return debugLog("Scene", "loadSceneTextureConnections", "unbind: " + connection.modelName + "[slot " + std::to_string(connection.slot) + "]", true);
     }
 
     TextureData* texture;
@@ -146,7 +146,6 @@ bool Engine::loadSceneTextureConnections() {
     model->useTextures = true;
     model->textureNames[connection.slot] = connection.textureName;
     model->textureMixRatio[connection.slot] = (connection.mix < 0.0f) ? 0.0f : (connection.mix > 1.0f ? 1.0f : connection.mix);
-    return debugLog("Scene", "bindTextureToModel", "bind: " + connection.textureName + " to " + connection.modelName + " [slot " + std::to_string(connection.slot) + "], mix=" + std::to_string(connection.mix), true);
   }
   return debugLog("Engine", "loadSceneTextureConnections", "Finish time: " + std::to_string(glfwGetTime()), true);
 }

@@ -10,7 +10,6 @@
 #include "controllers/cameraController.hpp"
 #include "controllers/modelController.hpp"
 #include "controllers/lightController.hpp"
-#include "controllers/textureController.hpp"
 
 #include "utils/log.hpp"
 
@@ -65,7 +64,6 @@ public:
   FreeCameraController cameraController;
   ModelController modelController;
   LightController lightController; 
-  TextureController textureController;
 
 private:
   std::string name;
