@@ -32,6 +32,7 @@ private:
 	bool setupShaders();
 	bool loadSceneMeshes();
 	bool loadSceneTextures();
+	bool loadSceneTextureConnections();
 
 	void tick(const float currentTime);
 	void renderFrame();

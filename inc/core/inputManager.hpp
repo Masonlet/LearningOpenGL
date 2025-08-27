@@ -5,15 +5,15 @@
 
 class InputManager {
 public:
-  void Update(GLFWwindow* window);
+  void update(GLFWwindow* window);
     
-  bool IsKeyDown(int key) const;
-  bool IsKeyPressed(int key) const;
+  bool isKeyDown(int key) const;
+  bool isKeyPressed(int key) const;
 
-  inline Vec2 GetMouseDelta() const { return mouseDelta;  }
+  inline Vec2 getMouseDelta() const { return mouseDelta;  }
 
-  void SetCursorLocked(bool locked);
-  inline bool IsCursorLocked() const { return cursorLocked; }
+  void setCursorLocked(bool locked);
+  inline bool isCursorLocked() const { return cursorLocked; }
 
 private:
   static constexpr  int TRACKED_KEY_COUNT{ 20 };

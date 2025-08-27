@@ -56,14 +56,14 @@ void Engine::tick(const float currentTime) {
   deltaTime = smoothingFactor * deltaTime + (1.0f - smoothingFactor) * rawDelta;
 }
 bool Engine::loadSceneAssets() {
-  return loadSceneMeshes() && loadSceneTextures();
-}
-bool Engine::loadSceneMeshes() {
-  debugLog("Engine", "loadSceneMeshes", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
   if (sceneManager.scene.getSceneName().empty())
     if (!sceneManager.loadTxtScene("Default"))
       return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
 
+  return loadSceneMeshes() && loadSceneTextures() && loadSceneTextureConnections();
+}
+bool Engine::loadSceneMeshes() {
+  debugLog("Engine", "loadSceneMeshes", "Start time: " + std::to_string(glfwGetTime()), true);
   const unsigned int shaderProgramID = renderer.getProgram();
   if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
 
@@ -82,18 +82,14 @@ bool Engine::loadSceneMeshes() {
 	}
 
 	renderer.updateLightCount(sceneManager.scene.getObjectCount<Light>());
-  sceneManager.scene.updateLights(shaderProgramID);
-  return debugLog("Engine", "loadSceneMeshes", "Load finish time: " + std::to_string(glfwGetTime()), true);
+  sceneManager.scene.lightController.updateLightLocations(sceneManager.scene.getObjects<Light>(), shaderProgramID);
+  return debugLog("Engine", "loadSceneMeshes", "Finish time: " + std::to_string(glfwGetTime()), true);
 }
 bool Engine::loadSceneTextures() {
-  debugLog("Engine", "loadSceneTextures", "Load scene models start time: " + std::to_string(glfwGetTime()), true);
-  if (sceneManager.scene.getSceneName().empty())
-    if (!sceneManager.loadTxtScene("Default"))
-      return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
-
-  std::map<std::string, TextureData>& textureData = sceneManager.scene.getObjects<TextureData>();
-  std::map<std::string, TextureData>::iterator it = textureData.begin();
-  for (; it != textureData.end(); ++it) {
+  debugLog("Engine", "loadSceneTextures", "Start time: " + std::to_string(glfwGetTime()), true);
+  std::map<std::string, TextureData>& data = sceneManager.scene.getObjects<TextureData>();
+  std::map<std::string, TextureData>::iterator it = data.begin();
+  for (; it != data.end(); ++it) {
     const TextureData& texture = it->second;
     if (textureManager.findTexture(texture.name)) continue;
 
@@ -102,7 +98,7 @@ bool Engine::loadSceneTextures() {
         if (!parseBMP(texture.faces[0].c_str(), face)) return false;
 
         if (!textureManager.uploadTextureToGPU(texture.name, face, true))
-          return error("Engine", "loadSceneMeshes", "Failed to load texture: " + texture.name);
+          return error("Engine", "loadSceneTextures", "Failed to upload texture: " + texture.name);
     } else {
       Texture faces[6];
       for (int i = 0; i < 6; ++i)
@@ -112,7 +108,47 @@ bool Engine::loadSceneTextures() {
         return error("Engine", "loadSceneTextures", "Failed to upload cubemap: " + texture.name);
     }
   }
-  return debugLog("Engine", "loadSceneTextures", "Load finish time: " + std::to_string(glfwGetTime()), true);
+  return debugLog("Engine", "loadSceneTextures", "Finish time: " + std::to_string(glfwGetTime()), true);
+}
+bool Engine::loadSceneTextureConnections() {
+  debugLog("Engine", "loadSceneTextureConnections", "Start time: " + std::to_string(glfwGetTime()), true);
+  std::map<std::string, TextureConnection>& data = sceneManager.scene.getObjects<TextureConnection>();
+  std::map<std::string, TextureConnection>::iterator it = data.begin();
+  for (; it != data.end(); ++it) {
+    const TextureConnection& connection = it->second;
+
+    if (connection.slot >= Model::NUM_TEXTURES) return error("Engine", "loadSceneTextureConnection", "Slot out of range: " + std::to_string(connection.slot));
+    
+    Model* model;
+    if (!sceneManager.scene.getObjectByName<Model>(connection.modelName, model))
+      return error("Engine", "loadSceneTextureConnection", "Model " + connection.modelName + " not found for connection " + connection.name);
+
+    if (connection.textureName.empty()) {
+      model->textureNames[connection.slot].clear();
+      model->textureMixRatio[connection.slot] = 0.0f;
+
+      bool any = false;
+      for (unsigned int i = 0; i < Model::NUM_TEXTURES; ++i) {
+        if (!model->textureNames[i].empty()) {
+          any = true;
+          break;
+        }
+      }
+
+      model->useTextures = any;
+      return debugLog("Scene", "bindTextureToModel", "unbind: " + connection.modelName + "[slot " + std::to_string(connection.slot) + "]", true);
+    }
+
+    TextureData* texture;
+    if(!sceneManager.scene.getObjectByName<TextureData>(connection.textureName, texture))
+      return error("Engine", "loadSceneTextureConnection", "Texture " + connection.textureName + " not found for connection " + connection.name);
+
+    model->useTextures = true;
+    model->textureNames[connection.slot] = connection.textureName;
+    model->textureMixRatio[connection.slot] = (connection.mix < 0.0f) ? 0.0f : (connection.mix > 1.0f ? 1.0f : connection.mix);
+    return debugLog("Scene", "bindTextureToModel", "bind: " + connection.textureName + " to " + connection.modelName + " [slot " + std::to_string(connection.slot) + "], mix=" + std::to_string(connection.mix), true);
+  }
+  return debugLog("Engine", "loadSceneTextureConnections", "Finish time: " + std::to_string(glfwGetTime()), true);
 }
 
 void Engine::run() {
@@ -120,7 +156,7 @@ void Engine::run() {
 
   while (!windowManager.getWindow()->shouldClose()) {	
     tick(static_cast<float>(glfwGetTime()));
-    inputManager.Update(windowManager.getWindow()->getGLFWwindow());
+    inputManager.update(windowManager.getWindow()->getGLFWwindow());
 
     Model* model{ nullptr };
     if (!sceneManager.scene.getObjectByIndex<Model>(sceneManager.scene.modelController.currentModel, model))
@@ -141,8 +177,7 @@ void Engine::renderFrame() {
     error("Engine", "run", "No active camera found for selected camera");
   renderer.updateCameraUniforms(cam->pos, cam->LookAt(), cam->Perspective(windowManager.getWindow()->getAspect()));
   sceneManager.scene.cameraController.update(*cam, inputManager, deltaTime);
-
-  sceneManager.scene.updateLightUniforms(renderer.getProgram());
+  sceneManager.scene.lightController.updateLightUniforms(sceneManager.scene.getObjects<Light>(), renderer.getProgram());
 
   Model* skyBox{ nullptr };
   std::vector<Model*> transparentInstances;

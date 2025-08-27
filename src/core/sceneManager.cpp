@@ -157,14 +157,6 @@ bool SceneManager::processSceneLine(const unsigned char*& p) {
 	else if (strcmp(nameStr, "triangle") == 0)    handled = parseAndAddObject<Model>(p, &parseTriangle, "triangle");
 	else if (strcmp(nameStr, "texture") == 0)     handled = parseAndAddObject<TextureData>(p, &parseTexture, "texture");
 	else if (strcmp(nameStr, "textureCube") == 0) handled = parseAndAddObject<TextureData>(p, &parseCubeTexture, "cube texture");
-	else if (strcmp(nameStr, "textureAdd") == 0)  handled = handleTextureConnectionLine(p);
+	else if (strcmp(nameStr, "textureAdd") == 0)  handled = parseAndAddObject<TextureConnection>(p, &parseTextureConnection, "texture connection");
 	return handled ? true : error("SceneManager", "processSceneLine", "Failed to handle: " + std::string(nameStr));
-}
-
-bool SceneManager::handleTextureConnectionLine(const unsigned char*& p) {
-	std::string modelName, textureName;
-	unsigned slot = 0;
-	float mix = 1.0f;
-	if (!parseTextureConnection(p, modelName, slot, textureName, mix)) return error("SceneManager", "handleTextureConnectionLine", "Failed to parse texture connection");
-	return scene.bindTextureToModel(modelName, slot, textureName, mix) ? true : error("SceneManager", "handleTextureConnectionLine", "Failed to bind " + textureName + " to " + modelName);
 }

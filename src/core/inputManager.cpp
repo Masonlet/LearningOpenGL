@@ -2,7 +2,7 @@
 #include "utils/log.hpp"
 #include "core/inputManager.hpp"
 
-void InputManager::Update(GLFWwindow* window) {
+void InputManager::update(GLFWwindow* window) {
   for (int i = 0; i < TRACKED_KEY_COUNT; ++i) {
     previousKeyState[i] = keyState[i];
     keyState[i] = glfwGetKey(window, trackedKeys[i]) == GLFW_PRESS;
@@ -31,14 +31,14 @@ void InputManager::Update(GLFWwindow* window) {
   lastMouseY = yPos;
 }
 
-bool InputManager::IsKeyDown(int key) const {
+bool InputManager::isKeyDown(int key) const {
   for (int i = 0; i < TRACKED_KEY_COUNT; ++i)
     if (trackedKeys[i] == key)
       return keyState[i];
 
   return false;
 }
-bool InputManager::IsKeyPressed(int key) const {
+bool InputManager::isKeyPressed(int key) const {
   for (int i = 0; i < TRACKED_KEY_COUNT; ++i)
     if (trackedKeys[i] == key)
       return keyState[i] && !previousKeyState[i]; 
@@ -46,7 +46,7 @@ bool InputManager::IsKeyPressed(int key) const {
   return false;
 }
 
-void InputManager::SetCursorLocked(bool locked) {
+void InputManager::setCursorLocked(bool locked) {
   cursorLocked = locked;
   firstMouse = true;
 }

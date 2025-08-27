@@ -4,17 +4,17 @@
 
 void FreeCameraController::update(Camera& camera, const InputManager& input, float deltaTime) {
   const float s = camera.moveSpeed * deltaTime;
-  if (input.IsKeyDown(GLFW_KEY_W)) camera.pos += camera.front * s;
-  if (input.IsKeyDown(GLFW_KEY_A)) camera.pos -= camera.GetRight() * s;
-  if (input.IsKeyDown(GLFW_KEY_S)) camera.pos -= camera.front * s;
-  if (input.IsKeyDown(GLFW_KEY_D)) camera.pos += camera.GetRight() * s;
-  if (input.IsKeyDown(GLFW_KEY_SPACE))        camera.pos += camera.up * s;
-  if (input.IsKeyDown(GLFW_KEY_LEFT_CONTROL)) camera.pos -= camera.up * s;
+  if (input.isKeyDown(GLFW_KEY_W)) camera.pos += camera.front * s;
+  if (input.isKeyDown(GLFW_KEY_A)) camera.pos -= camera.GetRight() * s;
+  if (input.isKeyDown(GLFW_KEY_S)) camera.pos -= camera.front * s;
+  if (input.isKeyDown(GLFW_KEY_D)) camera.pos += camera.GetRight() * s;
+  if (input.isKeyDown(GLFW_KEY_SPACE))        camera.pos += camera.up * s;
+  if (input.isKeyDown(GLFW_KEY_LEFT_CONTROL)) camera.pos -= camera.up * s;
 
-  if (!input.IsCursorLocked()) return;
+  if (!input.isCursorLocked()) return;
 
-  camera.yaw += input.GetMouseDelta().x * camera.mouseSpeed;
-  camera.pitch += input.GetMouseDelta().y * camera.mouseSpeed;
+  camera.yaw += input.getMouseDelta().x * camera.mouseSpeed;
+  camera.pitch += input.getMouseDelta().y * camera.mouseSpeed;
 
   if (camera.pitch > 89.0f)  camera.pitch = 89.0f;
   if (camera.pitch < -89.0f) camera.pitch = -89.0f;

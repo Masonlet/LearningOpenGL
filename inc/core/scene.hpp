@@ -1,13 +1,19 @@
 #pragma once
 
-#include "utils/log.hpp"
 #include "objects/model.hpp"
 #include "objects/light.hpp"
 #include "objects/camera.hpp"
 #include "objects/grid.hpp"
 #include "objects/textureData.hpp"
+#include "objects/textureConnection.hpp"
+
 #include "controllers/cameraController.hpp"
 #include "controllers/modelController.hpp"
+#include "controllers/lightController.hpp"
+#include "controllers/textureController.hpp"
+
+#include "utils/log.hpp"
+
 #include <map>
 #include <string>
 #include <iterator>
@@ -58,11 +64,8 @@ public:
 
   FreeCameraController cameraController;
   ModelController modelController;
-  void updateLights(int shaderProgram); // Need to remove, replace with a LightController ~~~
-  void updateLightUniforms(int shaderProgram); // Need to remove, replace with a LightController ~~~
-  //LightController lightController; 
-  bool bindTextureToModel(const std::string& modelName, unsigned int slot, const std::string& textureName, float mix); // Need to remove, replace with a TextureController ~~~
-  //TextureController textureController;
+  LightController lightController; 
+  TextureController textureController;
 
 private:
   std::string name;
@@ -73,6 +76,7 @@ private:
   static constexpr const char* typeName(Light*) { return "Light"; }
   static constexpr const char* typeName(Grid*) { return "Grid"; }
   static constexpr const char* typeName(TextureData*) { return "Texture"; }
+  static constexpr const char* typeName(TextureConnection*) { return "TextureConnection"; }
 
   std::map<std::string, Model>& getObjects(Model*) { return models; }
   const std::map<std::string, Model>& getObjects(Model*) const { return models; }
@@ -84,10 +88,13 @@ private:
   const std::map<std::string, Grid>& getObjects(Grid*) const { return grids; }
   std::map<std::string, TextureData>& getObjects(TextureData*) { return textures; }
   const std::map<std::string, TextureData>& getObjects(TextureData*) const { return textures; }
+  std::map<std::string, TextureConnection>& getObjects(TextureConnection*) { return textureConnections; }
+  const std::map<std::string, TextureConnection>& getObjects(TextureConnection*) const { return textureConnections; }
 
   std::map<std::string, Model> models;
   std::map<std::string, Camera> cameras;
   std::map<std::string, Light> lights;
   std::map<std::string, Grid> grids;
   std::map<std::string, TextureData> textures;
+  std::map<std::string, TextureConnection> textureConnections;
 };

@@ -78,10 +78,11 @@ bool parseCubeTexture(const unsigned char*& p, TextureData& out) {
   out.isCube = true;
   return true;
 }
-bool parseTextureConnection(const unsigned char*& p, std::string& model, unsigned int& slot, std::string& texture, float& mix) {
-  PARSE_STRING_OR(return false, p, model, 64, "texture connection model name");
-  PARSE_OR(return false, parseUInt, slot, "texture connection slot");
-  PARSE_STRING_OR(return false, p, texture, 128, "texture connection name");
-  PARSE_OR(return false, parseFloat, mix, "texture connection mix");
+bool parseTextureConnection(const unsigned char*& p, TextureConnection& out) {
+  PARSE_STRING_OR(return false, p, out.modelName, 64, "texture connection model name");
+  PARSE_OR(return false, parseUInt, out.slot, "texture connection slot");
+  PARSE_STRING_OR(return false, p, out.textureName, 128, "texture connection name");
+  PARSE_OR(return false, parseFloat, out.mix, "texture connection mix");
+  out.name = out.modelName + out.textureName + "_" + std::to_string(out.slot);
   return true;
 }

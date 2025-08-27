@@ -1,8 +1,7 @@
 #pragma once
 
-#include "controllers/controller.hpp"
+#include "controller.hpp"
 #include "objects/model.hpp"
-#include <map>
 
 class ModelController : public Controller<Model> {
 	public:

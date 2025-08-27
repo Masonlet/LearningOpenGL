@@ -19,6 +19,4 @@ private:
     if (!parseFN(p, obj)) return false;
     return scene.addObject(scene.getObjects<T>(), obj, type);
   }
-
-  bool handleTextureConnectionLine(const unsigned char*& p);
 };

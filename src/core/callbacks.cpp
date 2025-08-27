@@ -22,7 +22,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (key == GLFW_KEY_C) {
 			bool locked = glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED;
 			glfwSetInputMode(window, GLFW_CURSOR, locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
-			engine->inputManager.SetCursorLocked(locked);
+			engine->inputManager.setCursorLocked(locked);
 		}
 
     //if(key == GLFW_KEY_L)
