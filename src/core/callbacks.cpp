@@ -29,8 +29,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		//	engine->getSceneManager().saveTxtScene();
 
 		if (key == GLFW_KEY_N) {
-			if (mods & GLFW_MOD_SHIFT) engine->sceneManager.scene.modelController.incrementModel(engine->sceneManager.scene.getObjectCount<Model>());
-			else										   engine->sceneManager.scene.modelController.decrementModel();
+			if (mods & GLFW_MOD_SHIFT) engine->sceneManager.scene.modelController.increment(engine->sceneManager.scene.getObjectCount<Model>());
+			else										   engine->sceneManager.scene.modelController.decrement();
 		}
 
 		if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) 
@@ -54,7 +54,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
 	Camera* cam{ nullptr };
-	if (!engine->sceneManager.scene.getObjectByIndex<Camera>(engine->sceneManager.scene.cameraController.currentCamera, cam)) {
+	if (!engine->sceneManager.scene.getObjectByIndex<Camera>(engine->sceneManager.scene.cameraController.current, cam)) {
 		error("Engine", "Callbacks", "Failed to find active camera");
 		return;
 	}

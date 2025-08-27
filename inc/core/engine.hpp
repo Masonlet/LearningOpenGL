@@ -34,6 +34,6 @@ private:
 	bool loadSceneTextures();
 	bool loadSceneTextureConnections();
 
-	void tick(const float currentTime);
+	void updateTime(const float currentTime);
 	void renderFrame();
 };

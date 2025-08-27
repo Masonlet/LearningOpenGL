@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h> 
 
 #include "controllers/modelController.hpp"
+#include "core/inputManager.hpp"
 
 void ModelController::update(Model& model, const InputManager& input, float deltaTime) {
   Transform& transform = model.transform;

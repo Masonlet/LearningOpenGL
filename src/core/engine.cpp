@@ -36,7 +36,7 @@ bool Engine::setupShaders() {
   return debugLog("Engine", "setupShaders", "Shader setup finish time: " + std::to_string(glfwGetTime()), true);;
 }
 
-void Engine::tick(const float currentTime) {
+void Engine::updateTime(const float currentTime) {
   if (lastTime == 0.0f) {
     lastTime = currentTime;
     deltaTime = 0.0f;
@@ -155,11 +155,11 @@ void Engine::run() {
   windowManager.switchActiveWindowVisibiltiy();
 
   while (!windowManager.getWindow()->shouldClose()) {	
-    tick(static_cast<float>(glfwGetTime()));
+    updateTime(static_cast<float>(glfwGetTime()));
     inputManager.update(windowManager.getWindow()->getGLFWwindow());
 
     Model* model{ nullptr };
-    if (!sceneManager.scene.getObjectByIndex<Model>(sceneManager.scene.modelController.currentModel, model))
+    if (!sceneManager.scene.getObjectByIndex<Model>(sceneManager.scene.modelController.current, model))
       error("Engine", "run", "No active model found for selected model");
     else sceneManager.scene.modelController.update(*model, inputManager, deltaTime);
 
@@ -173,7 +173,7 @@ void Engine::renderFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   Camera* cam{ nullptr };
-  if (!sceneManager.scene.getObjectByIndex<Camera>(sceneManager.scene.cameraController.currentCamera, cam))
+  if (!sceneManager.scene.getObjectByIndex<Camera>(sceneManager.scene.cameraController.current, cam))
     error("Engine", "run", "No active camera found for selected camera");
   renderer.updateCameraUniforms(cam->pos, cam->LookAt(), cam->Perspective(windowManager.getWindow()->getAspect()));
   sceneManager.scene.cameraController.update(*cam, inputManager, deltaTime);

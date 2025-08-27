@@ -1,10 +1,16 @@
 #pragma once
 
-#include "core/inputManager.hpp"
+#include <cstddef>
+
+class InputManager;
 
 template <typename T>
-class Controller {
-public:
+struct Controller {
 	virtual ~Controller() = default;
-	virtual void update(T& object, const InputManager& input, float deltaTime) = 0;
+
+	std::size_t current{ 0 };
+	inline void increment(std::size_t maxCount) { if ((maxCount - 1) > current) current++; }
+	inline void decrement() { if (current != 0) current--; }
+
+	virtual void update(T& data, const InputManager& input, float deltaTime) = 0;
 };
