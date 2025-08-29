@@ -174,7 +174,7 @@ void Engine::renderFrame() {
   Camera* cam{ nullptr };
   if (!sceneManager.scene.getObjectByIndex<Camera>(sceneManager.scene.cameraController.current, cam))
     error("Engine", "run", "No active camera found for selected camera");
-  renderer.updateCameraUniforms(cam->pos, cam->LookAt(), cam->Perspective(windowManager.getWindow()->getAspect()));
+  renderer.updateCameraUniforms(cam->pos, Mat4::lookAt(cam->pos, cam->front), Mat4::perspective(cam->fov, windowManager.getWindow()->getAspect(), cam->nearPlane, cam->farPlane));
   sceneManager.scene.cameraController.update(*cam, inputManager, deltaTime);
   sceneManager.scene.lightController.updateLightUniforms(sceneManager.scene.getObjects<Light>(), renderer.getProgram());
 

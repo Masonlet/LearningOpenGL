@@ -17,8 +17,6 @@ struct Camera {
   bool enabled{ true }, paused{ false };
   
   void setFov(const float fovIn);
-	Vec3 GetRight() const;
-	Mat4 LookAt() const;
-	Mat4 Perspective(const float aspect) const;
+  Vec3 GetRight() const { return front.cross(WORLD_UP).normalized(); }
   void print() const;
 };
