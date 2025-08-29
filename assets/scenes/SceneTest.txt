@@ -1,7 +1,7 @@
 comment, on/off, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed
-camera, on, Cam1, FreeCam, -34.509 -0.482 -1.446, -18.500 -0.000, 90.000, 0.100 25000.000, 100.000
-camera, on, Cam2, FreeCam, 0.000 0.000 0.000, -18.500 -0.000, 70.000, 0.100 25000.000, 100.000
-camera, on, Cam3, FreeCam, 34.509 0.482 1.446, -18.500 -0.000, 40.000, 0.100 25000.000, 100.000
+camera, on, Cam1, -34.509 -0.482 -1.446, -18.500 -0.000, 90.000, 0.100 25000.000, 100.000
+camera, on, Cam2, 0.000 0.000 0.000, -18.500 -0.000, 70.000, 0.100 25000.000, 100.000
+camera, on, Cam3, 34.509 0.482 1.446, -18.500 -0.000, 40.000, 0.100 25000.000, 100.000
 
 comment, name, bmpPath
 texture, Lava, Lava_Texture.bmp, 1.0, 1 1

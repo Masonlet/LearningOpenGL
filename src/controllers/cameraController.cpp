@@ -25,3 +25,16 @@ void FreeCameraController::update(Camera& camera, const InputManager& input, flo
   camera.front = camera.front.normalized();
   camera.up = camera.GetRight().cross(camera.front).normalized();
 }
+
+void FreeCameraController::adjustFov(Camera& data, const float delta) {
+  data.fov += delta;
+  if (data.fov < 1.0f)   data.fov = 1.0f;
+  if (data.fov > 120.0f) data.fov = 120.0f;
+}
+void FreeCameraController::print(const Camera& data) const {
+  printf("\nPos: %f:%f:%f\n", data.pos.x, data.pos.y, data.pos.z);
+  printf("Front: %f:%f:%f\n", data.front.x, data.front.y, data.front.z);
+  printf("Pitch: %f\n\n", data.pitch);
+}
+
+

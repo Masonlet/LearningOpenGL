@@ -1,5 +1,5 @@
 comment, name, pos(xyz), rot(yaw pitch), fov, nearPlane farPlane, camSpeed
-camera, Cam1, FreeCam, 0.0 0.0 0.0, 0.0 0.0, 75.0, 0.1 10000, 50
+camera, Cam1, 0.0 0.0 0.0, 0.0 0.0, 75.0, 0.1 10000, 50
 
 comment, name, meshPath, pos(xyz), rot(xyz), scale(xyz), colour(Int, Named Coloured, Random, Rainbow, PLY), specular(rgb, power)
 model, cow, cow_xyz_n_rgba.ply, 0.0 0.0 0.0, 0.0 0.0 0.0, 1.0 1.0 1.0, 255 255 0 160, 1.0 1.0 1.0 32.0

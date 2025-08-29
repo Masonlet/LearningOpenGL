@@ -2,9 +2,9 @@
 #include "parsers/sceneParser.hpp"
 #include "parsers/fileParser.hpp"
 #include "objects/grid.hpp"
-#include "objects/primitives.hpp"
 #include "objects/textureData.hpp"
 #include "utils/log.hpp"
+#include "utils/primitives.hpp"
 #include <fstream>
 #include <iomanip>
 #include <vector>
@@ -23,19 +23,13 @@ bool SceneManager::saveTxtScene() {
 		const std::string& name = camIt->first;
 		const Camera& cam = camIt->second;
 
-		const std::string camType = (cam.type == 0) ? "FreeCam" :
-			(cam.type == 1) ? "DungeonCam" :
-			/*  .getType() == 2)*/ "ModernCam";
-
 		file << "camera, "
 			<< name << ", "
-			<< camType << ", "
 			<< cam.pos.x << " " << cam.pos.y << " " << cam.pos.z << ", "
 			<< cam.yaw << " " << cam.pitch << ", "
 			<< cam.fov << ", "
 			<< cam.nearPlane << " " << cam.farPlane << ", "
 			<< cam.moveSpeed;
-		if (cam.type != 0) file << ", " << cam.moveDistance;
 		file << '\n';
 	}
 

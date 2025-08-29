@@ -53,11 +53,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	Engine* engine = static_cast<Engine*>(glfwGetWindowUserPointer(window));
+	FreeCameraController& camController = engine->sceneManager.scene.cameraController;
+
 	Camera* cam{ nullptr };
-	if (!engine->sceneManager.scene.getObjectByIndex<Camera>(engine->sceneManager.scene.cameraController.current, cam)) {
+	if (!engine->sceneManager.scene.getObjectByIndex<Camera>(camController.current, cam)) {
 		error("Engine", "Callbacks", "Failed to find active camera");
 		return;
 	}
 
-	cam->setFov(cam->fov + static_cast<float>(-yoffset * 2.0f));
+	camController.adjustFov(*cam, static_cast<float>(-yoffset * 2.0f));
 }
