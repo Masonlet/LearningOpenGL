@@ -1,9 +1,9 @@
 #pragma once
 
-#include "math/vec2.hpp"
-#include "math/vec3.hpp"
-#include "math/vec4.hpp"
-#include "math/mat4.hpp"
+#include "starletmath/vec2.hpp"
+#include "starletmath/vec3.hpp"
+#include "starletmath/vec4.hpp"
+#include "starletmath/mat4.hpp"
 #include "objects/colour.hpp"
 #include <string>
 

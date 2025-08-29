@@ -2,7 +2,7 @@
 #include "parsers/parserFunctions.hpp"
 #include "parsers/fileParser.hpp"
 #include "utils/log.hpp"
-#include "math/constants.hpp"
+#include "starletmath/constants.hpp"
 #include <string>
 static bool parsePlyElementLine(const unsigned char*& p, unsigned int& verticesOut, unsigned int& trianglesOut) {
 	if (!p) return error("PlyParser", "parsePlyHeader", "Input pointer is null\n");

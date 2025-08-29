@@ -1,7 +1,7 @@
 #pragma once
 
-#include "math/vec3.hpp"
-#include "math/mat4.hpp"
+#include "starletmath/vec3.hpp"
+#include "starletmath/mat4.hpp"
 #include "core/inputManager.hpp"
 #include <string>
 

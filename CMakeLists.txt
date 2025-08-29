@@ -33,11 +33,14 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.4)
 FetchContent_MakeAvailable(glfw)
 
+FetchContent_Declare(StarletMath GIT_REPOSITORY https://github.com/masonlet/starletmath.git GIT_TAG main)
+FetchContent_MakeAvailable(StarletMath)
+
 add_library(glad STATIC ${CMAKE_SOURCE_DIR}/external/src/glad/glad.c)
 target_include_directories(glad PUBLIC ${CMAKE_SOURCE_DIR}/external/inc)
 
 find_package(OpenGL REQUIRED)
-target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL)
+target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL StarletMath)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "External")

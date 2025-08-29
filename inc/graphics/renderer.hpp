@@ -5,7 +5,7 @@
 #include "graphics/textureManager.hpp"
 #include "objects/model.hpp"
 #include "core/sceneManager.hpp"
-#include "math/mat4.hpp"
+#include "starletmath/mat4.hpp"
 
 constexpr int SKYBOX_TU{ 20 };
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "math/vec2.hpp"
+#include "starletmath/vec2.hpp"
 
 struct TextureData {
 	std::string name;

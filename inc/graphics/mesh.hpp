@@ -1,7 +1,7 @@
 #pragma once
 
-#include "math/Vec4.hpp"
-#include "math/vertex.hpp"
+#include "starletmath/Vec4.hpp"
+#include "starletmath/vertex.hpp"
 #include "objects/colour.hpp"
 #include <string>
 

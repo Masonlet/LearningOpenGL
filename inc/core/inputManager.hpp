@@ -1,7 +1,7 @@
 #pragma once 
 
 #include <GLFW/glfw3.h>
-#include "math/vec2.hpp"
+#include "starletmath/vec2.hpp"
 
 class InputManager {
 public:

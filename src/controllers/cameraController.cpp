@@ -1,5 +1,5 @@
 #include "controllers/cameraController.hpp"
-#include "math/constants.hpp"
+#include "starletmath/constants.hpp"
 #include <cmath>
 
 void FreeCameraController::update(Camera& camera, const InputManager& input, float deltaTime) {

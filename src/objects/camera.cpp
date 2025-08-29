@@ -1,5 +1,5 @@
 #include "objects/camera.hpp"
-#include "math/constants.hpp"
+#include "starletmath/constants.hpp"
 
 #include <cmath>
 

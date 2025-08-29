@@ -1,7 +1,7 @@
 #pragma once
 
-#include "math/vec4.hpp"
-#include "math/transform.hpp"
+#include "starletmath/vec4.hpp"
+#include "starletmath/transform.hpp"
 #include "objects/colour.hpp"
 #include <string>
 
