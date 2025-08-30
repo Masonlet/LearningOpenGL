@@ -6,9 +6,9 @@ bool createTriangle(MeshManager* meshManager, const std::string& name, unsigned 
 
 	info.numVertices = 3;
 	info.vertices = new Vertex[3];
-	info.vertices[0].pos = { -0.5f * size.x, -0.5f * size.y, 0.0f, 1.0f };
-	info.vertices[1].pos = {  0.5f * size.x, -0.5f * size.y, 0.0f, 1.0f };
-	info.vertices[2].pos = {  0.0f,           0.5f * size.y, 0.0f, 1.0f };
+	info.vertices[0].pos = { -0.5f * size.x, -0.5f * size.y, 0.0f };
+	info.vertices[1].pos = {  0.5f * size.x, -0.5f * size.y, 0.0f };
+	info.vertices[2].pos = {  0.0f,           0.5f * size.y, 0.0f };
 	for (int i = 0; i < 3; ++i)	info.vertices[i].col = vertexColour;
 
 	info.numIndices = 3;
@@ -33,14 +33,14 @@ bool createSquare(MeshManager* meshManager, const std::string& name, unsigned in
 	const float halfY = 0.5f * size.y;
 
 	// First triangle
-	info.vertices[0].pos = { -halfX, -halfY, 0.0f, 1.0f };
-	info.vertices[1].pos = {  halfX, -halfY, 0.0f, 1.0f };
-	info.vertices[2].pos = {  halfX,  halfY, 0.0f, 1.0f };
+	info.vertices[0].pos = { -halfX, -halfY, 0.0f };
+	info.vertices[1].pos = {  halfX, -halfY, 0.0f };
+	info.vertices[2].pos = {  halfX,  halfY, 0.0f };
 
 	// Second triangle
-	info.vertices[3].pos = { -halfX, -halfY, 0.0f, 1.0f };
-	info.vertices[4].pos = {  halfX,  halfY, 0.0f, 1.0f };
-	info.vertices[5].pos = { -halfX,  halfY, 0.0f, 1.0f };
+	info.vertices[3].pos = { -halfX, -halfY, 0.0f };
+	info.vertices[4].pos = {  halfX,  halfY, 0.0f };
+	info.vertices[5].pos = { -halfX,  halfY, 0.0f };
 
 	for (int i = 0; i < 6; ++i) {
 		info.vertices[i].col = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -82,7 +82,7 @@ bool createCube(MeshManager* meshManager, const std::string& name, const Vec3& s
 		for (int j = 0; j < 6; ++j) {
 			int idx = i * 6 + j;
 
-			info.vertices[idx].pos = { positions[faces[i][j]], 0.0f };
+			info.vertices[idx].pos = positions[faces[i][j]];
 			info.vertices[idx].col = { 1.0f, 1.0f, 1.0f, 1.0f };
 			info.indices[idx] = idx;
 		}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/mesh.hpp"
+#include "graphics/objects/mesh.hpp"
 #include <string>
 #include <map>
 

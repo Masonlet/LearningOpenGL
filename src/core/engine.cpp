@@ -1,10 +1,10 @@
 #include <glad/glad.h> 
 
 #include "core/engine.hpp"
-#include "controllers/modelController.hpp"
+#include "scene/controllers/modelController.hpp"
 #include "utils/log.hpp"
-#include "parsers/plyParser.hpp"
-#include "parsers/bmpParser.hpp"
+#include "graphics/parsers/plyParser.hpp"
+#include "graphics/parsers/bmpParser.hpp"
 
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };

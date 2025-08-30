@@ -1,12 +1,12 @@
 #pragma once
 
 #include "core/windowManager.hpp"
-#include "graphics/renderer.hpp"
+#include "core/renderer.hpp"
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
 #include "graphics/textureManager.hpp"
 #include "core/inputManager.hpp"
-#include "core/sceneManager.hpp"
+#include "scene/sceneManager.hpp"
 
 struct Engine {
 	WindowManager windowManager;

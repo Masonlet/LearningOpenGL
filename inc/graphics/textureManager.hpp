@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/texture.hpp"
+#include "graphics/objects/texture.hpp"
 #include <string>
 #include <map>
 
