@@ -1,10 +1,6 @@
 #include <glad/glad.h> 
-
 #include "core/engine.hpp"
-#include "scene/controllers/modelController.hpp"
 #include "utils/log.hpp"
-#include "graphics/parsers/plyParser.hpp"
-#include "graphics/parsers/bmpParser.hpp"
 
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };
@@ -60,54 +56,45 @@ bool Engine::loadSceneAssets() {
     if (!sceneManager.loadTxtScene("Default"))
       return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
 
-  return loadSceneMeshes() && loadSceneTextures() && loadSceneTextureConnections();
+  return loadSceneMeshes() && loadSceneLighting() && loadSceneTextures() && loadSceneTextureConnections();
 }
 bool Engine::loadSceneMeshes() {
   debugLog("Engine", "loadSceneMeshes", "Start time: " + std::to_string(glfwGetTime()), true);
-  const unsigned int shaderProgramID = renderer.getProgram();
-  if (shaderProgramID == 0) return error("Engine", "loadSceneMeshes", "No active shader program set before loading meshes");
 
 	std::map<std::string, Model>& modelData = sceneManager.scene.getObjects<Model>();
-	std::map<std::string, Model>::iterator it = modelData.begin();
-  for(; it != modelData.end(); ++it) {
-    const std::string& path = it->second.meshPath;
-    if (meshManager.findMesh(path)) continue;
+  for(std::map<std::string, Model>::iterator it = modelData.begin(); it != modelData.end(); ++it)
+    if (!meshManager.addMesh(it->second.meshPath))
+      return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + it->second.meshPath);
 
-    Mesh mesh;
-    if (!parsePlyMesh(path, mesh))
-      return false;
-
-    if (!meshManager.uploadMeshToGPU(path, mesh, shaderProgramID))
-      return error("Engine", "loadSceneMeshes", "Failed to load mesh: " + path);
-	}
-
-	renderer.updateLightCount(sceneManager.scene.getObjectCount<Light>());
-  sceneManager.scene.lightController.updateLightLocations(sceneManager.scene.getObjects<Light>(), shaderProgramID);
   return debugLog("Engine", "loadSceneMeshes", "Finish time: " + std::to_string(glfwGetTime()), true);
+}
+bool Engine::loadSceneLighting() {
+  debugLog("Engine", "loadSceneLighting", "Start time: " + std::to_string(glfwGetTime()), true);
+
+  const unsigned int shaderProgramID = renderer.getProgram();
+  if (shaderProgramID == 0) return error("Engine", "loadSceneLighting", "No active shader program set before loading lighting");
+
+  renderer.updateLightCount(sceneManager.scene.getObjectCount<Light>());
+  sceneManager.scene.lightController.updateLightLocations(sceneManager.scene.getObjects<Light>(), shaderProgramID);
+
+  return debugLog("Engine", "loadSceneLighting", "Finish time: " + std::to_string(glfwGetTime()), true);
 }
 bool Engine::loadSceneTextures() {
   debugLog("Engine", "loadSceneTextures", "Start time: " + std::to_string(glfwGetTime()), true);
+
   std::map<std::string, TextureData>& data = sceneManager.scene.getObjects<TextureData>();
-  std::map<std::string, TextureData>::iterator it = data.begin();
-  for (; it != data.end(); ++it) {
+  for (std::map<std::string, TextureData>::iterator it = data.begin(); it != data.end(); ++it) {
     const TextureData& texture = it->second;
     if (textureManager.findTexture(texture.name)) continue;
 
-    if(!texture.isCube){
-        Texture face;
-        if (!parseBMP(texture.faces[0].c_str(), face)) return false;
-
-        if (!textureManager.uploadTextureToGPU(texture.name, face, true))
-          return error("Engine", "loadSceneTextures", "Failed to upload texture: " + texture.name);
-    } else {
-      Texture faces[6];
-      for (int i = 0; i < 6; ++i)
-        if (!parseBMP(texture.faces[i].c_str(), faces[i])) return false;
-
-      if (!textureManager.uploadCubeTextureToGPU(texture.name, faces, true))
-        return error("Engine", "loadSceneTextures", "Failed to upload cubemap: " + texture.name);
+    if (!texture.isCube) {
+      if(!textureManager.addTexture(texture.name, texture.faces[0]))
+        return error("Engine", "loadSceneTextures", "Failed to load 2D texture: " + texture.name);
     }
+    else if (!textureManager.addCubeTexture(texture.name, texture.faces))
+      return error("Engine", "loadSceneTextures", "Failed to load cube map: " + texture.name);
   }
+
   return debugLog("Engine", "loadSceneTextures", "Finish time: " + std::to_string(glfwGetTime()), true);
 }
 bool Engine::loadSceneTextureConnections() {
@@ -136,7 +123,8 @@ bool Engine::loadSceneTextureConnections() {
       }
 
       model->useTextures = any;
-      return debugLog("Scene", "loadSceneTextureConnections", "unbind: " + connection.modelName + "[slot " + std::to_string(connection.slot) + "]", true);
+      debugLog("Scene", "loadSceneTextureConnections", "unbind: " + connection.modelName + "[slot " + std::to_string(connection.slot) + "]", true);
+      continue;
     }
 
     TextureData* texture;

@@ -12,10 +12,10 @@ uniform int hasVertexColour;
 uniform vec2 yMin_yMax;
 uniform vec3 seed;
 
-in vec4 vCol;
-in vec4 vPos;
-in vec4 vNorm;
-in vec2 vTextCoords;
+layout (location=0) in vec4 vPos;
+layout (location=1) in vec4 vNorm;
+layout (location=2) in vec4 vCol;
+layout (location=3) in vec2 vTextCoords;
 
 out vec4 vertColor;
 out vec4 vertNormal;
