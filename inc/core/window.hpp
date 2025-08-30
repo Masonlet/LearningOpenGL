@@ -1,11 +1,9 @@
 #pragma once
 
-#define GLFW_INCLUDE_NONE 
-#include <GLFW/glfw3.h>
+struct GLFWwindow;
 
 class Window {
 public:
-	Window(const unsigned int width, const unsigned int height, const char* title);
 	~Window();
 
 	void pollEvents() const;
@@ -18,11 +16,8 @@ public:
 	inline unsigned int getHeight() const { return height; }
 	inline float getAspect() const { return static_cast<float>(width) / static_cast<float>(height); }
 
+	bool createWindow(const unsigned int widthIn, const unsigned int heightIn, const char* title);
 private:
-	GLFWwindow* window = nullptr;
-	unsigned int width, height;
-
-	bool createWindow(const unsigned int width, const unsigned int height, const char* title);
-	bool initGLAD();
-	void setupGLState();
+	GLFWwindow* window{ nullptr };
+	unsigned int width{ 0 }, height{ 0 };
 };

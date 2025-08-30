@@ -12,8 +12,11 @@ public:
 
   inline Window *getWindow() const { return window; }
 
-  void switchActiveWindowVisibiltiy();
+  void switchActiveWindowVisibility();
 
 private:
   Window* window = nullptr;
+
+  bool initGLADOnce();
+  void setInitialViewport();
 };

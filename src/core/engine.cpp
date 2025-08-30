@@ -11,12 +11,13 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 
   if (!setupShaders()) return false;
 
-  constexpr float bgR = 0.2f;
-  constexpr float bgG = 0.2f;
-  constexpr float bgB = 0.2f;
-  constexpr float bgA = 1.0f;
-  glClearColor(bgR, bgG, bgB, bgA);
-
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
   return true;
 }
 
@@ -139,7 +140,7 @@ bool Engine::loadSceneTextureConnections() {
 }
 
 void Engine::run() {
-  windowManager.switchActiveWindowVisibiltiy();
+  windowManager.switchActiveWindowVisibility();
 
   while (!windowManager.getWindow()->shouldClose()) {	
     updateTime(static_cast<float>(glfwGetTime()));
