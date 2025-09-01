@@ -1,8 +1,7 @@
 #pragma once
 
-#include "scene/scene.hpp"
-#include "graphics/meshManager.hpp"
-#include "utils/parsers/parserFunctions.hpp"
+#include "scene.hpp"
+#include "sceneLoader.hpp"
 
 struct SceneManager {
   Scene scene;
@@ -11,12 +10,5 @@ struct SceneManager {
   bool loadTxtScene(const std::string& name);
 
 private:
-  bool processSceneLine(const unsigned char*& p);
- 
-  template<typename T>
-  bool parseAndAddObject(const unsigned char*& p, bool (*parseFN)(const unsigned char*&, T&), const char* type) {
-    T obj{};
-    if (!parseFN(p, obj)) return false;
-    return scene.addObject(scene.getObjects<T>(), obj, type);
-  }
+  SceneLoader loader;
 };

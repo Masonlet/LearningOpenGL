@@ -28,12 +28,9 @@ public:
     return typeName(static_cast<T*>(nullptr));
   }
 
-  template <typename T, typename MapT>
-  bool addObject(MapT& map, const T& data, const char* type) {
-    if (data.name.empty()) return error("Scene", "addEntity", std::string(type) + " name is empty");
-    std::pair<typename MapT::iterator, bool> res = map.emplace(data.name, data);
-    if (!res.second) return error("Scene", "addObject", std::string(type) + " name already used: " + data.name);
-    return true;
+  template <typename T>
+  bool addObject(const T& data, const char* type) {
+    return addObjectData(getObjects<T>(), data, type);
   }
 
   template <typename T>
@@ -65,9 +62,15 @@ public:
   FreeCameraController cameraController;
   ModelController modelController;
   LightController lightController; 
-
 private:
   std::string name;
+  std::map<std::string, Model> models;
+  std::map<std::string, Camera> cameras;
+  std::map<std::string, Light> lights;
+  std::map<std::string, Grid> grids;
+  std::map<std::string, TextureData> textures;
+  std::map<std::string, TextureConnection> textureConnections;
+  std::map<std::string, Primitive> primitives;
 
   static constexpr const char* typeName(void*) { return "Object"; }
   static constexpr const char* typeName(Model*) { return "Model"; }
@@ -77,6 +80,14 @@ private:
   static constexpr const char* typeName(TextureData*) { return "Texture"; }
   static constexpr const char* typeName(TextureConnection*) { return "TextureConnection"; }
   static constexpr const char* typeName(Primitive*) { return "Primitive"; }
+
+  template <typename T, typename MapT>
+  bool addObjectData(MapT& map, const T& data, const char* type) {
+    if (data.name.empty()) return error("Scene", "addEntity", std::string(type) + " name is empty");
+    std::pair<typename MapT::iterator, bool> res = map.emplace(data.name, data);
+    if (!res.second) return error("Scene", "addObject", std::string(type) + " name already used: " + data.name);
+    return true;
+  }
 
   std::map<std::string, Model>& getObjects(Model*) { return models; }
   const std::map<std::string, Model>& getObjects(Model*) const { return models; }
@@ -92,12 +103,4 @@ private:
   const std::map<std::string, TextureConnection>& getObjects(TextureConnection*) const { return textureConnections; }
   std::map<std::string, Primitive>& getObjects(Primitive*) { return primitives; }
   const std::map<std::string, Primitive>& getObjects(Primitive*) const { return primitives; }
-
-  std::map<std::string, Model> models;
-  std::map<std::string, Camera> cameras;
-  std::map<std::string, Light> lights;
-  std::map<std::string, Grid> grids;
-  std::map<std::string, TextureData> textures;
-  std::map<std::string, TextureConnection> textureConnections;
-  std::map<std::string, Primitive> primitives;
 };
