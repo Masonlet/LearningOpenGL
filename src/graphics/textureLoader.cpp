@@ -1,6 +1,6 @@
-#include "graphics/loaders/textureLoader.hpp"
-#include "graphics/objects/texture.hpp"
-#include "graphics/parsers/bmpParser.hpp"
+#include "graphics/textureLoader.hpp"
+#include "graphics/texture.hpp"
+#include "parsers/textures/bmpParser.hpp"
 #include "utils/log.hpp"
 #include <glad/glad.h>
 

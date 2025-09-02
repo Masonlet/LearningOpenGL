@@ -1,6 +1,7 @@
-#include "graphics/loaders/meshLoader.hpp"
+#include "graphics/mesh.hpp"
+#include "graphics/meshLoader.hpp"
 #include <glad/glad.h>
-#include "graphics/parsers/plyParser.hpp"
+#include "parsers/meshes/plyParser.hpp"
 #include "utils/log.hpp"
 
 bool MeshLoader::loadMesh(const std::string& path, Mesh& mesh) {

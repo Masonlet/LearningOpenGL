@@ -1,8 +1,8 @@
 #pragma once
 
 #include "scene/objects/camera.hpp"
-#include "scene/parsers/cameraParser.hpp"
-#include "utils/parsers/parserFunctions.hpp"
+#include "parsers/scene/cameraParser.hpp"
+#include "parsers/parserFunctions.hpp"
 
 bool parseCamera(const unsigned char*& p, Camera& out) {
   PARSE_OR(return false, parseBool, out.enabled, "camera enabled");

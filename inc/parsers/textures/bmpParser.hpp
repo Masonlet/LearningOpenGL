@@ -1,5 +1,5 @@
 #pragma once
 
-#include "graphics/objects/texture.hpp"
+struct Texture;
 
 bool parseBMP(const char* path, Texture& out);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "objects/texture.hpp"
-#include "loaders/textureLoader.hpp"
+#include "texture.hpp"
+#include "textureLoader.hpp"
 #include <string>
 #include <map>
 

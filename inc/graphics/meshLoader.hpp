@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/objects/mesh.hpp"
+struct Mesh;
 #include <string>
 
 struct MeshLoader {

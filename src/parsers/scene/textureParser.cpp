@@ -2,8 +2,8 @@
 
 #include "scene/objects/textureData.hpp"
 #include "scene/objects/textureConnection.hpp"
-#include "scene/parsers/textureParser.hpp"
-#include "utils/parsers/parserFunctions.hpp"
+#include "parsers/scene/textureParser.hpp"
+#include "parsers/parserFunctions.hpp"
 
 bool parseTexture(const unsigned char*& p, TextureData& out) {
   PARSE_STRING_OR(return false, p, out.name, 128, "texture name");

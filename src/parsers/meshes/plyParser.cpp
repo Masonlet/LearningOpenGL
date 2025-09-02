@@ -1,9 +1,11 @@
-#include "graphics/parsers/plyParser.hpp"
-#include "utils/parsers/parserFunctions.hpp"
-#include "utils/parsers/fileParser.hpp"
+#include "graphics/mesh.hpp"
+#include "parsers/meshes/plyParser.hpp"
+#include "parsers/parserFunctions.hpp"
+#include "parsers/fileParser.hpp"
 #include "utils/log.hpp"
 #include "starletmath/constants.hpp"
 #include <string>
+
 static bool parsePlyElementLine(const unsigned char*& p, unsigned int& verticesOut, unsigned int& trianglesOut) {
 	if (!p) return error("PlyParser", "parsePlyHeader", "Input pointer is null\n");
 

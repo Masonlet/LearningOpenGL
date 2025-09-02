@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/objects/shader.hpp"
+#include "shader.hpp"
 #include <vector>
 #include <map>
 #include <string>

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "scene/objects/grid.hpp"
-#include "scene/parsers/gridParser.hpp"
-#include "utils/parsers/parserFunctions.hpp"
+#include "parsers/scene/gridParser.hpp"
+#include "parsers/parserFunctions.hpp"
 
 bool parseGrid(const unsigned char*& p, Grid& out) {
   PARSE_OR(return false, parseUInt, out.count, "cubeGrid count");

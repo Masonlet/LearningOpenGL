@@ -1,7 +1,7 @@
 #pragma once
 
-#include "objects/mesh.hpp"
-#include "loaders/meshLoader.hpp"
+#include "mesh.hpp"
+#include "meshLoader.hpp"
 #include <string>
 #include <map>
 

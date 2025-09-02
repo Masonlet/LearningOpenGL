@@ -1,8 +1,8 @@
 #pragma once
 
 #include "scene/objects/model.hpp"
-#include "scene/parsers/modelParser.hpp"
-#include "utils/parsers/parserFunctions.hpp"
+#include "parsers/scene/modelParser.hpp"
+#include "parsers/parserFunctions.hpp"
 
 bool parseModel(const unsigned char*& p, Model& out) {
   PARSE_OR(return false, parseBool, out.isVisible, "model enabled");

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "scene/objects/light.hpp"
-#include "scene/parsers/lightParser.hpp"
-#include "utils/parsers/parserFunctions.hpp"
+#include "parsers/scene/lightParser.hpp"
+#include "parsers/parserFunctions.hpp"
 
 bool parseLight(const unsigned char*& p, Light& out) {
   PARSE_OR(return false, parseBool, out.enabled, "light enabled");

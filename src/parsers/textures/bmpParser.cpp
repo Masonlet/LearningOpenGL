@@ -1,5 +1,6 @@
-#include "graphics/parsers/bmpParser.hpp"
-#include "utils/parsers/fileParser.hpp"
+#include "graphics/texture.hpp"
+#include "parsers/textures/bmpParser.hpp"
+#include "parsers/fileParser.hpp"
 #include "utils/log.hpp"
 #include <cstdio>
 
