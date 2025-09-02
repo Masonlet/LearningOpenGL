@@ -1,12 +1,12 @@
-#include "graphics/mesh.hpp"
+#include "starletparsers/meshes/mesh.hpp"
 #include "graphics/meshLoader.hpp"
 #include <glad/glad.h>
-#include "parsers/meshes/plyParser.hpp"
-#include "utils/log.hpp"
+#include "starletparsers/meshes/plyParser.hpp"
+#include "starletparsers/utils/log.hpp"
 
 bool MeshLoader::loadMesh(const std::string& path, Mesh& mesh) {
   if (!mesh.empty()) return error("MeshLoader", "loadMesh", "Loading non-empty mesh: " + path);
-    if (!parsePlyMesh(path, mesh)) 
+    if (!parsePlyMesh(std::string(ASSET_DIR) + "/models/" + path, mesh))
       return error("MeshLoader", "loadMesh", "Failed to parse mesh file: " + path);
   
   return true;

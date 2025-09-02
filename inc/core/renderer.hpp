@@ -3,7 +3,7 @@
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
 #include "graphics/textureManager.hpp"
-#include "scene/objects/model.hpp"
+#include "starletparsers/scene/model.hpp"
 #include "scene/sceneManager.hpp"
 #include "starletmath/mat4.hpp"
 

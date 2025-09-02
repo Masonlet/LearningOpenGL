@@ -1,7 +1,7 @@
 #pragma once
 
 #include "controller.hpp"
-#include "scene/objects/light.hpp"
+#include "starletparsers/scene/light.hpp"
 #include <cstddef>
 #include <map>
 #include <string>

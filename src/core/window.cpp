@@ -2,7 +2,7 @@
 #define GLFW_INCLUDE_NONE 
 #include <GLFW/glfw3.h>
 #include "core/window.hpp"
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 #include <cstdio>
 
 Window::~Window() {

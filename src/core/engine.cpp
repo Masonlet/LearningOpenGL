@@ -1,6 +1,6 @@
 #include <glad/glad.h> 
 #include "core/engine.hpp"
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 
 constexpr int default_width{ 1920 };
 constexpr int default_height{ 1200 };

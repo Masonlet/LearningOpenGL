@@ -1,6 +1,6 @@
 #include <glad/glad.h>
 #include "graphics/meshManager.hpp"
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 
 MeshManager::~MeshManager() {
   for (std::map<std::string, Mesh>::iterator it = pathToMeshes.begin(); it != pathToMeshes.end(); ++it) {

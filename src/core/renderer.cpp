@@ -1,6 +1,6 @@
 #include <glad/glad.h>
 #include "core/renderer.hpp"
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 
 bool Renderer::setProgram(unsigned int program) {
 	if (program == 0) return error("Renderer", "setProgram", "Program is 0");

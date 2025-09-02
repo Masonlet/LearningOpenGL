@@ -3,10 +3,10 @@ project(LearningOpenGL)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_SUPPRESS_REGENERATION ON)
-set(ASSET_SRC "${CMAKE_SOURCE_DIR}/assets")
+set(ASSET_SRC "${CMAKE_CURRENT_SOURCE_DIR}/assets")
 
-file(GLOB_RECURSE SOURCES        CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/*.cpp ${CMAKE_SOURCE_DIR}/src/*.c)
-file(GLOB_RECURSE HEADERS        CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/inc/*.hpp ${CMAKE_SOURCE_DIR}/inc/*.h)
+file(GLOB_RECURSE SOURCES        CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
+file(GLOB_RECURSE HEADERS        CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 file(GLOB_RECURSE ASSET_SHADERS  CONFIGURE_DEPENDS "${ASSET_SRC}/shaders/*")
 file(GLOB_RECURSE ASSET_MODELS   CONFIGURE_DEPENDS "${ASSET_SRC}/models/*")
 file(GLOB_RECURSE ASSET_SCENES   CONFIGURE_DEPENDS "${ASSET_SRC}/scenes/*")
@@ -15,8 +15,8 @@ file(GLOB_RECURSE ASSET_TEXTURES CONFIGURE_DEPENDS "${ASSET_SRC}/textures/*")
 add_executable(LearningOpenGL ${SOURCES} ${HEADERS})
 
 # Visual Studio organization
-source_group(TREE ${CMAKE_SOURCE_DIR}/src PREFIX "Source Files" FILES ${SOURCES})
-source_group(TREE ${CMAKE_SOURCE_DIR}/inc PREFIX "Header Files" FILES ${HEADERS})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "Source Files" FILES ${SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/inc PREFIX "Header Files" FILES ${HEADERS})
 add_custom_target(Assets SOURCES ${ASSET_SHADERS} ${ASSET_MODELS} ${ASSET_SCENES} ${ASSET_TEXTURES})
 set_target_properties(Assets PROPERTIES FOLDER "Assets")
 source_group("Assets\\Shaders"  FILES ${ASSET_SHADERS})
@@ -36,11 +36,14 @@ FetchContent_MakeAvailable(glfw)
 FetchContent_Declare(StarletMath GIT_REPOSITORY https://github.com/masonlet/starletmath.git GIT_TAG main)
 FetchContent_MakeAvailable(StarletMath)
 
-add_library(glad STATIC ${CMAKE_SOURCE_DIR}/external/src/glad/glad.c)
-target_include_directories(glad PUBLIC ${CMAKE_SOURCE_DIR}/external/inc)
+FetchContent_Declare(StarletParsers GIT_REPOSITORY https://github.com/masonlet/starletparsers.git GIT_TAG main)
+FetchContent_MakeAvailable(StarletParsers)
+
+add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/src/glad/glad.c)
+target_include_directories(glad PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/inc)
 
 find_package(OpenGL REQUIRED)
-target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL StarletMath)
+target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL StarletMath StarletParsers)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "External")
@@ -51,6 +54,9 @@ if(TARGET update_mappings)
 endif()
 if(TARGET uninstall)
   set_target_properties(uninstall PROPERTIES FOLDER "External")
+endif()
+if(TARGET StarletParsers)
+  set_target_properties(StarletParsers PROPERTIES FOLDER "External")
 endif()
 
 # Output directories
@@ -64,5 +70,5 @@ set_target_properties(LearningOpenGL PROPERTIES
 # Default Project
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT LearningOpenGL)
 
-file(TO_CMAKE_PATH "${CMAKE_SOURCE_DIR}/assets" ASSET_PATH)
+file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets" ASSET_PATH)
 target_compile_definitions(LearningOpenGL PRIVATE ASSET_DIR="${ASSET_PATH}")

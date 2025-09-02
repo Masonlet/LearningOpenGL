@@ -1,4 +1,7 @@
 #include "scene/sceneManager.hpp"
+#include "starletparsers/utils/log.hpp"
+#define GLFW_INCLUDE_NONE 
+#include <GLFW/glfw3.h>
 
 bool SceneManager::loadTxtScene(const std::string& name) {
 	debugLog("SceneManager", "loadTxtScene", "Start time: " + std::to_string(glfwGetTime()), true);

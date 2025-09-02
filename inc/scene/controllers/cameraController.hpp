@@ -1,5 +1,5 @@
 #pragma once
-#include "scene/objects/camera.hpp"
+#include "starletparsers/scene/camera.hpp"
 #include "scene/controllers/controller.hpp"
 
 struct FreeCameraController : public Controller<Camera> {

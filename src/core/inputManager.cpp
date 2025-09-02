@@ -1,5 +1,5 @@
 #include <GLFW/glfw3.h>
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 #include "core/inputManager.hpp"
 
 void InputManager::update(GLFWwindow* window) {

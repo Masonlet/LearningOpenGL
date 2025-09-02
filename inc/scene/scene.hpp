@@ -1,18 +1,18 @@
 #pragma once
 
-#include "objects/model.hpp"
-#include "objects/light.hpp"
-#include "objects/camera.hpp"
-#include "objects/grid.hpp"
-#include "objects/textureData.hpp"
-#include "objects/textureConnection.hpp"
-#include "objects/primitive.hpp"
+#include "starletparsers/scene/model.hpp"
+#include "starletparsers/scene/light.hpp"
+#include "starletparsers/scene/camera.hpp"
+#include "starletparsers/scene/grid.hpp"
+#include "starletparsers/scene/textureData.hpp"
+#include "starletparsers/scene/textureConnection.hpp"
+#include "starletparsers/scene/primitive.hpp"
 
 #include "controllers/cameraController.hpp"
 #include "controllers/modelController.hpp"
 #include "controllers/lightController.hpp"
 
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 
 #include <map>
 #include <string>

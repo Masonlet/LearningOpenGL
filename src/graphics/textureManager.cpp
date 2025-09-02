@@ -1,5 +1,5 @@
 #include "graphics/textureManager.hpp"
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 #include <glad/glad.h>
   
 TextureManager::~TextureManager() {

@@ -1,5 +1,5 @@
 #include "utils/primitives.hpp"
-#include "utils/log.hpp"
+#include "starletparsers/utils/log.hpp"
 
 bool createTriangle(MeshManager* meshManager, const std::string& name, unsigned int shaderID, const Vec2& size, const Vec4& vertexColour) {
 	Mesh info;
