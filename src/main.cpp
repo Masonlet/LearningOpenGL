@@ -4,7 +4,7 @@
 	#include <cstdlib>
 #endif
 
-#include "core/engine.hpp"
+#include "starletengine/engine.hpp"
 
 int main() {
 #ifdef NDEBUG
@@ -13,6 +13,8 @@ int main() {
 #endif
 	
 	Engine engine;
+	engine.assetPath = std::string(ASSET_DIR);
+
 	if (!engine.initialize(1920, 1200, "Test")) 
 		return -1;
 	if (!engine.setScene("SceneTest"))          

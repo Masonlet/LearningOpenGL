@@ -17,6 +17,7 @@ add_executable(LearningOpenGL ${SOURCES} ${HEADERS})
 # Visual Studio organization
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "Source Files" FILES ${SOURCES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/inc PREFIX "Header Files" FILES ${HEADERS})
+
 add_custom_target(Assets SOURCES ${ASSET_SHADERS} ${ASSET_MODELS} ${ASSET_SCENES} ${ASSET_TEXTURES})
 set_target_properties(Assets PROPERTIES FOLDER "Assets")
 source_group("Assets\\Shaders"  FILES ${ASSET_SHADERS})
@@ -24,48 +25,16 @@ source_group("Assets\\Models"   FILES ${ASSET_MODELS})
 source_group("Assets\\Scenes"   FILES ${ASSET_SCENES})
 source_group("Assets\\Textures" FILES ${ASSET_TEXTURES})
 
-target_include_directories(LearningOpenGL PUBLIC "${CMAKE_SOURCE_DIR}/inc")
+target_include_directories(LearningOpenGL PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc")
 
 include(FetchContent)
-add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/src/glad/glad.c)
-target_include_directories(glad PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/inc)
-set_target_properties(glad PROPERTIES FOLDER "External")
+FetchContent_Declare(StarletEngine GIT_REPOSITORY https://github.com/masonlet/starletengine.git GIT_TAG main)
+FetchContent_MakeAvailable(StarletEngine)
 
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.4)
-FetchContent_MakeAvailable(glfw)
-
-FetchContent_Declare(StarletMath GIT_REPOSITORY https://github.com/masonlet/starletmath.git GIT_TAG main)
-FetchContent_MakeAvailable(StarletMath)
-
-FetchContent_Declare(StarletParsers GIT_REPOSITORY https://github.com/masonlet/starletparsers.git GIT_TAG main)
-FetchContent_MakeAvailable(StarletParsers)
-target_link_libraries(StarletParsers PUBLIC glad)
-
-FetchContent_Declare(StarletScene GIT_REPOSITORY https://github.com/masonlet/starletscene.git GIT_TAG main)
-FetchContent_MakeAvailable(StarletScene)
-
-FetchContent_Declare(StarletGraphics GIT_REPOSITORY https://github.com/masonlet/starletgraphics.git GIT_TAG main)
-FetchContent_MakeAvailable(StarletGraphics)
-target_link_libraries(StarletGraphics PUBLIC glad)
-
-find_package(OpenGL REQUIRED)
-target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL StarletMath StarletParsers StarletScene StarletGraphics)
+target_link_libraries(LearningOpenGL PUBLIC StarletEngine)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "External")
-set_target_properties(glfw PROPERTIES FOLDER "External")
-set_target_properties(StarletParsers PROPERTIES FOLDER "External")
-set_target_properties(StarletScene PROPERTIES FOLDER "External")
-set_target_properties(StarletGraphics PROPERTIES FOLDER "External")
-if(TARGET update_mappings)
-  set_target_properties(update_mappings PROPERTIES FOLDER "External")
-endif()
-if(TARGET uninstall)
-  set_target_properties(uninstall PROPERTIES FOLDER "External")
-endif()
 
 # Output directories
 set_target_properties(LearningOpenGL PROPERTIES
