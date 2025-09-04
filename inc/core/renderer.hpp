@@ -1,8 +1,8 @@
 #pragma once
 
-#include "graphics/shaderManager.hpp"
-#include "graphics/meshManager.hpp"
-#include "graphics/textureManager.hpp"
+#include "starletgraphics/shaderManager.hpp"
+#include "starletgraphics/meshManager.hpp"
+#include "starletgraphics/textureManager.hpp"
 #include "starletparsers/scene/model.hpp"
 #include "starletmath/mat4.hpp"
 

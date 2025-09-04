@@ -24,6 +24,7 @@ bool Engine::initialize(const unsigned int width, const unsigned int height, con
 bool Engine::setupShaders() {
 	debugLog("Engine", "setupShaders", "Shader setup start time: " + std::to_string(glfwGetTime()), true);
 
+  shaderManager.setBasePath(std::string(ASSET_DIR));
   if (!shaderManager.createProgramFromPaths("shader1", "vertex_shader.glsl", "fragment_shader.glsl"))
     return error("Engine", "setupShaders", "Failed to create shader program from file");
 
@@ -62,6 +63,7 @@ bool Engine::loadSceneAssets() {
 bool Engine::loadSceneMeshes() {
   debugLog("Engine", "loadSceneMeshes", "Start time: " + std::to_string(glfwGetTime()), true);
 
+  meshManager.setBasePath(std::string(ASSET_DIR));
 	std::map<std::string, Model>& modelData = sceneManager.scene.getObjects<Model>();
   for(std::map<std::string, Model>::iterator it = modelData.begin(); it != modelData.end(); ++it)
     if (!meshManager.addMesh(it->second.meshPath))
@@ -83,6 +85,7 @@ bool Engine::loadSceneLighting() {
 bool Engine::loadSceneTextures() {
   debugLog("Engine", "loadSceneTextures", "Start time: " + std::to_string(glfwGetTime()), true);
 
+  textureManager.setBasePath(std::string(ASSET_DIR));
   std::map<std::string, TextureData>& data = sceneManager.scene.getObjects<TextureData>();
   for (std::map<std::string, TextureData>::iterator it = data.begin(); it != data.end(); ++it) {
     const TextureData& texture = it->second;

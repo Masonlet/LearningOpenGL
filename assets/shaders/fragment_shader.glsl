@@ -43,7 +43,7 @@ in vec2 vertTextCoords;
 
 out vec4 pixelColour;
 
-vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular); // Forward Declaration
+vec4 calculateLightContrib(vec4 vertexMaterialColour, vec3 vertexNormal, vec3 vertexWorldPos, vec4 vertexSpecular);
 
 void main() {
 	vec4 finalTextRGBA = vertColor;
