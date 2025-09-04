@@ -1,10 +1,5 @@
 # LearningOpenGL
-A modular OpenGL engine written in C++
-
-# Features
-- Custom Scene Loader & Scene Saver supporting Models, Lights, Cameras
-- Primitive Generation: Triangles, Squares, Cubes, SquareGrids, CubeGrids
-- Lighting, Transformation handling, and multi-camera support
+A repository to better understand and explain OpenGL
 
 ## Building the Project
 This project uses **CMake**. Follow these steps to build:
@@ -35,17 +30,3 @@ Can be safely omitted on Windows if you're using Visual Studio
   cmake --build .
   ```
   Or open the generated `.sln` file in Visual Studio and build the solution.
-
-## Runtime Controls  
-| **Key**       | **Action**             |
-| ------------- | ---------------------- |
-| Esc           | Exit program           |
-| W / A / S / D | Move camera            |
-| Space / LCtrl | Up / Down camera       |
-| Mouse         | Look around            |
-| 0–9           | Switch between cameras |
-| P             | Toggle Wireframe       |
-| C             | Toggle Cursor          |
-| L             | Save current scene     |
-
-  
