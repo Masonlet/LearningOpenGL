@@ -3,10 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# Ignore large models
-assets/models/GalacticaOriginal_ASCII_no_text.ply
-assets/models/GalacticaOriginal_ASCII_no_text_xyz_n.ply
-
 # User-specific files
 *.rsuser
 *.suo
