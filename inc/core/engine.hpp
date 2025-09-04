@@ -2,9 +2,9 @@
 
 #include "core/windowManager.hpp"
 #include "core/renderer.hpp"
-#include "graphics/shaderManager.hpp"
-#include "graphics/meshManager.hpp"
-#include "graphics/textureManager.hpp"
+#include "starletgraphics/shaderManager.hpp"
+#include "starletgraphics/meshManager.hpp"
+#include "starletgraphics/textureManager.hpp"
 #include "input/inputManager.hpp"
 #include "starletscene/sceneManager.hpp"
 #include "input/lightController.hpp"
