@@ -5,8 +5,11 @@
 #include "graphics/shaderManager.hpp"
 #include "graphics/meshManager.hpp"
 #include "graphics/textureManager.hpp"
-#include "core/inputManager.hpp"
-#include "scene/sceneManager.hpp"
+#include "input/inputManager.hpp"
+#include "starletscene/sceneManager.hpp"
+#include "input/lightController.hpp"
+#include "input/modelController.hpp"
+#include "input/cameraController.hpp"
 
 struct Engine {
 	WindowManager windowManager;
@@ -19,11 +22,15 @@ struct Engine {
 	InputManager inputManager;
 	SceneManager sceneManager;
 
+	LightController lightController;
+	ModelController modelController;
+	FreeCameraController cameraController;
+
 	bool wireframe{ false };
 	float deltaTime{ 0.0f }, lastTime{ 0.0f };
 
 	bool initialize(const unsigned int width, const unsigned int height, const char* title);
-	bool setScene(const std::string& sceneIn = "Default") { return sceneManager.loadTxtScene(sceneIn); }
+	bool setScene(const std::string& sceneIn = std::string(ASSET_DIR) + "/scenes/Default.txt") { return sceneManager.loadTxtScene(std::string(ASSET_DIR) + "/scenes/" + sceneIn + ".txt"); }
 	bool loadSceneAssets();
 
 	void run();

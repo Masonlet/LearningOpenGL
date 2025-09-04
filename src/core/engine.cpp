@@ -53,8 +53,8 @@ void Engine::updateTime(const float currentTime) {
   deltaTime = smoothingFactor * deltaTime + (1.0f - smoothingFactor) * rawDelta;
 }
 bool Engine::loadSceneAssets() {
-  if (sceneManager.scene.getSceneName().empty())
-    if (!sceneManager.loadTxtScene("Default"))
+  if (sceneManager.scene.getScenePath().empty())
+    if (!sceneManager.loadTxtScene(std::string(ASSET_DIR) + "Scene/Default.txt"))
       return error("Engine", "loadSceneMeshes", "No scene loaded and failed to load default scene");
 
   return loadSceneMeshes() && loadSceneLighting() && loadSceneTextures() && loadSceneTextureConnections();
@@ -76,7 +76,7 @@ bool Engine::loadSceneLighting() {
   if (shaderProgramID == 0) return error("Engine", "loadSceneLighting", "No active shader program set before loading lighting");
 
   renderer.updateLightCount(sceneManager.scene.getObjectCount<Light>());
-  sceneManager.scene.lightController.updateLightLocations(sceneManager.scene.getObjects<Light>(), shaderProgramID);
+  lightController.updateLightLocations(sceneManager.scene.getObjects<Light>(), shaderProgramID);
 
   return debugLog("Engine", "loadSceneLighting", "Finish time: " + std::to_string(glfwGetTime()), true);
 }
@@ -147,9 +147,9 @@ void Engine::run() {
     inputManager.update(windowManager.getWindow()->getGLFWwindow());
 
     Model* model{ nullptr };
-    if (!sceneManager.scene.getObjectByIndex<Model>(sceneManager.scene.modelController.current, model))
+    if (!sceneManager.scene.getObjectByIndex<Model>(modelController.current, model))
       error("Engine", "run", "No active model found for selected model");
-    else sceneManager.scene.modelController.update(*model, inputManager, deltaTime);
+    else modelController.update(*model, inputManager, deltaTime);
 
     renderFrame();
     windowManager.getWindow()->swapBuffers();
@@ -161,11 +161,11 @@ void Engine::renderFrame() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   Camera* cam{ nullptr };
-  if (!sceneManager.scene.getObjectByIndex<Camera>(sceneManager.scene.cameraController.current, cam))
+  if (!sceneManager.scene.getObjectByIndex<Camera>(cameraController.current, cam))
     error("Engine", "run", "No active camera found for selected camera");
   renderer.updateCameraUniforms(cam->pos, Mat4::lookAt(cam->pos, cam->front), Mat4::perspective(cam->fov, windowManager.getWindow()->getAspect(), cam->nearPlane, cam->farPlane));
-  sceneManager.scene.cameraController.update(*cam, inputManager, deltaTime);
-  sceneManager.scene.lightController.updateLightUniforms(sceneManager.scene.getObjects<Light>(), renderer.getProgram());
+  cameraController.update(*cam, inputManager, deltaTime);
+  lightController.updateLightUniforms(sceneManager.scene.getObjects<Light>(), renderer.getProgram());
 
   Model* skyBox{ nullptr };
   std::vector<Model*> transparentInstances;
@@ -174,7 +174,7 @@ void Engine::renderFrame() {
     Model& instance = it->second;
     if (instance.name == "skybox") skyBox = &instance;
 
-    if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, textureManager, sceneManager, instance);
+    if (instance.colour.w >= 1.0f) renderer.drawModel(meshManager, textureManager, instance);
     else                           transparentInstances.push_back(&instance);
   }
 
@@ -196,7 +196,7 @@ void Engine::renderFrame() {
   }
 
   for (Model* instance : transparentInstances) 
-    renderer.drawModel(meshManager, textureManager, sceneManager, *instance);
+    renderer.drawModel(meshManager, textureManager, *instance);
 
   if (skyBox) {
     skyBox->transform.pos = { cam->pos, 0.0f };
@@ -207,7 +207,7 @@ void Engine::renderFrame() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);     
     glDepthMask(GL_FALSE);
-    renderer.drawModel(meshManager, textureManager, sceneManager, *skyBox);
+    renderer.drawModel(meshManager, textureManager, *skyBox);
     glDepthMask(GL_TRUE);
     glCullFace(GL_BACK);
     skyBox->isVisible = false;

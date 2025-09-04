@@ -1,6 +1,6 @@
 #include <GLFW/glfw3.h>
 #include "starletparsers/utils/log.hpp"
-#include "core/inputManager.hpp"
+#include "input/inputManager.hpp"
 
 void InputManager::update(GLFWwindow* window) {
   for (int i = 0; i < TRACKED_KEY_COUNT; ++i) {

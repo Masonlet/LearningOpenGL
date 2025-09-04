@@ -1,6 +1,6 @@
 #pragma once
 #include "starletparsers/scene/camera.hpp"
-#include "scene/controllers/controller.hpp"
+#include "input/controller.hpp"
 
 struct FreeCameraController : public Controller<Camera> {
 	inline void setCamera(unsigned int cameraIndex, std::size_t cameraCount) { if (cameraIndex < cameraCount) current = cameraIndex; }

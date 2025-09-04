@@ -39,24 +39,26 @@ FetchContent_MakeAvailable(StarletMath)
 FetchContent_Declare(StarletParsers GIT_REPOSITORY https://github.com/masonlet/starletparsers.git GIT_TAG main)
 FetchContent_MakeAvailable(StarletParsers)
 
+FetchContent_Declare(StarletScene GIT_REPOSITORY https://github.com/masonlet/starletscene.git GIT_TAG main)
+FetchContent_MakeAvailable(StarletScene)
+
 add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/src/glad/glad.c)
 target_include_directories(glad PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/external/inc)
 
 find_package(OpenGL REQUIRED)
-target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL StarletMath StarletParsers)
+target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL StarletMath StarletParsers StarletScene)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "External")
 set_target_properties(glfw PROPERTIES FOLDER "External")
 set_target_properties(glad PROPERTIES FOLDER "External")
+set_target_properties(StarletParsers PROPERTIES FOLDER "External")
+set_target_properties(StarletScene PROPERTIES FOLDER "External")
 if(TARGET update_mappings)
   set_target_properties(update_mappings PROPERTIES FOLDER "External")
 endif()
 if(TARGET uninstall)
   set_target_properties(uninstall PROPERTIES FOLDER "External")
-endif()
-if(TARGET StarletParsers)
-  set_target_properties(StarletParsers PROPERTIES FOLDER "External")
 endif()
 
 # Output directories

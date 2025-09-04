@@ -1,4 +1,4 @@
-#include "scene/controllers/lightController.hpp"
+#include "input/lightController.hpp"
 #include <glad/glad.h>
 
 void LightController::updateLightLocations(std::map<std::string, Light>& lights, int shaderProgram) {

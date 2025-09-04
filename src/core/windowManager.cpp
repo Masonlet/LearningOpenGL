@@ -1,6 +1,6 @@
 #include <glad/glad.h>
 #include "core/windowManager.hpp"
-#include "core/callbacks.hpp"
+#include "input/callbacks.hpp"
 #include "starletparsers/utils/log.hpp"
 #include <cstdio>
 

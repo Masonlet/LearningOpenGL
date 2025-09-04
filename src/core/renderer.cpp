@@ -91,7 +91,7 @@ static Vec3 seedFromName(const std::string& s) {
 	b = fmod(b / 255.0f, 1.0f);
 	return { r, g, b };
 }
-bool Renderer::drawModel(MeshManager& meshManager, TextureManager& textureManager, SceneManager& sceneManager, const Model& instance) const {
+bool Renderer::drawModel(MeshManager& meshManager, TextureManager& textureManager, const Model& instance) const {
 	if (!instance.isVisible) return true;
 
 	Mesh* data;

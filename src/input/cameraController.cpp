@@ -1,6 +1,6 @@
-#include "scene/controllers/cameraController.hpp"
+#include "input/cameraController.hpp"
+#include "input/inputManager.hpp"
 #include "starletmath/constants.hpp"
-#include "core/inputManager.hpp"
 #include <cmath>
 
 void FreeCameraController::update(Camera& camera, const InputManager& input, float deltaTime) {
