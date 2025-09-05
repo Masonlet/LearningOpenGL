@@ -1,5 +1,9 @@
 # LearningOpenGL
-A repository to better understand and explain OpenGL
+A repository to better understand and explain OpenGL.
+This project uses **GLFW** for windowing and **GLAD** for OpenGL function loading.
+
+## Branch 0.0
+Demonstrates how to set up and build a minimal OpenGL project using **CMake**.
 
 ## Building the Project
 This project uses **CMake**. Follow these steps to build:
