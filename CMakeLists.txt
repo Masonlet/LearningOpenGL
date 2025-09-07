@@ -32,5 +32,13 @@ find_package(OpenGL REQUIRED)
 # Link Everything
 target_link_libraries(LearningOpenGL PRIVATE glad glfw OpenGL::GL)
 
+# Seperate external solutions
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "External")
+set_target_properties(glad PROPERTIES FOLDER "External")
+set_target_properties(glfw PROPERTIES FOLDER "External")
+set_target_properties(update_mappings PROPERTIES FOLDER "External")
+set_target_properties(uninstall PROPERTIES FOLDER "External")
+
 # Visual Studio Default
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT LearningOpenGL)
