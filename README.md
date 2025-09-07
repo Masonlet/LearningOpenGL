@@ -2,8 +2,11 @@
 A repository to better understand and explain OpenGL.
 This project uses **GLFW** for windowing and **GLAD** for OpenGL function loading.
 
-## Branch 0.1
-Demonstrates the bare minimum for a **GLFW** and **GLAD** window.
+## Branches
+Branches are used to demonstrate specific OpenGL concepts, building step by step from the basics to more advanced topics.
+
+- **Branch 0.0** - Demonstrates how to set up and build a minimal OpenGL project using **CMake**.
+- **Branch 0.1** - Demonstrates the bare minimum for a **GLFW** and **GLAD** window.
 
 ## Building the Project
 This project uses **CMake**. Follow these steps to build:
