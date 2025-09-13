@@ -3,8 +3,8 @@ A repository to better understand and explain OpenGL.
 This project uses **GLFW** for windowing and **GLAD** for OpenGL function loading.
 
 ## Branches and Tags
-Branches are used to demonstrate **specific OpenGL concepts** as major steps (0.1, 0.2)
-Tags mark **smaller improvements** or **refactors** inside those branches (0.1.1, 0.1.2)
+Branches are used to demonstrate **specific OpenGL concepts** as major steps (0.1, 0.2).   
+Tags mark **smaller improvements** or **refactors** inside those branches (0.1.1, 0.1.2).   
 
 - [Branch 0.0](https://github.com/Masonlet/LearningOpenGL/tree/Branch_0.0) — Demonstrates how to set up and build a minimal OpenGL project using **CMake**.
 - [Branch 0.1](https://github.com/Masonlet/LearningOpenGL/tree/Branch_0.1) — Bare minimum GLFW + GLAD window
