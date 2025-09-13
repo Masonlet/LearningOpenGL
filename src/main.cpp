@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-// Branch 0.15 : Bare Minimum OpenGL Window w/ functions
+// Branch 0.1.1 : Bare Minimum OpenGL Window w/ functions
 
 static bool initializeGLFW() {
 	if (!glfwInit()) {
