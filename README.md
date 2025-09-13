@@ -6,10 +6,10 @@ This project uses **GLFW** for windowing and **GLAD** for OpenGL function loadin
 Branches are used to demonstrate **specific OpenGL concepts** as major steps (0.1, 0.2).   
 Tags mark **smaller improvements** or **refactors** inside those branches (0.1.1, 0.1.2).   
 
-- [Branch 0.0](https://github.com/Masonlet/LearningOpenGL/tree/Branch_0.0) — Demonstrates how to set up and build a minimal OpenGL project using **CMake**.
-- [Branch 0.1](https://github.com/Masonlet/LearningOpenGL/tree/Branch_0.1) — Bare minimum GLFW + GLAD window
-  - [v0.1.0](https://github.com/Masonlet/LearningOpenGL/tree/v0.1.0) — Initial OpenGL initializing with explanatory comments
-  - [v0.1.1](https://github.com/Masonlet/LearningOpenGL/tree/v0.1.1) — Separates OpenGL initialization into functions
+- [Branch 0.0](https://github.com/Masonlet/LearningOpenGL/blob/Branch_0.0/CMakeLists.txt) — Demonstrates how to set up and build a minimal OpenGL project using **CMake**.
+- [Branch 0.1](https://github.com/Masonlet/LearningOpenGL/blob/Branch_0.1/src/main.cpp) — Bare minimum GLFW + GLAD window
+  - [v0.1.0](https://github.com/Masonlet/LearningOpenGL/blob/v0.1.0/src/main.cpp) — Initial OpenGL initializing with explanatory comments
+  - [v0.1.1](https://github.com/Masonlet/LearningOpenGL/blob/v0.1.1/src/main.cpp) — Separates OpenGL initialization into functions
 - [Branch 0.2](https://github.com/Masonlet/LearningOpenGL/) — *W.I.P*
 - [Branch 0.3](https://github.com/Masonlet/LearningOpenGL/) — *W.I.P*
 - [Branch 0.4](https://github.com/Masonlet/LearningOpenGL/) — *W.I.P*
