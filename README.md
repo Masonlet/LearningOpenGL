@@ -8,8 +8,8 @@ Tags mark **smaller improvements** or **refactors** inside those branches (0.1.1
 
 - **Branch 0.0** - Demonstrates how to set up and build a minimal OpenGL project using **CMake**.
 - [Branch 0.1](https://github.com/Masonlet/LearningOpenGL/tree/Branch_0.1) — Bare minimum GLFW + GLAD window
-  - [`v0.1.0`](https://github.com/Masonlet/LearningOpenGL/tree/v0.1.0) — Initial OpenGL initialziing
-  - [`v0.1.1`](https://github.com/Masonlet/LearningOpenGL/tree/v0.1.1) — Separates OpenGL init into functions
+  - [v0.1.0](https://github.com/Masonlet/LearningOpenGL/tree/v0.1.0) — Initial OpenGL initializing
+  - [v0.1.1](https://github.com/Masonlet/LearningOpenGL/tree/v0.1.1) — Separates OpenGL init into functions
 - **Branch 0.2** - *W.I.P*
 - **Branch 0.3** - *W.I.P*
 - **Branch 0.4** - *W.I.P*
