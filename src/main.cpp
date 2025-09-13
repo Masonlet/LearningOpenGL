@@ -1,62 +1,56 @@
-#include <glad/glad.h>   // Must be included before GLFW, includes the required OpenGL headers
+#include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-// Branch 0.1 : Bare Minimum OpenGL Window
+// Branch 0.15 : Bare Minimum OpenGL Window w/ functions
 
-int main() {
-	// Initialize GLFW
-	// Must be called before any other GLFW function
+static bool initializeGLFW() {
 	if (!glfwInit()) {
 		std::cerr << "Failed to initialize GLFW\n";
-		return EXIT_FAILURE;
+		return false;
 	}
 
-	// Configure GLFW OpenGL context using glfwWindowHint
-	// This first argument is the option to be configured
-	// The second argument is the value to set the option to
-	// More information can be found at: https://www.glfw.org/docs/latest/window.html#window_hints
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // OpenGL version 3.x
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // OpenGL version x.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); 
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// If on Mac OS X Enable forward compatibility by uncommenting the line below
-	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); 
+	return true;
+}
 
-	// Create a window object -- Holds all the windowing data, required by most of GLFW's functions
-	// glfwCreateWindow(width, height, title, monitor, share)
-	// Monitor = NULL -> windowed mode, non-NULL -> full screen mode
-	// Share = NULL -> do not share resources with other context, non-NULL -> share resources with the specified context
-	GLFWwindow* window = glfwCreateWindow(800, 600, "LearningOpenGL", NULL, NULL);
+static GLFWwindow* createWindow(const unsigned int width, const unsigned int height, const char* title) {
+	GLFWwindow* window = glfwCreateWindow(width, height, title, nullptr, nullptr);
 	if (!window) {
 		std::cerr << "Failed to create GLFW window\n";
-		glfwTerminate();
-		return EXIT_FAILURE;
+		return nullptr;
 	}
 
-	// Make the context of the window the main context on this thread
-	// Makes future OpenGL calls refer to this context
 	glfwMakeContextCurrent(window);
+	return window;
+}
 
-	// Load all required OpenGL function pointers using GLAD, must be called after context creation
+static bool initializeGlad() {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Failed to initialize GLAD" << std::endl;
-		return EXIT_FAILURE;
+		return false;
 	}
 
-	// Event loop, runs until the window is closed (Clicks X, alt+F4, etc.)
-	while (!glfwWindowShouldClose(window)) {
-		// Poll inputs/events (keyboard, mouse, window resize, etc.)
-		glfwPollEvents();
+	return true;
+}
 
-		// Draws to the back buffer while the front buffer is being displayed
-		// Then, swaps front and back buffers at the end of the loop
+int main() {
+	if (!initializeGLFW()) return EXIT_FAILURE;
+
+	GLFWwindow* window = createWindow(800, 600, "LearningOpenGL");
+	if (!window) return EXIT_FAILURE;
+
+	if (!initializeGlad()) return EXIT_FAILURE;
+
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
 		glfwSwapBuffers(window); 
 	}
 
-	// Destroys the window and its context
 	glfwDestroyWindow(window); 
-	// Terminates GLFW, clearing any resources allocated by GLFW
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }
